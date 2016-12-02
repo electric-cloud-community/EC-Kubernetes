@@ -1,0 +1,11 @@
+<plugin>
+  <author>Electric Cloud</author>
+  <authorUrl></authorUrl>
+  <category>Container Management</category>
+  <commander-version min="6.0" />
+  <description>Integrates with Kubernetes orchestration engine to run docker containers. Kubernetes cluster can be hosted anywhere as long as the API is accessible.</description>
+  <help>help.xml</help>
+  <key>EC-Kubernetes</key>
+  <label>EC-Kubernetes</label>
+  <version>0.1.0</version>
+</plugin>
