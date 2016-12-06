@@ -13,7 +13,7 @@ if (!clusterOrEnvProjectName) {
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
 
-//// -- Driver script logic to provision cluster -- //
+//// -- Driverl script logic to provision cluster -- //
 
 EFClient efClient = new EFClient()
 
@@ -40,6 +40,7 @@ if(clusterDetails){
     throw new RuntimeException("Cluster does not exist, please create a cluster and then proceed")
 }
 clusterEndPoint = "https://107.178.213.141:8080/r/projects/1a7/kubernetes"
+accessToken = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImVjbG91ZC10b2tlbi16bnJobSIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJlY2xvdWQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJmMDg0ODFiNC1iYmFiLTExZTYtYjAzNC0wMmQ4M2U4ODVkZmMiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDplY2xvdWQifQ.iRjOD_FQkzT4Rys40hMTx51nU5ekkyj5PsJqHp_M1K5_N2BvDpfUzqGazFS3-DcCqLIzOwka2ms9ijCYDE4ca1A3KPRlgZC5IOWd-3iogHIVaqIu62ZgXsfAiybMC7xt0WC975i7hSyk3BRWjXGhy6McY-TDC6VvnkIT3REaLEEtWJDHJonw3Zpa_FTtXVzlzmmsuA3CuaoSmMS9BpRE7VmjmeGCjsn1VNseMNaqbofmTB3_OivejT-gXcINf0vYxsmkw9FqM3Ev5Duh9feNry0sh43zDlwRmZT4RZQyK2gsIhota2xFK43h6NnfOjS0dqH4Dmpb2f9qicmVDZcPoQ"
 
 def serviceDetails = efClient.getServiceDeploymentDetails(
         serviceName,

@@ -1,0 +1,146 @@
+<!--
+
+     Copyright 2016 Electric Cloud, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Configuration:</label>
+        <property>config</property>
+        <required>1</required>
+        <documentation>The name of an existing configuration which holds all the connection information for Google Container Engine.</documentation>
+    </formElement> 
+    <formElement>
+        <type>entry</type>
+        <label>Container Cluster Name:</label>
+        <property>clusterName</property>
+        <required>1</required>
+        <documentation>The name of the cluster that needs to be provisioned.</documentation>
+    </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Description:</label>
+        <property>clusterDescription</property>
+        <required>0</required>
+        <documentation>Description of the cluster that needs to be provisioned. The cluster description is set at creation time only and cannot be updated so this parameter will be ignored if the cluster already exists.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Google Cloud Platform Project ID:</label>
+        <property>clusterProjectID</property>
+        <required>1</required>
+        <documentation>The Project ID for the Google Cloud Platform project that the cluster belongs to. If the cluster does not exist in the project identified by the Project ID, then it will be created in this project.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Master Zone:</label>
+        <property>masterZone</property>
+        <required>1</required>
+        <documentation>The primary zone for the cluster. The master zone for a cluster is set at creation time and cannot be updated so this parameter will be ignored if the cluster already exists.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Node Pool Name:</label>
+        <property>nodePoolName</property>
+        <required>1</required>
+        <value>default-pool</value>
+        <documentation>The node pool to be created or updated.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Initial Node Pool Size:</label>
+        <property>nodePoolSize</property>
+        <required>1</required>
+        <value>3</value>
+        <documentation>The number of nodes to be created in each of the cluster's zones. Defaults to 3.</documentation>
+    </formElement>
+    <formElement>
+        <type>checkbox</type>
+        <label>Enable Autoscaling for Node Pool?</label>
+        <property>enableAutoscaling</property>
+        <required>0</required>
+        <checkedValue>true</checkedValue>
+        <uncheckedValue>false</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to enable autoscaling for the node pool.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Minimum Node Pool Size:</label>
+        <property>minNodeCount</property>
+        <required>0</required>
+        <documentation>Minimum number of nodes in the NodePool. Must be &gt;= 1 and &lt;= 'Maximum Node Pool Size'. Applicable if Autoscaling is enabled.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Maximum Node Pool Size:</label>
+        <property>maxNodeCount</property>
+        <required>0</required>
+        <documentation>Maximum number of nodes in the NodePool. Must be &gt;= 'Minimum Node Pool Size'. Applicable if Autoscaling is enabled.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Machine Type:</label>
+        <property>machineType</property>
+        <required>1</required>
+        <documentation>The type of machine to use for nodes.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Image Type:</label>
+        <property>imageType</property>
+        <required>1</required>
+        <documentation>Image Type specifies the base OS that the nodes in the cluster will run on.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Disk Size:</label>
+        <property>diskSize</property>
+        <required>1</required>
+        <value>100</value>
+        <documentation>Size in GB for node VM boot disks. Defaults to 100 GB.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Additional Zones:</label>
+        <property>additionalZones</property>
+        <required>0</required>
+        <documentation>The set of additional zones in which the specified node footprint should be replicated. All zones must be in the same region as the cluster's primary zone. If additional-zones is not specified, all nodes will be in the cluster's primary zone.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Network:</label>
+        <property>network</property>
+        <required>1</required>
+        <value>default</value>
+        <documentation>The Compute Engine Network that the cluster will connect to. Google Container Engine will use this network when creating routes and firewalls for the clusters. Defaults to the 'default' network.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Subnetwork:</label>
+        <property>subnetwork</property>
+        <required>0</required>
+        <documentation>The name of the Google Compute Engine subnetwork to which the cluster is connected.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Wait time (in minutes):</label>
+        <property>clusterWaitime</property>
+        <required>0</required>
+        <value>5</value>
+        <documentation>Number of minutes to wait for cluster creation or update operation to complete. Defaults to 5 minutes.</documentation>
+    </formElement>
+</editor>

@@ -1,0 +1,1 @@
+// Just a dummy procedure as it is not needed in Kubernetes
