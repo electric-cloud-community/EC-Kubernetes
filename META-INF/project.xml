@@ -1,94 +1,103 @@
 <exportedData buildLabel="build_3.5_30434_OPT_2010.01.13_07:32:22" buildVersion="3.5.1.30434" version="39">
-  <exportPath>/projects/MyPlugin-1.0</exportPath>
+  <exportPath>/projects/PluginLite-1.0</exportPath>
   <project>
-    <projectName>MyPlugin-1.0</projectName>
+    <projectName>PluginLite-1.0</projectName>
     <propertySheet>
       <property>
         <expandable>0</expandable>
         <propertyName>ec_setup</propertyName>
         <value>use Cwd;
-
-use File::Spec;
-use ElectricCommander::ArtifactManagement;
-use ElectricCommander::ArtifactManagement::ArtifactVersion;
-
-use POSIX;
-
-my $dir = getcwd;
-
-my $logfile =&quot;&quot;;
-
-my $pluginDir;
-
-if(defined $ENV{QUERY_STRING}) { # Promotion through UI
-
-       $pluginDir = $ENV{COMMANDER_PLUGINS} . &quot;/$pluginName&quot;;
+            use File::Spec;
+            use POSIX;
+            my $dir = getcwd;
+            my $logfile =&quot;&quot;;
+            my $pluginDir;
 
 
+            if ( defined $ENV{QUERY_STRING} ) {    # Promotion through UI
+                $pluginDir = $ENV{COMMANDER_PLUGINS} . &quot;/$pluginName&quot;;
+            }
+            else {
+                my $commanderPluginDir = $commander-&gt;getProperty('/server/settings/pluginsDirectory')-&gt;findvalue('//value');
+                unless ( $commanderPluginDir &amp;&amp; -d $commanderPluginDir ) {
+                    die &quot;Cannot find commander plugin dir, please ensure that the option server/settings/pluginsDirectory is set up correctly&quot;;
+                }
+                $pluginDir = File::Spec-&gt;catfile($commanderPluginDir, $pluginName);
+            }
 
-} else {
+            $logfile .= &quot;Plugin directory is $pluginDir&quot;;
 
-       $pluginDir = $dir;
+            $commander-&gt;setProperty(&quot;/plugins/$pluginName/project/pluginDir&quot;, {value=&gt;$pluginDir});
+            $logfile .= &quot;Plugin Name: $pluginName\n&quot;;
+            $logfile .= &quot;Current directory: $dir\n&quot;;
 
-}
+            # Evaluate promote.groovy or demote.groovy based on whether plugin is being promoted or demoted ($promoteAction)
+            local $/ = undef;
+            # If env variable QUERY_STRING exists:
+            my $dslFilePath;
+            if(defined $ENV{QUERY_STRING}) { # Promotion through UI
+                $dslFilePath = File::Spec-&gt;catfile($ENV{COMMANDER_PLUGINS}, $pluginName, &quot;dsl&quot;, &quot;$promoteAction.groovy&quot;);
+            } else {  # Promotion from the command line
+                $dslFilePath = File::Spec-&gt;catfile($pluginDir, &quot;dsl&quot;, &quot;$promoteAction.groovy&quot;);
+            }
+
+            open FILE, $dslFilePath or die &quot;Couldn't open file: $dslFilePath: $!&quot;;
+            my $dsl = &lt;FILE&gt;;
+            close FILE;
+            my $dslReponse = $commander-&gt;evalDsl(
+                $dsl, {
+                    parameters =&gt; qq(
+                    {
+                    &quot;pluginName&quot;:&quot;$pluginName&quot;,
+                    &quot;upgradeAction&quot;:&quot;$upgradeAction&quot;,
+                    &quot;otherPluginName&quot;:&quot;$otherPluginName&quot;
+                    }
+                ),
+                debug             =&gt; 'false',
+                serverLibraryPath =&gt; File::Spec-&gt;catdir( $pluginDir, 'dsl' ),
+            },
+            );
 
 
+            $logfile .= $dslReponse-&gt;findnodes_as_string(&quot;/&quot;);
 
-$commander-&gt;setProperty(&quot;/plugins/$pluginName/project/pluginDir&quot;,{value=&gt;$pluginDir});
+            my $errorMessage = $commander-&gt;getError();
+            if ( !$errorMessage ) {
 
-$logfile .= &quot;Plugin Name: $pluginName\n&quot;;
+                # This is here because we cannot do publishArtifactVersion in dsl today
 
-$logfile .= &quot;Plugin Directory: $pluginDir\n&quot;;
+                # delete artifact if it exists first
+                $commander-&gt;deleteArtifactVersion(&quot;com.electriccloud:EC-GoogleContainerEngine-Grapes:1.0.0&quot;);
+
+                if ( $promoteAction eq &quot;promote&quot; ) {
+
+                    #publish jars to the repo server if the plugin project was created successfully
+                    my $am = new ElectricCommander::ArtifactManagement($commander);
+                    my $artifactVersion = $am-&gt;publish({
+                        groupId         =&gt; &quot;com.electriccloud&quot;,
+                        artifactKey     =&gt; &quot;EC-GoogleContainerEngine-Grapes&quot;,
+                        version         =&gt; &quot;1.0.0&quot;,
+                        includePatterns =&gt; &quot;**&quot;,
+                        fromDirectory   =&gt; &quot;$pluginDir/lib/grapes&quot;,
+                        description =&gt; &quot;JARs that EC-GoogleContainerEngine plugin procedures depend on&quot;
+                    });
+
+                    # Print out the xml of the published artifactVersion.
+                    $logfile .= $artifactVersion-&gt;xml() . &quot;\n&quot;;
+
+                    if ( $artifactVersion-&gt;diagnostics() ) {
+                        $logfile .= &quot;\nDetails:\n&quot; . $artifactVersion-&gt;diagnostics();
+                    }
+                }
+            }
+
+            # Create output property
+
+            my $nowString = localtime;
+            $commander-&gt;setProperty( &quot;/plugins/$pluginName/project/logs/$nowString&quot;, { value =&gt; $logfile } );
 
 
-
-# Evaluate promote.groovy or demote.groovy based on whether plugin is being promoted or demoted ($promoteAction)
-
-local $/ = undef;
-
-# If env variable QUERY_STRING exists:
-
-if(defined $ENV{QUERY_STRING}) { # Promotion through UI
-
-       open FILE, $ENV{COMMANDER_PLUGINS} . &quot;/$pluginName/dsl/$promoteAction.groovy&quot; or die &quot;Couldn't open file: $!&quot;;
-
-} else {  # Promotion from the command line
-
-       open FILE, &quot;dsl/$promoteAction.groovy&quot; or die &quot;Couldn't open file: $!&quot;;
-
-}
-
-my $dsl = &lt;FILE&gt;;
-
-close FILE;
-
-my $dslReponse = $commander-&gt;evalDsl($dsl,
-
-              {parameters=&gt;qq(
-
-                     {
-
-                           &quot;pluginName&quot;:&quot;$pluginName&quot;,
-                           &quot;upgradeAction&quot;:&quot;$upgradeAction&quot;,
-                           &quot;otherPluginName&quot;:&quot;$otherPluginName&quot;
-
-                     }
-
-              ),
-              debug=&gt;&quot;false&quot;,
-			  serverLibraryPath=&gt;&quot;$pluginDir/dsl&quot;}
-
-);
-
-$logfile .= $dslReponse-&gt;findnodes_as_string(&quot;/&quot;);
-
-my $errorMessage = $commander-&gt;getError();
-
-my $nowString = localtime;
-
-$commander-&gt;setProperty(&quot;/plugins/$pluginName/project/logs/$nowString&quot;,{value=&gt;$logfile});
-
-</value>
+        </value>
       </property>
     </propertySheet>
   </project>

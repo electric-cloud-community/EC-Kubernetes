@@ -7,5 +7,5 @@
   <help>help.xml</help>
   <key>EC-Kubernetes</key>
   <label>EC-Kubernetes</label>
-  <version>0.1.0</version>
+  <version>1.0.0</version>
 </plugin>
