@@ -6,6 +6,7 @@
   <description>Integrates with Kubernetes orchestration engine to run docker containers. Kubernetes cluster can be hosted anywhere as long as the API is accessible.</description>
   <help>help.xml</help>
   <key>EC-Kubernetes</key>
+  <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
   <version>1.0.0</version>
 </plugin>
