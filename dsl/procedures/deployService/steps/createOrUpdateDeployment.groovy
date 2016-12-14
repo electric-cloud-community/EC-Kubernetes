@@ -25,7 +25,7 @@ def clusterParameters = efClient.getProvisionClusterParameters(
 def configName = clusterParameters.config
 def pluginProjectName = '$[/myProject/projectName]'
 
-//def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
+def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
 
 KubernetesClient client = new KubernetesClient()
 // Access Token and ClusterEndPoint will be retrieved from flow

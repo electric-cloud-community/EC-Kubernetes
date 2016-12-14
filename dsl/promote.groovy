@@ -28,14 +28,13 @@ project pluginName, {
 		configurationLocation = 'ec_plugin_cfgs'
 		property 'operations', {
 			property 'provisionCluster', {
-				property 'procedureName', value: 'Provision Cluster'
+				property 'procedureName', value: 'Check Cluster'
 				property 'ui_formRefs', {
 					parameterForm = 'ec_parameterForm'
 				}
 				property 'parameterRefs', {
 					configuration = 'config'
-					platformClusterName = 'clusterName'
-					platformProjectReference = 'clusterProjectID'
+					platformClusterUrl = 'clusterURL'
 				}
 			}
 			property 'defineContainerMappings', {
