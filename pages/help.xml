@@ -1,13 +1,161 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
         <meta content="text/html; charset=us-ascii" http-equiv="content-type"/>
-        <title>MyPlugin</title>
+        <title>EC-Kubernetes Plugin</title>
     </head>
+    <style>
+    table, th, td {
+        border: 1px solid black;
+    }
+    p.important {
+    color: BLUE;
+    }
+    </style>
     <body>
         <div class="help">
-            <h1>MyPlugin</h1>
-			<h3>Overview</h3>
-			<p></p>
-		</div>
-	</body>
-</html>	
+            <h1>EC-Kubernetes</h1>
+            <p>Plugin version 1.0.0</p>
+            <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
+            <h3>Overview</h3>
+            <p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory). 
+
+            You need to have a Kubernetes cluster available for using this plugin.
+            </p>
+            <p class="important">Please note that some of names given in Flow UI will be modified to comply with the naming conventions of Kubernetes. Specifically characters such as "space , _ " will be converted to "-". Such parameters are marked with a asterisk (*)  in procedure details</p>
+            <h1>Contents</h1>
+            <ul>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#CreateConfiguration">Plugin  Configuration</a></li>
+                 <li><a href="#procedures">Plugin Procedures</a></li>
+                <ul>
+                    <li><a href="#ProvisionCluster">Check cluster</a></li>
+                    <li><a href="#DeployService">Deploy service</a></li>
+                </ul>
+            </ul>
+            <div id="CreateConfiguration">
+                <a name="CreateConfiguration" id="CreateConfigurationLink"></a>
+                <h2>Plugin Configurations</h2>
+                <!-- If the plugin has separate configurations then include
+                     this section, otherwise omit this whole section. We don't
+                     need to have a configuration section that just says "There
+                     is no configuration for this plugin." -->
+                <p>
+                    Plugin configurations are sets of parameters that apply
+                    across some or all of the plugin procedures. They
+                    reduce repetition of common values, create
+                    predefined parameter sets for end users, and
+                    securely store credentials where needed. Each configuration
+                    is given a unique name that is entered in designated
+                    parameters on procedures that use them.<br /><br />
+                </p>
+                <!-- For all parameters, the parameter name should be *exactly*
+                     the same as it appears in the Parameter Panel, and the first
+                     sentence(s) of the description should be the same as the tooltip (if
+                     there is one). After that, the parameter description can go into
+                     greater detail about the parameter including valid value ranges and
+                     examples. -->
+                <h3>Creating Plugin Configurations</h3>
+                <p>To create plugin configurations in ElectricFlow,
+                do these steps:</p>
+                
+                <li>Go to <b>Administration</b> &gt; <b>Plugins</b> to open the Plugin Manager.</li>
+                    <li>Find the EC-Kubernetes row.</li>
+                    <li>Click <b>Configure</b> to open the
+                    Kubernetes Configurations page.</li>
+                    <li>Click <b>Create Configuration</b>.</li>
+                    <li>For communicating with Kubernetes cluster, you need two configurations - the cluster<br/>
+                    <ul type="square">
+                        <li>1. Base address of API Endpoint URL </li>
+                        <li>2. Bearer token which has authorization to access API.  
+                        <p>For creating a bearer token, please follow the steps:</p>
+                        <ul>
+                            <li>Download the Kubeconfig file from your Kubernetes cluster. Or if you have direct access to Kubectl shell of the cluster, that will work too.</li>
+                            <li>You will need to install Kubectl (http://kubernetes.io/docs/user-guide/prereqs/) or have access to Kubectl shell</li>
+                            <li>Create a service account with following kubectl command:<p>
+                                kubectl create serviceaccount api-user
+                            </p></li>
+                            <li>Get details of Service account we just created, from the output determine name of secret in which data is stored:<p>
+                            kubectl get serviceaccount api-user -o yaml
+                            </p></li>
+                            <li>Assuming name of secret from above step is secret-1234, get details of secret:
+                                <p>kubectl get secrey secret-1234 -o yaml</p></li>
+                                <li>The value of token field in above output is the berar token in encoded format. We need to decode it and use it as berar token. On a Unix like system, following command will decode the password<p>
+                                echo "encoded_string" | base64 --decode
+                                </p></li>
+                        </ul>
+                        </li>
+                    </ul>
+                </li>
+
+            </div>            
+            <h1 id="procedures">Plugin Procedures</h1>
+            <div id="ProvisionCluster">
+                <h2>Check Cluster</h2>
+                <p>The procedure checks if the cluster exists and is reachable with provided details.</p>
+                <h3>Check Cluster Parameters</h3>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="required">Configuration *</td>
+                            <td>The berar token for accessing the cluster</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Cluster API endpoint *</td>
+                            <td>The base URL of cluster's API endpoint</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>  
+            <div id="DeployService">
+                <h2>Deploy service</h2>
+                <p>This procedure deploys a service and application to a already provisioned cluster</p>
+                <h3>Depoy Service Parameters</h3>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="required">Service Name *</td>
+                            <td>The name of the service in Deploy that encapsulates the service to be deployed on the Google container cluster.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Service Projet Name *</td>
+                            <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Application Name *</td>
+                            <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Application Revision ID</td>
+                            <td>Revision Id of the application version that the service belongs to.</td>
+                        </tr>  
+                        <tr>
+                            <td class="required">Cluster name *</td>
+                            <td>The name of the cluster in Deploy that encapsulates the Google container cluster on which the service is to be deployed.</td>
+                        </tr>                        
+                        <tr>
+                            <td class="required">Cluster or environment project name</td>
+                            <td>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Environment Name</td>
+                            <td>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>          
+        </div>
+    </body>
+</html> 
