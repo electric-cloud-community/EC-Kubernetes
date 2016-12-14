@@ -12,7 +12,7 @@ def otherPluginName = args.otherPluginName
 def pluginKey = getProject("/plugins/$pluginName/project").pluginKey
 def pluginDir = getProperty("/projects/$pluginName/pluginDir").value
 
-def pluginCategory = 'Utilities'
+def pluginCategory = 'Container Management'
 project pluginName, {
 
 	ec_visibility = 'pickListOnly'
