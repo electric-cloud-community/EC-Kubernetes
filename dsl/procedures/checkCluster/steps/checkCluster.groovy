@@ -13,8 +13,4 @@ KubernetesClient client = new KubernetesClient()
 
 def resp = client.checkClusterHealth(clusterEndpoint, accessToken)
 
-if (resp == null) {
-	throw new RuntimeException("The Kubernetes cluster is either not reachable or is down")
-}
-
-	
+client.handleError("The Kubernetes cluster at ${clusterEndpoint} is either not reachable or is down")

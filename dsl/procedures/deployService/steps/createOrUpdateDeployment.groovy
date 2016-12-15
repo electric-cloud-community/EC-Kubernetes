@@ -12,7 +12,6 @@ if (!clusterOrEnvProjectName) {
 }
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
-def clusterEndpoint = '$[clusterURL]'
 
 //// -- Driverl script logic to provision cluster -- //
 
@@ -24,6 +23,8 @@ def clusterParameters = efClient.getProvisionClusterParameters(
         environmentName)
 
 def configName = clusterParameters.config
+def clusterEndpoint = clusterParameters.clusterURL
+
 def pluginProjectName = '$[/myProject/projectName]'
 
 def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)

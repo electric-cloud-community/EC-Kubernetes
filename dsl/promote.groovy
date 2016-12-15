@@ -34,7 +34,6 @@ project pluginName, {
 				}
 				property 'parameterRefs', {
 					configuration = 'config'
-					platformClusterUrl = 'clusterURL'
 				}
 			}
 			property 'defineContainerMappings', {
