@@ -25,6 +25,21 @@ class Logger {
 
 public class KubernetesClient extends BaseClient {
 
+    /**
+    *  A way to check cluster is up/reachable. Currently simply hits API base endpoint
+    *  In future there might be a "health" endpoint available which can be used
+    */
+    def checkClusterHealth(String clusterEndPoint, String accessToken){
+
+        if (OFFLINE) return null
+
+        def response =  doHttpGet(clusterEndPoint,
+                "/apis",
+                accessToken, /*failOnErrorCode*/ false)
+        response.status == 200 ? response.data : null
+
+    }
+
     // Need to check if accessToken would suffice or we would need user/password
     /**
      * Retrieves the Deployment instance from Kubernetes cluster.

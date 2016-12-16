@@ -12,7 +12,7 @@ def otherPluginName = args.otherPluginName
 def pluginKey = getProject("/plugins/$pluginName/project").pluginKey
 def pluginDir = getProperty("/projects/$pluginName/pluginDir").value
 
-def pluginCategory = 'Utilities'
+def pluginCategory = 'Container Management'
 project pluginName, {
 
 	ec_visibility = 'pickListOnly'
@@ -28,14 +28,12 @@ project pluginName, {
 		configurationLocation = 'ec_plugin_cfgs'
 		property 'operations', {
 			property 'provisionCluster', {
-				property 'procedureName', value: 'Provision Cluster'
+				property 'procedureName', value: 'Check Cluster'
 				property 'ui_formRefs', {
 					parameterForm = 'ec_parameterForm'
 				}
 				property 'parameterRefs', {
 					configuration = 'config'
-					platformClusterName = 'clusterName'
-					platformProjectReference = 'clusterProjectID'
 				}
 			}
 			property 'defineContainerMappings', {
