@@ -1,7 +1,7 @@
 import java.io.File
 
 procedure 'CreateConfiguration',
-        description: 'Creates a configuration for Google Container Engine', {
+        description: 'Creates a configuration for the Kubernetes cluster', {
 
     step 'createConfiguration',
             command: new File(pluginDir, 'dsl/procedures/createConfiguration/steps/createConfiguration.pl').text,

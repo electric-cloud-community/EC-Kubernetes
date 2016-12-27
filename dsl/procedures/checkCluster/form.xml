@@ -21,7 +21,7 @@
         <label>Configuration:</label>
         <property>config</property>
         <required>1</required>
-        <documentation>The name of an existing configuration which holds all the connection information for Google Container Engine.</documentation>
+        <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
     </formElement> 
     <formElement>
         <type>entry</type>
