@@ -32,10 +32,10 @@
     </formElement>
     <formElement>
         <type>entry</type>
-        <label>Google Cloud Platform Project ID:</label>
+        <label>Project ID:</label>
         <property>clusterProjectID</property>
         <required>1</required>
-        <documentation>The Project ID for the Google Cloud Platform project that the cluster belongs to.</documentation>
+        <documentation>The Project ID that the cluster belongs to.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>

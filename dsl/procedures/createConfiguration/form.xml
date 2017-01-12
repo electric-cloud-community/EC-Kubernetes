@@ -32,11 +32,11 @@
     </formElement>
     <formElement>
         <type>credential</type>
-        <label>Service Account key pair:</label>
+        <label>Bearer Token of Kubernetes Cluster:</label>
         <property>credential</property>
         <required>1</required>
         <credentialType>key</credentialType>
-        <documentation>The contents of the JSON file generated at the time of the Service Account key creation. The service account identified by the key pair in the JSON will be used for accessing Google APIs for managing containers and clusters.</documentation>
+        <documentation>The bearer token related to a serviceAccount which has access to create resources in the Kubernetes cluster</documentation>
         <attachedAsParameterToStep>createAndAttachCredential</attachedAsParameterToStep>
     </formElement>
     <formElement>
