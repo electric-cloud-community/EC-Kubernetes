@@ -1,4 +1,5 @@
 @Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' )
+@Grab(group='net.sf.json-lib', module='json-lib', version='2.3', classifier = 'jdk15') 
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
@@ -19,7 +20,7 @@ class Logger {
     static final Integer INFO = 2
     static final Integer WARNING = 3
     static final Integer ERROR = 4
-    static Integer logLevel = INFO
+    static Integer logLevel = DEBUG
 }
 
 
@@ -261,11 +262,12 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
 
         def volumeData = convertVolumes(args.volumes)
+        String svcName = formatName(args.serviceName)
         def result = json {
             kind "Deployment"
             apiVersion "extensions/v1beta1"
             metadata {
-                name formatName(args.serviceName)
+                name svcName
             }
             spec {
                 replicas args.defaultCapacity.toInteger()
@@ -277,14 +279,14 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 }
                 selector {
                     matchLabels {
-                        "ec-svc" formatName(args.serviceName)
+                        "ec-svc" svcName
                     }
                 }
                 template {
                     metadata {
-                        name formatName(args.serviceName)
+                        name svcName
                         labels {
-                            "ec-svc" formatName(args.serviceName)
+                            "ec-svc" svcName
                         }
                     }
                     spec{
@@ -395,12 +397,13 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
     String buildServicePayload(Map args, def deployedService){
 
         def json = new JsonBuilder()
+        String svcName = formatName(args.serviceName)
         def result = json {
             kind "Service"
             apiVersion "v1"
 
             metadata {
-                name formatName(args.serviceName)
+                name svcName
             }
             //Kubernetes plugin injects this service selector
             //to link the service to the pod that this
@@ -411,7 +414,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 this.addServiceParameters(delegate, args)
 
                 selector {
-                    "ec-svc" formatName(args.serviceName)
+                    "ec-svc" svcName
                 }
                 ports(args.port.collect { svcPort ->
                     [

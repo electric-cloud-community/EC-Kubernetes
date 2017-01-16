@@ -31,10 +31,18 @@
         <documentation>Description for the plugin configuration.</documentation>
     </formElement>
     <formElement>
+        <type>entry</type>
+        <label>The Kubernetes API Endpoint:</label>
+        <property>clusterEndpoint</property>
+        <required>0</required>
+        <documentation>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvble DNS name.</documentation>
+    </formElement>
+    <formElement>
         <type>credential</type>
         <label>Bearer Token of Kubernetes Cluster:</label>
         <property>credential</property>
         <required>1</required>
+        <passwordLabel>Kubernetes Bearer token:</passwordLabel>
         <credentialType>key</credentialType>
         <documentation>The bearer token related to a serviceAccount which has access to create resources in the Kubernetes cluster</documentation>
         <attachedAsParameterToStep>createAndAttachCredential</attachedAsParameterToStep>
