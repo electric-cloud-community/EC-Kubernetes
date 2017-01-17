@@ -67,7 +67,7 @@
                 # This is here because we cannot do publishArtifactVersion in dsl today
 
                 # delete artifact if it exists first
-                $commander-&gt;deleteArtifactVersion(&quot;com.electriccloud:EC-GoogleContainerEngine-Grapes:1.0.0&quot;);
+                $commander-&gt;deleteArtifactVersion(&quot;com.electriccloud:EC-Kubernetes-Grapes:1.0.0&quot;);
 
                 if ( $promoteAction eq &quot;promote&quot; ) {
 
@@ -75,11 +75,11 @@
                     my $am = new ElectricCommander::ArtifactManagement($commander);
                     my $artifactVersion = $am-&gt;publish({
                         groupId         =&gt; &quot;com.electriccloud&quot;,
-                        artifactKey     =&gt; &quot;EC-GoogleContainerEngine-Grapes&quot;,
+                        artifactKey     =&gt; &quot;EC-Kubernetes-Grapes&quot;,
                         version         =&gt; &quot;1.0.0&quot;,
                         includePatterns =&gt; &quot;**&quot;,
                         fromDirectory   =&gt; &quot;$pluginDir/lib/grapes&quot;,
-                        description =&gt; &quot;JARs that EC-GoogleContainerEngine plugin procedures depend on&quot;
+                        description =&gt; &quot;JARs that EC-Kubernetes plugin procedures depend on&quot;
                     });
 
                     # Print out the xml of the published artifactVersion.

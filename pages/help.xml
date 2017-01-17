@@ -127,7 +127,7 @@
                     <tbody>
                         <tr>
                             <td class="required">Service Name *</td>
-                            <td>The name of the service in Deploy that encapsulates the service to be deployed on the Google container cluster.</td>
+                            <td>The name of the service in Deploy that encapsulates the service to be deployed on the Kubernetes cluster.</td>
                         </tr>
                         <tr>
                             <td class="required">Service Projet Name *</td>
@@ -143,7 +143,7 @@
                         </tr>  
                         <tr>
                             <td class="required">Cluster name *</td>
-                            <td>The name of the cluster in Deploy that encapsulates the Google container cluster on which the service is to be deployed.</td>
+                            <td>The name of the cluster in Deploy that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
                         </tr>                        
                         <tr>
                             <td class="required">Cluster or environment project name</td>

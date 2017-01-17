@@ -11,8 +11,21 @@ def otherPluginName = args.otherPluginName
 
 def pluginKey = getProject("/plugins/$pluginName/project").pluginKey
 def pluginDir = getProperty("/projects/$pluginName/pluginDir").value
-
 def pluginCategory = 'Container Management'
+
+//List of procedure steps to which the plugin configuration credentials need to be attached
+def stepsWithAttachedCredentials = [
+		[
+				procedureName: 'Check Cluster',
+				stepName: 'checkCluster'
+		], [
+				procedureName: 'Deploy Service',
+				stepName: 'createOrUpdateDeployment'
+		], [
+				procedureName: 'Cleanup Cluster - Experimental',
+				stepName: 'cleanup'
+		]
+]
 project pluginName, {
 
 	ec_visibility = 'pickListOnly'
@@ -116,9 +129,4 @@ objTypes.each { type ->
 // Copy existing plugin configurations from the previous
 // version to this version. At the same time, also attach
 // the credentials to the required plugin procedure steps.
-upgrade(upgradeAction, pluginName, otherPluginName,
-		/*TODO: Add the list of procedure steps to which the plugin configuration credentials need to be attached.*/
-		[/*[
-			procedureName: 'Procedure Name',
-			stepName: 'step that needs the credentials to be attached'
-		 ],*/])
+upgrade(upgradeAction, pluginName, otherPluginName, stepsWithAttachedCredentials)

@@ -23,25 +23,4 @@
         <required>1</required>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
     </formElement> 
-    <formElement>
-        <type>entry</type>
-        <label>Container Cluster Name:</label>
-        <property>clusterName</property>
-        <required>1</required>
-        <documentation>The name of the cluster whose services and deployments need to be deleted.</documentation>
-    </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>Google Cloud Platform Project ID:</label>
-        <property>clusterProjectID</property>
-        <required>1</required>
-        <documentation>The Project ID for the Google Cloud Platform project that the cluster belongs to.</documentation>
-    </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>Master Zone:</label>
-        <property>masterZone</property>
-        <required>1</required>
-        <documentation>The primary zone for the cluster.</documentation>
-    </formElement>
 </editor>

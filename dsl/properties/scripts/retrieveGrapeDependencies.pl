@@ -21,7 +21,7 @@ retrieveGrapeDependencies.pl
 =head1 DESCRIPTION
 
 
-Retrieves artifacts published as artifact EC-GoogleContainerEngine-Grapes
+Retrieves artifacts published as artifact EC-Kubernetes-Grapes
 to the grape root directory configured with ec-groovy.
 
 =head1 METHODS
@@ -45,7 +45,7 @@ sub main {
     $ec->abortOnError(1);
 
     my $xpath = $ec->retrieveArtifactVersions({
-        artifactVersionName => 'com.electriccloud:EC-GoogleContainerEngine-Grapes:1.0.0'
+        artifactVersionName => 'com.electriccloud:EC-Kubernetes-Grapes:1.0.0'
     });
 
     # copy to the grape directory ourselves instead of letting
