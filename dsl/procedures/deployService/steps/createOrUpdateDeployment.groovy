@@ -1,4 +1,4 @@
-$[/myProject/scripts/helperClasses]
+$[/myProject/scripts/preamble]
 
 //// Input parameters
 String serviceName = '$[serviceName]'

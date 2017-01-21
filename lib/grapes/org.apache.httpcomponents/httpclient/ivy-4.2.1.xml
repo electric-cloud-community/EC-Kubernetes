@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="org.apache.httpcomponents" module="httpclient" revision="4.2.1" status="release" publication="20120630022423">
+	<info organisation="org.apache.httpcomponents"
+		module="httpclient"
+		revision="4.2.1"
+		status="release"
+		publication="20120629135423"
+	>
 		<description homepage="http://hc.apache.org/httpcomponents-client">
 		HttpComponents Client (base module)
 		</description>

@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="org.codehaus.groovy.modules.http-builder" module="http-builder" revision="0.7.1" status="release" publication="20140226000900">
-		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
+	<info organisation="org.codehaus.groovy.modules.http-builder"
+		module="http-builder"
+		revision="0.7.1"
+		status="release"
+		publication="20140225103908"
+	>
+		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
 		<description homepage="http://groovy.codehaus.org/modules/http-builder/">
 		A builder-style HTTP client API, including authentication, and extensible
         handling of common content-types such as JSON and XML. It is built on top of
@@ -33,7 +38,7 @@
 	<dependencies>
 		<dependency org="org.apache.httpcomponents" name="httpclient" rev="4.2.1" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
 		<dependency org="net.sf.json-lib" name="json-lib" rev="2.3" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)">
-			
+			<artifact name="json-lib" type="jar" ext="jar" conf="" m:classifier="jdk15"/>
 			<exclude org="org.jruby" module="jruby" name="*" type="*" ext="*" conf="" matcher="exact"/>
 			<exclude org="xmlunit" module="xmlunit" name="*" type="*" ext="*" conf="" matcher="exact"/>
 			<exclude org="xom" module="xom" name="*" type="*" ext="*" conf="" matcher="exact"/>

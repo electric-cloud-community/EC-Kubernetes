@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="commons-codec" module="commons-codec" revision="1.6" status="release" publication="20151028201238">
+	<info organisation="commons-codec"
+		module="commons-codec"
+		revision="1.6"
+		status="release"
+		publication="20111202183826"
+	>
 		<description homepage="http://commons.apache.org/codec/">
 		The codec package contains simple encoder and decoders for
      various formats such as Base64 and Hexadecimal.  In addition to these

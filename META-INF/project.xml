@@ -25,7 +25,7 @@
                 $pluginDir = File::Spec-&gt;catfile($commanderPluginDir, $pluginName);
             }
 
-            $logfile .= &quot;Plugin directory is $pluginDir&quot;;
+            $logfile .= &quot;Plugin directory is $pluginDir\n&quot;;
 
             $commander-&gt;setProperty(&quot;/plugins/$pluginName/project/pluginDir&quot;, {value=&gt;$pluginDir});
             $logfile .= &quot;Plugin Name: $pluginName\n&quot;;
@@ -40,6 +40,8 @@
             } else {  # Promotion from the command line
                 $dslFilePath = File::Spec-&gt;catfile($pluginDir, &quot;dsl&quot;, &quot;$promoteAction.groovy&quot;);
             }
+
+            $logfile .= &quot;Evaluating dsl file: $dslFilePath\n&quot;;
 
             open FILE, $dslFilePath or die &quot;Couldn't open file: $dslFilePath: $!&quot;;
             my $dsl = &lt;FILE&gt;;
@@ -91,11 +93,12 @@
                 }
             }
 
-            # Create output property
+            # Create output property for plugin setup debug logs
 
             my $nowString = localtime;
             $commander-&gt;setProperty( &quot;/plugins/$pluginName/project/logs/$nowString&quot;, { value =&gt; $logfile } );
 
+            die $errorMessage unless !$errorMessage
 
         </value>
       </property>

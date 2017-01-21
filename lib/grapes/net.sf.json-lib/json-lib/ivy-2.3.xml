@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="net.sf.json-lib" module="json-lib" revision="2.3" status="release" publication="20090712041040">
-		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
+	<info organisation="net.sf.json-lib"
+		module="json-lib"
+		revision="2.3"
+		status="release"
+		publication="20090711154040"
+	>
+		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
 		<description homepage="http://json-lib.sourceforge.net">
 		Java library for transforming beans, maps, collections, java
       arrays and XML to JSON.

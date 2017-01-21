@@ -1,86 +1,181 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="org.apache.httpcomponents"
-		module="httpclient"
-		revision="4.2.1"
-		status="release"
-		publication="20120630022423"
-	>
-		<description homepage="http://hc.apache.org/httpcomponents-client">
-		HttpComponents Client (base module)
-		</description>
-		<m:properties__maven.compile.target>1.5</m:properties__maven.compile.target>
-		<m:properties__maven.compile.deprecation>true</m:properties__maven.compile.deprecation>
-		<m:properties__maven.compile.source>1.5</m:properties__maven.compile.source>
-		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
-		<m:properties__maven.compile.optimize>true</m:properties__maven.compile.optimize>
-		<m:properties__project.reporting.outputEncoding>UTF-8</m:properties__project.reporting.outputEncoding>
-		<m:properties__api.comparison.version>4.1</m:properties__api.comparison.version>
-		<m:properties__ehcache.version>2.2.0</m:properties__ehcache.version>
-		<m:properties__memcached.version>2.6</m:properties__memcached.version>
-		<m:properties__slf4j.version>1.5.11</m:properties__slf4j.version>
-		<m:properties__commons-logging.version>1.1.1</m:properties__commons-logging.version>
-		<m:properties__commons-codec.version>1.6</m:properties__commons-codec.version>
-		<m:properties__junit.version>4.9</m:properties__junit.version>
-		<m:properties__mockito.version>1.8.5</m:properties__mockito.version>
-		<m:properties__httpcore.version>4.2.1</m:properties__httpcore.version>
-		<m:properties__easymock.version>2.5.2</m:properties__easymock.version>
-		<m:properties__minSeverity>info</m:properties__minSeverity>
-		<m:properties__maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</m:properties__maven.build.timestamp.format>
-		<m:properties__hc.project-info.version>2.4</m:properties__hc.project-info.version>
-		<m:properties__implementation.build>${scmBranch}@r${buildNumber}; ${maven.build.timestamp}</m:properties__implementation.build>
-		<m:properties__clover.version>2.6.3</m:properties__clover.version>
-		<m:properties__hc.surefire-report.version>2.9</m:properties__hc.surefire-report.version>
-		<m:properties__hc.clirr.version>2.3</m:properties__hc.clirr.version>
-		<m:properties__hc.javadoc.version>2.8</m:properties__hc.javadoc.version>
-		<m:properties__hc.jxr.version>2.3</m:properties__hc.jxr.version>
-		<m:maven.plugins>null__maven-compiler-plugin__null|null__maven-jar-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|null__maven-compiler-plugin__null|null__maven-jar-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.httpcomponents__maven-notice-plugin__null|null__maven-jar-plugin__null|null__maven-source-plugin__null|null__maven-javadoc-plugin__null|null__maven-site-plugin__null|null__maven-assembly-plugin__null|null__maven-antrun-plugin__null|com.agilejava.docbkx__docbkx-maven-plugin__null|null__maven-resources-plugin__null|org.codehaus.mojo__clirr-maven-plugin__null|org.apache.maven.plugins__maven-release-plugin__null|null__maven-compiler-plugin__null|null__maven-jar-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|null__maven-compiler-plugin__null|null__maven-jar-plugin__null|org.apache.maven.plugins__maven-site-plugin__null|org.apache.httpcomponents__maven-notice-plugin__null|null__maven-jar-plugin__null|null__maven-source-plugin__null|null__maven-javadoc-plugin__null|null__maven-site-plugin__null|null__maven-assembly-plugin__null|null__maven-antrun-plugin__null|com.agilejava.docbkx__docbkx-maven-plugin__null|null__maven-resources-plugin__null|org.codehaus.mojo__clirr-maven-plugin__null|org.apache.maven.plugins__maven-release-plugin__null|org.apache.maven.plugins__maven-compiler-plugin__null|null__maven-surefire-plugin__null|null__maven-jar-plugin__null|com.atlassian.maven.plugins__maven-clover2-plugin__null</m:maven.plugins>
-		<m:dependency.management__org.apache.httpcomponents__httpcore__version>4.2.1</m:dependency.management__org.apache.httpcomponents__httpcore__version>
-		<m:dependency.management__commons-logging__commons-logging__version>1.1.1</m:dependency.management__commons-logging__commons-logging__version>
-		<m:dependency.management__commons-codec__commons-codec__version>1.6</m:dependency.management__commons-codec__commons-codec__version>
-		<m:dependency.management__net.sf.ehcache__ehcache-core__version>2.2.0</m:dependency.management__net.sf.ehcache__ehcache-core__version>
-		<m:dependency.management__org.slf4j__slf4j-jcl__version>1.5.11</m:dependency.management__org.slf4j__slf4j-jcl__version>
-		<m:dependency.management__spy__spymemcached__version>2.6</m:dependency.management__spy__spymemcached__version>
-		<m:dependency.management__junit__junit__version>4.9</m:dependency.management__junit__junit__version>
-		<m:dependency.management__junit__junit__scope>test</m:dependency.management__junit__junit__scope>
-		<m:dependency.management__org.mockito__mockito-core__version>1.8.5</m:dependency.management__org.mockito__mockito-core__version>
-		<m:dependency.management__org.mockito__mockito-core__scope>test</m:dependency.management__org.mockito__mockito-core__scope>
-		<m:dependency.management__org.easymock__easymock__version>2.5.2</m:dependency.management__org.easymock__easymock__version>
-		<m:dependency.management__org.easymock__easymock__scope>test</m:dependency.management__org.easymock__easymock__scope>
-		<m:dependency.management__org.easymock__easymockclassextension__version>2.5.2</m:dependency.management__org.easymock__easymockclassextension__version>
-		<m:dependency.management__org.easymock__easymockclassextension__scope>test</m:dependency.management__org.easymock__easymockclassextension__scope>
-	</info>
-	<configurations>
-		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
-		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
-		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
-		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
-		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
-		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
-		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
-		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
-		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
-		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
-	</configurations>
-	<publications>
-		<artifact name="httpclient" type="jar" ext="jar" conf="master"/>
-		<artifact name="httpclient" type="source" ext="jar" conf="sources" m:classifier="sources"/>
-	</publications>
-	<dependencies>
-		<dependency org="org.apache.httpcomponents" name="httpcore" rev="4.2.1" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
-		<dependency org="commons-logging" name="commons-logging" rev="1.1.1" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
-		<dependency org="commons-codec" name="commons-codec" rev="1.6" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
-		<dependency org="junit" name="junit" rev="4.9" force="true" conf="test->runtime(*),master(*)"/>
-		<dependency org="org.mockito" name="mockito-core" rev="1.8.5" force="true" conf="test->runtime(*),master(*)"/>
-		<override org="commons-codec" module="commons-codec" matcher="exact" rev="1.6"/>
-		<override org="spy" module="spymemcached" matcher="exact" rev="2.6"/>
-		<override org="net.sf.ehcache" module="ehcache-core" matcher="exact" rev="2.2.0"/>
-		<override org="org.slf4j" module="slf4j-jcl" matcher="exact" rev="1.5.11"/>
-		<override org="org.easymock" module="easymock" matcher="exact" rev="2.5.2"/>
-		<override org="junit" module="junit" matcher="exact" rev="4.9"/>
-		<override org="commons-logging" module="commons-logging" matcher="exact" rev="1.1.1"/>
-		<override org="org.apache.httpcomponents" module="httpcore" matcher="exact" rev="4.2.1"/>
-		<override org="org.mockito" module="mockito-core" matcher="exact" rev="1.8.5"/>
-		<override org="org.easymock" module="easymockclassextension" matcher="exact" rev="2.5.2"/>
-	</dependencies>
-</ivy-module>
+<!--
+   ====================================================================
+   Licensed to the Apache Software Foundation (ASF) under one
+   or more contributor license agreements.  See the NOTICE file
+   distributed with this work for additional information
+   regarding copyright ownership.  The ASF licenses this file
+   to you under the Apache License, Version 2.0 (the
+   "License"); you may not use this file except in compliance
+   with the License.  You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing,
+   software distributed under the License is distributed on an
+   "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+   KIND, either express or implied.  See the License for the
+   specific language governing permissions and limitations
+   under the License.
+   ====================================================================
+
+   This software consists of voluntary contributions made by many
+   individuals on behalf of the Apache Software Foundation.  For more
+   information on the Apache Software Foundation, please see
+   <http://www.apache.org />.
+ -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.apache.httpcomponents</groupId>
+    <artifactId>httpcomponents-client</artifactId>
+    <version>4.2.1</version>
+  </parent>
+  <artifactId>httpclient</artifactId>
+  <name>HttpClient</name>
+  <description>
+   HttpComponents Client (base module)
+  </description>
+  <url>http://hc.apache.org/httpcomponents-client</url>
+  <packaging>jar</packaging>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-codec</groupId>
+      <artifactId>commons-codec</artifactId>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven.compile.source>1.5</maven.compile.source>
+    <maven.compile.target>1.5</maven.compile.target>
+    <maven.compile.optimize>true</maven.compile.optimize>
+    <maven.compile.deprecation>true</maven.compile.deprecation>
+  </properties>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <includes>
+            <include>**/*.properties</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${maven.compile.source}</source>
+          <target>${maven.compile.target}</target>
+          <optimize>${maven.compile.optimize}</optimize>
+          <showDeprecations>${maven.compile.deprecation}</showDeprecations>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>com.atlassian.maven.plugins</groupId>
+        <artifactId>maven-clover2-plugin</artifactId>
+        <configuration>
+          <flushPolicy>threaded</flushPolicy>
+          <flushInterval>100</flushInterval>
+          <targetPercentage>50%</targetPercentage>
+        </configuration>
+        <executions>
+          <execution>
+            <id>site</id>
+            <phase>pre-site</phase>
+            <goals>
+              <goal>instrument</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <reporting>
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+         <version>${hc.javadoc.version}</version>
+        <configuration>
+          <!-- reduce console output. Can override with -Dquiet=false -->
+          <quiet>true</quiet>
+          <source>1.5</source>
+          <links>
+            <link>http://download.oracle.com/javase/1.5.0/docs/api/</link>
+            <link>http://hc.apache.org/httpcomponents-core-ga/httpcore/apidocs/</link>
+          </links>
+        </configuration>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>javadoc</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+
+      <plugin>
+        <groupId>com.atlassian.maven.plugins</groupId>
+        <artifactId>maven-clover2-plugin</artifactId>
+        <version>${clover.version}</version>
+        <configuration>
+          <jdk>1.5</jdk>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-jxr-plugin</artifactId>
+         <version>${hc.jxr.version}</version>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+         <version>${hc.surefire-report.version}</version>
+      </plugin>
+
+    </plugins>
+  </reporting>
+
+</project>

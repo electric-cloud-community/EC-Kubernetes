@@ -17,7 +17,7 @@ else {
     $pluginDir = File::Spec->catfile($commanderPluginDir, $pluginName);
 }
 
-$logfile .= "Plugin directory is $pluginDir";
+$logfile .= "Plugin directory is $pluginDir\n";
 
 $commander->setProperty("/plugins/$pluginName/project/pluginDir", {value=>$pluginDir});
 $logfile .= "Plugin Name: $pluginName\n";
@@ -32,6 +32,8 @@ if(defined $ENV{QUERY_STRING}) { # Promotion through UI
 } else {  # Promotion from the command line
     $dslFilePath = File::Spec->catfile($pluginDir, "dsl", "$promoteAction.groovy");
 }
+
+$logfile .= "Evaluating dsl file: $dslFilePath\n";
 
 open FILE, $dslFilePath or die "Couldn't open file: $dslFilePath: $!";
 my $dsl = <FILE>;
@@ -84,7 +86,8 @@ if ( !$errorMessage ) {
     }
 }
 
-# Create output property
-
+# Create output property for plugin setup debug logs
 my $nowString = localtime;
 $commander->setProperty( "/plugins/$pluginName/project/logs/$nowString", { value => $logfile } );
+
+die $errorMessage unless !$errorMessage

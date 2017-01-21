@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="xml-resolver" module="xml-resolver" revision="1.2" status="release" publication="20080831171501">
+	<info organisation="xml-resolver"
+		module="xml-resolver"
+		revision="1.2"
+		status="release"
+		publication="20061222053752"
+	>
 		<description homepage="http://xml.apache.org/commons/components/resolver/">
 		xml-commons provides an Apache-hosted set of DOM, SAX, and 
     JAXP interfaces for use in other xml-based projects. Our hope is that we 
