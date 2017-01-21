@@ -28,24 +28,40 @@ to the grape root directory configured with ec-groovy.
 
 =cut
 
-use strict;
-use warnings;
-
 use File::Copy::Recursive qw(rcopy);
 use File::Path;
-
 use ElectricCommander;
 
+use warnings;
+use strict;
 $|=1;
 
-main();
 
-sub main {
+$::gAdditionalArtifactVersion = "$[additionalArtifactVersion]";
+
+sub main() {
     my $ec = ElectricCommander->new();
     $ec->abortOnError(1);
 
+    retrieveGrapeDependency($ec, 'com.electriccloud:EC-Kubernetes-Grapes:1.0.0');
+    if ($::gAdditionalArtifactVersion ne '') {
+        retrieveGrapeDependency($ec, $::gAdditionalArtifactVersion);
+    }
+}
+
+########################################################################
+# retrieveGrapeDependency - Retrieves the artifact version and copies it
+# to the grape directory used by ec-groovy for @Grab dependencies
+#
+# Arguments:
+#   -ec
+#   -artifactVersion
+########################################################################
+sub retrieveGrapeDependency($){
+    my ($ec, $artifactVersion) = @_;
+
     my $xpath = $ec->retrieveArtifactVersions({
-        artifactVersionName => 'com.electriccloud:EC-Kubernetes-Grapes:1.0.0'
+        artifactVersionName => $artifactVersion
     });
 
     # copy to the grape directory ourselves instead of letting
@@ -63,6 +79,10 @@ sub main {
     die "ERROR: Cannot create target directory" unless( -e $grapesDir );
 
     rcopy( $dir, $grapesDir) or die "Copy failed: $!";
-    print "Retrieved and copied grape dependencies to $grapesDir";
+    print "Retrieved and copied grape dependencies from $dir to $grapesDir";
 
 }
+
+main();
+
+1;

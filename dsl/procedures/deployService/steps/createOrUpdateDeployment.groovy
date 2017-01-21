@@ -18,7 +18,7 @@ if (!resultsPropertySheet) {
     resultsPropertySheet = '/myParent/parent'
 }
 
-//// -- Driverl scrip logic to provision cluster -- //
+//// -- Driver script logic to provision cluster -- //
 
 EFClient efClient = new EFClient()
 
@@ -32,7 +32,7 @@ def configName = clusterParameters.config
 def pluginProjectName = '$[/myProject/projectName]'
 
 def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
-String accessToken = 'Bearer '+pluginConfig.credential.password
+String accessToken = 'Bearer '+ pluginConfig.credential.password
 def clusterEndpoint = pluginConfig.clusterEndpoint //clusterParameters.clusterURL
 
 KubernetesClient client = new KubernetesClient()

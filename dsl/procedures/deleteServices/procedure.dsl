@@ -7,13 +7,17 @@ procedure 'Cleanup Cluster - Experimental',
     property 'standardStepPicker', value: false
 
 	step 'setup',
-    	  command: new File(pluginDir, 'dsl/properties/scripts/retrieveGrapeDependencies.pl').text,
-    	  errorHandling: 'failProcedure',
-    	  exclusiveMode: 'none',
-    	  postProcessor: 'postp',
-    	  releaseMode: 'none',
-    	  shell: 'ec-perl',
-    	  timeLimitUnits: 'minutes'
+      subproject: '',
+      subprocedure: 'Setup',
+      command: null,
+      errorHandling: 'failProcedure',
+      exclusiveMode: 'none',
+      postProcessor: 'postp',
+      releaseMode: 'none',
+      timeLimitUnits: 'minutes', {
+
+    	  actualParameter 'additionalArtifactVersion', ''
+    }
 
 	step 'cleanup',
 	  command: new File(pluginDir, 'dsl/procedures/deleteServices/steps/deleteServices.groovy').text,
