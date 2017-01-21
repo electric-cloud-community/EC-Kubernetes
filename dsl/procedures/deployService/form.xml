@@ -65,4 +65,11 @@
         <required>0</required>
         <documentation>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</documentation>
     </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Results Property Sheet:</label>
+        <property>resultsPropertySheet</property>
+        <required>0</required>
+        <documentation>Name of the property sheet where the output properties for the deployed service will be saved. If not specified, will default to '/myParent/parent'.</documentation>
+    </formElement>
 </editor>
