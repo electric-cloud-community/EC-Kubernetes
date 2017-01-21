@@ -1,4 +1,4 @@
-$[/myProject/scripts/helperClasses]
+$[/myProject/scripts/preamble]
 
 def pluginProjectName = '$[/myProject/projectName]'
 // Input parameters

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="xerces" module="xercesImpl" revision="2.9.1" status="release" publication="20160207225836">
+	<info organisation="xerces"
+		module="xercesImpl"
+		revision="2.9.1"
+		status="release"
+		publication="20081001151919"
+	>
 		<description homepage="http://xerces.apache.org/xerces2-j">
 		Xerces2 is the next generation of high performance, fully compliant XML parsers in the
     Apache Xerces family. This new version of Xerces introduces the Xerces Native Interface (XNI),

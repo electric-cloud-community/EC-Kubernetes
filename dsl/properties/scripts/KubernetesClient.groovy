@@ -1,29 +1,3 @@
-@Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' )
-@Grab(group='net.sf.json-lib', module='json-lib', version='2.3', classifier = 'jdk15') 
-
-import groovy.json.JsonBuilder
-import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
-import groovyx.net.http.HTTPBuilder
-import groovyx.net.http.Method
-
-import static groovyx.net.http.ContentType.JSON
-import static groovyx.net.http.Method.DELETE
-import static groovyx.net.http.Method.GET
-import static groovyx.net.http.Method.POST
-import static groovyx.net.http.Method.PUT
-
-import static Logger.*
-
-class Logger {
-    static final Integer DEBUG = 1
-    static final Integer INFO = 2
-    static final Integer WARNING = 3
-    static final Integer ERROR = 4
-    static Integer logLevel = DEBUG
-}
-
-
 public class KubernetesClient extends BaseClient {
 
     /**
@@ -34,14 +8,11 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
-        def response =  doHttpGet(clusterEndPoint,
+        doHttpGet(clusterEndPoint,
                 "/apis",
                 accessToken, /*failOnErrorCode*/ false)
-        response.status == 200 ? response.data : null
-
     }
 
-    // Need to check if accessToken would suffice or we would need user/password
     /**
      * Retrieves the Deployment instance from Kubernetes cluster.
      * Returns null if no Deployment instance by the given name is found.
@@ -99,6 +70,39 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
+    def getDeployedServiceEndpoint(String clusterEndPoint, def serviceDetails, String accessToken) {
+
+        def lbEndpoint
+        def elapsedTime = 0;
+        def timeInSeconds = 5*60
+        String serviceName = formatName(serviceDetails.serviceName)
+        while (elapsedTime <= timeInSeconds) {
+            def before = System.currentTimeMillis()
+            Thread.sleep(10*1000)
+
+            def deployedService = getService(clusterEndPoint, serviceName, accessToken)
+            def lbIngress = deployedService?.status?.loadBalancer?.ingress.find {
+                it.ip != null || it.hostname != null
+            }
+
+            if (lbIngress) {
+                lbEndpoint = lbIngress.ip?:lbIngress.hostname
+                break
+            }
+            logger INFO, "Waiting for service status to publish loadbalancer ingress... \nElapsedTime: $elapsedTime seconds"
+
+            def now = System.currentTimeMillis()
+            elapsedTime = elapsedTime + (now - before)/1000
+        }
+
+        if (!lbEndpoint) {
+            logger INFO, "Loadbalancer ingress not published yet. Defaulting to specified loadbalancer IP."
+            def value = getServiceParameter(serviceDetails, 'loadBalancerIP')
+            lbEndpoint = value
+        }
+        lbEndpoint
+    }
+
 def createOrUpdateSecret(def secretName, def username, def password, def repoBaseUrl,
                          String clusterEndPoint, String accessToken){
         def existingSecret = getSecret(secretName, clusterEndPoint, accessToken)
@@ -121,7 +125,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                             ['Authorization' : accessToken],
                             /*failOnErrorCode*/ true,
                             secret)
-                }        
+                }
     }
 
     def getSecret(def secretName, def clusterEndPoint, def accessToken) {
@@ -136,8 +140,8 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
 
     def buildSecretPayload(def secretName, def username, def password, def repoBaseUrl){
         def encodedCreds = (username+":"+password).bytes.encodeBase64().toString()
-        def dockerCfgData = ["${repoBaseUrl}": [ username: username, 
-                                                password: password, 
+        def dockerCfgData = ["${repoBaseUrl}": [ username: username,
+                                                password: password,
                                                 email: "none",
                                                 auth: encodedCreds]
                             ]
@@ -147,12 +151,12 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                        kind: "Secret",
                        metadata: [name: secretName],
                        data: [".dockercfg": dockerCfgEnoded],
-                       type: "kubernetes.io/dockercfg"]        
+                       type: "kubernetes.io/dockercfg"]
 
         def secretJson = new JsonBuilder(secret)
         return secretJson.toPrettyString()
     }
-     
+
     def constructSecretName(String imageUrl, String username){
         def imageDetails = imageUrl.tokenize('/')
         if (imageDetails.size() < 2) {
@@ -194,7 +198,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         def deploymentName = formatName(serviceDetails.serviceName)
         def existingDeployment = getDeployment(clusterEndPoint, deploymentName, accessToken)
         def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
-        println deployment
+        logger DEBUG, "Deployment payload:\n $deployment"
 
 
         if (OFFLINE) return null
@@ -220,32 +224,15 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
 
     }
 
-    Object getJsonFromXML(Object xmlData){
-        if(!xmlData){
-            return []
-        }
-        def parsed
-
-        try {
-            parsed = new JsonSlurper().parseText(xmlData)
-        } catch (Exception e) {
-            logger(ERROR, "Cannot parse mount points json: $json")
-            System.exit(-1)
-        }
-        if (!(parsed instanceof List)) {
-                parsed = [ parsed ]
-            }
-        parsed
-    }
-
-    def convertVolumes(xmlData){
-        def jsonData = getJsonFromXML(xmlData)
+    def convertVolumes(data){
+        def jsonData = parseJsonToList(data)
         def result = []
         for (item in jsonData){
+            def name = formatName(item.name)
             if(item.hostPath){
-                result << [name: formatName(item.name), hostPath: [item.hostPath]]
+                result << [name: name, hostPath: [item.hostPath]]
             } else {
-                result << [name: formatName(item.name), emptyDir: {}]
+                result << [name: name, emptyDir: {}]
             }
         }
         return (new JsonBuilder(result))
@@ -255,6 +242,10 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
 
     String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
 
+        if (!args.defaultCapacity) {
+            args.defaultCapacity = 1
+        }
+
         def json = new JsonBuilder()
         //Get the message calculation out of the way
         int maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
@@ -262,12 +253,12 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
 
         def volumeData = convertVolumes(args.volumes)
-        String svcName = formatName(args.serviceName)
+        def serviceName = formatName(args.serviceName)
         def result = json {
             kind "Deployment"
             apiVersion "extensions/v1beta1"
             metadata {
-                name svcName
+                name serviceName
             }
             spec {
                 replicas args.defaultCapacity.toInteger()
@@ -279,14 +270,14 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 }
                 selector {
                     matchLabels {
-                        "ec-svc" svcName
+                        "ec-svc" serviceName
                     }
                 }
                 template {
                     metadata {
-                        name svcName
+                        name serviceName
                         labels {
-                            "ec-svc" svcName
+                            "ec-svc" serviceName
                         }
                     }
                     spec{
@@ -296,7 +287,8 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                                 limits.memory = "${svcContainer.memoryLimit}M"
                             }
                             if (svcContainer.cpuLimit) {
-                                limits.cpu = svcContainer.cpuLimit
+                                Integer cpu = convertCpuToMilliCpu(svcContainer.cpuLimit.toFloat())
+                                limits.cpu = "${cpu}m"
                             }
 
                             def requests = [:]
@@ -304,7 +296,8 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                                 requests.memory = "${svcContainer.memorySize}M"
                             }
                             if (svcContainer.cpuCount) {
-                                requests.cpu = svcContainer.cpuCount
+                                Integer cpu = convertCpuToMilliCpu(svcContainer.cpuCount.toFloat())
+                                requests.cpu = "${cpu}m"
                             }
 
                             def containerResources = [:]
@@ -317,7 +310,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
 
                             [
                                     name: formatName(svcContainer.containerName),
-                                    image: "${svcContainer.imageName}:${svcContainer.imageVersion}",
+                                    image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
                                     command: svcContainer.entryPoint?.split(','),
                                     args: svcContainer.command?.split(','),
                                     ports: svcContainer.port?.collect { port ->
@@ -327,14 +320,13 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                                                 protocol: "TCP"
                                         ]
                                     },
-                                    volumeMounts: (getJsonFromXML(svcContainer.volumeMounts)).collect { mount ->
+                                    volumeMounts: (parseJsonToList(svcContainer.volumeMounts)).collect { mount ->
                                                         [
                                                             name: formatName(mount.name),
                                                             mountPath: mount.mountPath
                                                         ]
 
                                         },
-                                    //TODO: handle null
                                     env: svcContainer.environmentVariable?.collect { envVar ->
                                         [
                                                 name: envVar.environmentVariableName,
@@ -396,14 +388,14 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
 
     String buildServicePayload(Map args, def deployedService){
 
+        def serviceName = formatName(args.serviceName)
         def json = new JsonBuilder()
-        String svcName = formatName(args.serviceName)
         def result = json {
             kind "Service"
             apiVersion "v1"
 
             metadata {
-                name svcName
+                name serviceName
             }
             //Kubernetes plugin injects this service selector
             //to link the service to the pod that this
@@ -414,13 +406,13 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 this.addServiceParameters(delegate, args)
 
                 selector {
-                    "ec-svc" svcName
+                    "ec-svc" serviceName
                 }
                 ports(args.port.collect { svcPort ->
                     [
                             port: svcPort.listenerPort.toInteger(),
                             //name is required for Kubernetes if more than one port is specified so auto-assign
-                            name: svcPort.portName,
+                            name: formatName(svcPort.portName),
                             targetPort: svcPort.subport?:svcPort.listenerPort.toInteger(),
                             // default to TCP which is the default protocol if not set
                             //protocol: svcPort.protocol?: "TCP"
@@ -439,182 +431,8 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         return (new JsonBuilder(payload)).toPrettyString()
     }
 
-}
-
-public class EFClient extends BaseClient {
-
-    def getServerUrl() {
-        def commanderServer = System.getenv('COMMANDER_SERVER')
-        def secure = Integer.getInteger("COMMANDER_SECURE", 0).intValue()
-        def protocol = secure ? "https" : "http"
-        def commanderPort = secure ? System.getenv("COMMANDER_HTTPS_PORT") : System.getenv("COMMANDER_PORT")
-        def url = "$protocol://$commanderServer:$commanderPort"
-        System.out.println(url)
-        url
-    }
-
-    Object doHttpGet(String requestUri, boolean failOnErrorCode = true, def query = null) {
-        def sessionId = System.getenv('COMMANDER_SESSIONID')
-        doHttpRequest(GET, getServerUrl(), requestUri, ['Cookie': "sessionId=$sessionId"],
-                failOnErrorCode, /*requestBody*/ null, query)
-    }
-
-    Object doHttpPost(String requestUri, Object requestBody, boolean failOnErrorCode = true) {
-        def sessionId = System.getenv('COMMANDER_SESSIONID')
-        doHttpRequest(POST, getServerUrl(), requestUri, ['Cookie': "sessionId=$sessionId"], failOnErrorCode, requestBody)
-    }
-
-    def getConfigValues(def configPropertySheet, def config, def pluginProjectName) {
-
-        // Get configs property sheet
-        def result = doHttpGet("/rest/v1.0/projects/$pluginProjectName/$configPropertySheet", /*failOnErrorCode*/ false)
-
-        def configPropSheetId = result.data?.property?.propertySheetId
-        if (!configPropSheetId) {
-            throw new RuntimeException("No plugin configurations exist!")
-        }
-
-        result = doHttpGet("/rest/v1.0/propertySheets/$configPropSheetId", /*failOnErrorCode*/ false)
-        // Get the property sheet id of the config from the result
-        def configProp = result.data.propertySheet.property.find{
-            it.propertyName == config
-        }
-
-        if (!configProp) {
-            throw new RuntimeException("Configuration $config does not exist!")
-        }
-
-        result = doHttpGet("/rest/v1.0/propertySheets/$configProp.propertySheetId")
-
-        def values = result.data.propertySheet.property.collectEntries{
-            [(it.propertyName): it.value]
-        }
-
-        logger(INFO, "Config values: " + values)
-
-        def cred = getCredentials(config)
-        values << [credential: [userName: cred.userName, password: cred.password]]
-
-        //Set the log level using the plugin configuration setting
-        logLevel = (values.logLevel?: INFO).toInteger()
-
-        values
-    }
-
-    def getProvisionClusterParameters(String clusterName,
-                                      String clusterOrEnvProjectName,
-                                      String environmentName) {
-
-        def partialUri = environmentName ?
-                "projects/$clusterOrEnvProjectName/environments/$environmentName/clusters/$clusterName" :
-                "projects/$clusterOrEnvProjectName/clusters/$clusterName"
-
-        def result = doHttpGet("/rest/v1.0/$partialUri")
-
-        def params = result.data.cluster?.provisionParameters?.parameterDetail
-
-        if(!params) {
-            handleError("No provision parameters found for cluster $clusterName!")
-        }
-
-        def provisionParams = params.collectEntries {
-            [(it.parameterName): it.parameterValue]
-        }
-
-        logger DEBUG, "Cluster params from Deploy: $provisionParams"
-
-        return provisionParams
-    }
-
-    def getServiceDeploymentDetails(String serviceName,
-                                    String serviceProjectName,
-                                    String applicationName,
-                                    String applicationRevisionId,
-                                    String clusterName,
-                                    String clusterProjectName,
-                                    String environmentName) {
-
-        def partialUri = applicationName ?
-                "projects/$serviceProjectName/applications/$applicationName/services/$serviceName" :
-                "projects/$serviceProjectName/services/$serviceName"
-        def queryArgs = [
-                request: 'getServiceDeploymentDetails',
-                clusterName: clusterName,
-                clusterProjectName: clusterProjectName,
-                environmentName: environmentName,
-                applicationEntityRevisionId: applicationRevisionId
-        ]
-        def result = doHttpGet("/rest/v1.0/$partialUri", /*failOnErrorCode*/ true, queryArgs)
-
-        def svcDetails = result.data.service
-        logger DEBUG, "Service Details: " + JsonOutput.toJson(svcDetails)
-
-        svcDetails
-    }
-
-    def getCredentials(def credentialName) {
-        def jobStepId = '$[/myJobStep/jobStepId]'
-        // Use the new REST mapping for getFullCredential with 'credentialPaths'
-        // which works around the restMapping matching issue with the credentialName being a path.
-        def result = doHttpGet("/rest/v1.0/jobSteps/$jobStepId/credentialPaths/$credentialName")
-        result.data.credential
-    }
-
-}
-
-public class BaseClient {
-
-    //Meant for use during development if there is no internet access
-    //in which case Kubernetes calls will become no-ops.
-    final boolean OFFLINE = false
-
-    Object doHttpRequest(Method method, String requestUrl,
-                         String requestUri, def requestHeaders,
-                         boolean failOnErrorCode = true,
-                         Object requestBody = null,
-                         def queryArgs = null) {
-
-        logger DEBUG, "requestUrl: $requestUrl"
-        logger DEBUG, "method: $method"
-        logger DEBUG, "URI: $requestUri"
-        if (queryArgs) {
-            logger DEBUG, "queryArgs: '$queryArgs'"
-        }
-        logger DEBUG, "URL: '$requestUrl$requestUri'"
-        if (requestBody) logger DEBUG, "Payload: $requestBody"
-
-        def http = new HTTPBuilder(requestUrl)
-        http.ignoreSSLIssues()
-
-        http.request(method, JSON) {
-            if (requestUri) {
-                uri.path = requestUri
-            }
-            if (queryArgs) {
-                uri.query = queryArgs
-            }
-            headers = requestHeaders
-            body = requestBody
-
-            response.success = { resp, json ->
-                logger DEBUG, "request was successful $resp.statusLine.statusCode $json"
-                [statusLine: resp.statusLine,
-                 status: resp.status,
-                 data      : json]
-            }
-
-            response.failure = { resp, reader ->
-                if (failOnErrorCode) {
-                    logger ERROR, "Error details: $reader"
-                    handleError("Request failed with $resp.statusLine")
-                } else {
-                    logger INFO, "Response: $reader"
-                }
-
-                [statusLine: resp.statusLine,
-                 status: resp.status]
-            }
-        }
+    def convertCpuToMilliCpu(float cpu) {
+        return cpu * 1000 as int
     }
 
     Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
@@ -626,18 +444,7 @@ public class BaseClient {
                 failOnErrorCode)
     }
 
-    Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs) {
-
-        doHttpRequest(GET,
-                requestUrl,
-                requestUri,
-                ['Authorization' : accessToken],
-                failOnErrorCode,
-                null,
-                queryArgs)
-    }
-
-    Object doHttpPost(String requestUrl, String requestUri, String accessToken, Object requestBody, boolean failOnErrorCode = true) {
+    Object doHttpPost(String requestUrl, String requestUri, String accessToken, String requestBody, boolean failOnErrorCode = true) {
 
         doHttpRequest(POST,
                 requestUrl,
@@ -647,7 +454,7 @@ public class BaseClient {
                 requestBody)
     }
 
-    Object doHttpPut(String requestUrl, String requestUri, String accessToken, Object requestBody, boolean failOnErrorCode = true) {
+    Object doHttpPut(String requestUrl, String requestUri, String accessToken, String requestBody, boolean failOnErrorCode = true) {
 
         doHttpRequest(PUT,
                 requestUrl,
@@ -666,48 +473,4 @@ public class BaseClient {
                 failOnErrorCode)
     }
 
-    def mergeObjs(def dest, def src) {
-        //Converting both object instances to a map structure
-        //to ease merging the two data structures
-        logger DEBUG, "Source to merge: " + JsonOutput.toJson(src)
-        def result = mergeJSON((new JsonSlurper()).parseText((new JsonBuilder(dest)).toString()),
-                (new JsonSlurper()).parseText((new JsonBuilder(src)).toString()))
-        logger DEBUG, "After merge: " + JsonOutput.toJson(result)
-        return result
-    }
-
-    def mergeJSON(def dest, def src) {
-        src.each { prop, value ->
-            logger DEBUG, "Has property $prop? value:" + dest[prop]
-            if(dest[prop] != null && dest[prop] instanceof Map) {
-                mergeJSON(dest[prop], value)
-            } else {
-                dest[prop] = value
-            }
-        }
-        return dest
-    }
-
-    /**
-     * Based on plugin parameter value truthiness
-     * True if value == true or value == '1'
-     */
-    boolean toBoolean(def value) {
-        return value != null && (value == true || value == 'true' || value == 1 || value == '1')
-    }
-
-    def handleError (String msg) {
-        println "ERROR: $msg"
-        System.exit(-1)
-    }
-
-    def logger(Integer level, def message) {
-        if ( level >= logLevel ) {
-            println message
-        }
-    }
-
-    String formatName(String name){
-        return name.replaceAll(':', '-').replaceAll(' ', '-').replaceAll('_', '-').toLowerCase()
-    }
 }

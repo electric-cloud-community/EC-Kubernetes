@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="commons-lang" module="commons-lang" revision="2.4" status="release" publication="20160120163101">
+	<info organisation="commons-lang"
+		module="commons-lang"
+		revision="2.4"
+		status="release"
+		publication="20080318224228"
+	>
 		<description homepage="http://commons.apache.org/lang/">
 		Commons Lang, a package of Java utility classes for the
         classes that are in java.lang&apos;s hierarchy, or are considered to be so

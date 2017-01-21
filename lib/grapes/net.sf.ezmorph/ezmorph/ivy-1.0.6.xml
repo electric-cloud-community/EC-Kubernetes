@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="net.sf.ezmorph" module="ezmorph" revision="1.0.6" status="release" publication="20160530140824">
-		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
+	<info organisation="net.sf.ezmorph"
+		module="ezmorph"
+		revision="1.0.6"
+		status="release"
+		publication="20081226045237"
+	>
+		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
 		<description homepage="http://ezmorph.sourceforge.net">
 		Simple java library for transforming an Object to another Object.
 		</description>

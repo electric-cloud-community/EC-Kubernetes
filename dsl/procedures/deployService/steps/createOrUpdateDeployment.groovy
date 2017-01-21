@@ -1,4 +1,4 @@
-$[/myProject/scripts/helperClasses]
+$[/myProject/scripts/preamble]
 
 //// Input parameters
 String serviceName = '$[serviceName]'
@@ -13,7 +13,12 @@ if (!clusterOrEnvProjectName) {
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
 
-//// -- Driverl script logic to provision cluster -- //
+String resultsPropertySheet = '$[resultsPropertySheet]'
+if (!resultsPropertySheet) {
+    resultsPropertySheet = '/myParent/parent'
+}
+
+//// -- Driverl scrip logic to provision cluster -- //
 
 EFClient efClient = new EFClient()
 
@@ -44,3 +49,13 @@ def serviceDetails = efClient.getServiceDeploymentDetails(
 client.createOrUpdateService(clusterEndpoint, serviceDetails, accessToken)
 
 client.createOrUpdateDeployment(clusterEndpoint, serviceDetails, accessToken)
+
+def serviceEndpoint = client.getDeployedServiceEndpoint(clusterEndpoint, serviceDetails, accessToken)
+
+if (serviceEndpoint) {
+    serviceDetails.port?.each { port ->
+        String portName = port.portName
+        String url = "${serviceEndpoint}:${port.listenerPort}"
+        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+    }
+}

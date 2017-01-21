@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="commons-logging" module="commons-logging" revision="1.1.1" status="release" publication="20160120163001">
+	<info organisation="commons-logging"
+		module="commons-logging"
+		revision="1.1.1"
+		status="release"
+		publication="20071126122410"
+	>
 		<description homepage="http://commons.apache.org/logging">
 		Commons Logging is a thin adapter allowing configurable bridging to other,
     well known logging systems.
