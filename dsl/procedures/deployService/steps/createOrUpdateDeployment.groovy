@@ -19,43 +19,21 @@ if (!resultsPropertySheet) {
 }
 
 //// -- Driver script logic to provision cluster -- //
-
 EFClient efClient = new EFClient()
-
-def clusterParameters = efClient.getProvisionClusterParameters(
-        clusterName,
-        clusterOrEnvProjectName,
-        environmentName)
-
-def configName = clusterParameters.config
-
-def pluginProjectName = '$[/myProject/projectName]'
-
-def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
-String accessToken = 'Bearer '+ pluginConfig.credential.password
-def clusterEndpoint = pluginConfig.clusterEndpoint //clusterParameters.clusterURL
-
 KubernetesClient client = new KubernetesClient()
+def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
+String accessToken = client.retrieveAccessToken (pluginConfig)
+def clusterEndpoint = pluginConfig.clusterEndpoint
 
-def serviceDetails = efClient.getServiceDeploymentDetails(
+client.deployService(
+        efClient,
+        accessToken,
+        clusterEndpoint,
         serviceName,
         serviceProjectName,
         applicationName,
         applicationRevisionId,
         clusterName,
         clusterOrEnvProjectName,
-        environmentName)
-
-client.createOrUpdateService(clusterEndpoint, serviceDetails, accessToken)
-
-client.createOrUpdateDeployment(clusterEndpoint, serviceDetails, accessToken)
-
-def serviceEndpoint = client.getDeployedServiceEndpoint(clusterEndpoint, serviceDetails, accessToken)
-
-if (serviceEndpoint) {
-    serviceDetails.port?.each { port ->
-        String portName = port.portName
-        String url = "${serviceEndpoint}:${port.listenerPort}"
-        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
-    }
-}
+        environmentName,
+        resultsPropertySheet)
