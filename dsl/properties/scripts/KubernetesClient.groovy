@@ -3,6 +3,10 @@
  */
 public class KubernetesClient extends BaseClient {
 
+    String retrieveAccessToken(def pluginConfig) {
+        "Bearer ${pluginConfig.credential.password}"
+    }
+
     /**
     *  A way to check cluster is up/reachable. Currently simply hits API base endpoint
     *  In future there might be a "health" endpoint available which can be used
@@ -14,6 +18,55 @@ public class KubernetesClient extends BaseClient {
         doHttpGet(clusterEndPoint,
                 "/apis",
                 accessToken, /*failOnErrorCode*/ false)
+    }
+
+    def deployService(
+            EFClient efClient,
+            String accessToken,
+            String clusterEndpoint,
+            String serviceName,
+            String serviceProjectName,
+            String applicationName,
+            String applicationRevisionId,
+            String clusterName,
+            String clusterOrEnvProjectName,
+            String environmentName,
+            String resultsPropertySheet) {
+
+        def serviceDetails = efClient.getServiceDeploymentDetails(
+                serviceName,
+                serviceProjectName,
+                applicationName,
+                applicationRevisionId,
+                clusterName,
+                clusterOrEnvProjectName,
+                environmentName)
+
+        createOrUpdateService(clusterEndpoint, serviceDetails, accessToken)
+
+        createOrUpdateDeployment(clusterEndpoint, serviceDetails, accessToken)
+
+        def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, serviceDetails, accessToken)
+
+        if (serviceEndpoint) {
+            serviceDetails.port?.each { port ->
+                String portName = port.portName
+                String url = "${serviceEndpoint}:${port.listenerPort}"
+                efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+            }
+        }
+    }
+
+    def getPluginConfig(EFClient efClient, String clusterName, String clusterOrEnvProjectName, String environmentName) {
+
+        def clusterParameters = efClient.getProvisionClusterParameters(
+                clusterName,
+                clusterOrEnvProjectName,
+                environmentName)
+
+        def configName = clusterParameters.config
+        def pluginProjectName = '$[/myProject/projectName]'
+        efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
     }
 
     /**
