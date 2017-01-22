@@ -1,3 +1,6 @@
+/**
+ * Kubernetes API client
+ */
 public class KubernetesClient extends BaseClient {
 
     /**

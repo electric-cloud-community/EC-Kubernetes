@@ -79,7 +79,7 @@ sub retrieveGrapeDependency($){
     die "ERROR: Cannot create target directory" unless( -e $grapesDir );
 
     rcopy( $dir, $grapesDir) or die "Copy failed: $!";
-    print "Retrieved and copied grape dependencies from $dir to $grapesDir";
+    print "Retrieved and copied grape dependencies from $dir to $grapesDir\n";
 
 }
 
