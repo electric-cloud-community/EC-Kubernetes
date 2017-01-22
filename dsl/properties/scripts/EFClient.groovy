@@ -1,3 +1,6 @@
+/**
+ * ElectricFlow API client
+ */
 public class EFClient extends BaseClient {
 
     def getServerUrl() {
