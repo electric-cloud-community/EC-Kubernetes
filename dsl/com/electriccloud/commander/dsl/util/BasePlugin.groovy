@@ -26,7 +26,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 			description: propDescription
 	} 
 
-	def setupCustomEditorData(String pluginKey, String pluginName, String pluginCategory) {
+	def setupPluginMetadata(String pluginDir, String pluginKey, String pluginName, String pluginCategory) {
 		getProcedures(pluginName).each { proc ->
 
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
@@ -38,13 +38,35 @@ abstract class BasePlugin extends DslDelegatingScript {
 			}
 			
 		}
+
+		// configure the plugin icon if is exists
+		setPluginIconIfIconExists(pluginDir, pluginName)
 	}
-	
+
+	def setPluginIconIfIconExists(String pluginDir, String pluginName) {
+
+		String iconRelativePath = getPluginIcon(pluginDir)
+		if (iconRelativePath) {
+			println "Setting icon property /projects/${pluginName}/ec_icon to $iconRelativePath"
+			property "/projects/${pluginName}/ec_icon", value: iconRelativePath
+		}
+	}
+
+	def getPluginIcon(String pluginDir) {
+
+		['svg', 'png'].findResult { ext ->
+			File pluginIcon = new File("$pluginDir/htdocs/images", "icon-plugin.$ext")
+			println "Checking icon file: $pluginIcon.absolutePath, exists? " + pluginIcon.exists()
+			pluginIcon.exists() && pluginIcon.isFile() ?
+					"images/icon-plugin.$ext" : null
+		}
+	}
+
 	def cleanup(String pluginKey, String pluginName, String pluginCategory) {
 		getProcedures(pluginName).each { proc ->
 			
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
-			// delete the step picker if it was added by setupCustomEditorData
+			// delete the step picker if it was added by setupPluginMetadata
 			if (addStepPicker) {
 				def label = "$pluginKey - $proc.procedureName"
 				def propName = "/server/ec_customEditors/pickerStep/$label"
@@ -124,7 +146,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 		}
 		
 		// plugin boiler-plate
-		setupCustomEditorData(pluginKey, pluginName, pluginCategory)
+		setupPluginMetadata(pluginDir, pluginKey, pluginName, pluginCategory)
 	}
 
     def getProcedureDSLFile(File procedureDir) {
