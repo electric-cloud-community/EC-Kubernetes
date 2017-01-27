@@ -47,6 +47,7 @@ project pluginName, {
 				}
 				property 'parameterRefs', {
 					configuration = 'config'
+					namespace = 'namespace'
 				}
 			}
 			property 'defineContainerMappings', {

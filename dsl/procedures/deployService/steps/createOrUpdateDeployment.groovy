@@ -17,9 +17,11 @@ String resultsPropertySheet = '$[resultsPropertySheet]'
 if (!resultsPropertySheet) {
     resultsPropertySheet = '/myParent/parent'
 }
-
 //// -- Driver script logic to provision cluster -- //
 EFClient efClient = new EFClient()
+def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clusterOrEnvProjectName, environmentName)
+String namespace= clusterParameters.namespace
+
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
 String accessToken = client.retrieveAccessToken (pluginConfig)
@@ -29,6 +31,7 @@ client.deployService(
         efClient,
         accessToken,
         clusterEndpoint,
+        namespace,
         serviceName,
         serviceProjectName,
         applicationName,

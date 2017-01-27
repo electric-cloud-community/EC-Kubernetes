@@ -22,5 +22,13 @@
         <property>config</property>
         <required>1</required>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
-    </formElement> 
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Namespace Name:</label>
+        <property>namespace</property>
+        <required>0</required>
+        <value>default</value>
+        <documentation>The name of namespace to which the services and deployments should be deployed.</documentation>
+    </formElement>
 </editor>
