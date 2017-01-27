@@ -15,7 +15,7 @@ String clusterEndpoint = pluginConfig.clusterEndpoint
 
 efClient.logger WARNING, "Deleting all services, and deployments in the cluster!"
 def serviceList = client.doHttpGet(clusterEndpoint,
-                                   '/api/v1/namespaces/${namespace}/services/',
+                                   "/api/v1/namespaces/${namespace}/services/",
                                    accessToken)
 for(service in serviceList.data.items){
     def svcName = service.metadata.name
@@ -28,7 +28,7 @@ for(service in serviceList.data.items){
 }
 
 def deploymentList = client.doHttpGet(clusterEndpoint,
-                                   '/apis/extensions/v1beta1/namespaces/${namespace}/deployments',
+                                   "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
                                    accessToken)
 
 for(deployment in deploymentList.data.items){
@@ -41,7 +41,7 @@ for(deployment in deploymentList.data.items){
 }
 
 def rcList = client.doHttpGet(clusterEndpoint,
-                              '/apis/extensions/v1beta1/namespaces/${namespace}/replicasets',
+                              "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
                               accessToken)
 
 for(rc in rcList.data.items){
@@ -55,7 +55,7 @@ for(rc in rcList.data.items){
 
 
 def podList = client.doHttpGet(clusterEndpoint,
-                               '/api/v1/namespaces/${namespace}/pods/',
+                               "/api/v1/namespaces/${namespace}/pods/",
                                accessToken)
 for(pod in podList.data.items){
     def podName = pod.metadata.name
