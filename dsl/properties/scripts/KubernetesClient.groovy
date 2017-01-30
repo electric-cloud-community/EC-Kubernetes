@@ -532,6 +532,16 @@ public class KubernetesClient extends BaseClient {
         return cpu * 1000 as int
     }
 
+    Object doHttpHead(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs){
+        doHttpRequest(HEAD,
+                      requestUrl,
+                      requestUri,
+                      ['Authorization' : accessToken],
+                      failOnErrorCode,
+                      null,
+                      queryArgs)
+    }
+
     Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
 
         doHttpRequest(GET,
@@ -539,6 +549,17 @@ public class KubernetesClient extends BaseClient {
                 requestUri,
                 ['Authorization' : accessToken],
                 failOnErrorCode)
+    }
+
+    Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs) {
+
+        doHttpRequest(GET,
+                requestUrl,
+                requestUri,
+                ['Authorization' : accessToken, 'Content-Type': 'application/json'],
+                failOnErrorCode,
+                null,
+                queryArgs)
     }
 
     Object doHttpPost(String requestUrl, String requestUri, String accessToken, String requestBody, boolean failOnErrorCode = true) {
@@ -560,6 +581,16 @@ public class KubernetesClient extends BaseClient {
                 failOnErrorCode,
                 requestBody)
     }
+
+    Object doHttpPut(String requestUrl, String requestUri, String accessToken, Object requestBody, boolean failOnErrorCode = true, Map queryArgs) {
+        doHttpRequest(PUT,
+                      requestUrl,
+                      requestUri,
+                      ['Authorization' : accessToken],
+                      failOnErrorCode,
+                      requestBody,
+                      queryArgs)
+    }    
 
     Object doHttpDelete(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
 
