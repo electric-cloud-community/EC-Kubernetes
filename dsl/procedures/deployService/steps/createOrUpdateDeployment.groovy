@@ -12,6 +12,7 @@ if (!clusterOrEnvProjectName) {
 }
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
+String namespace = '$[namespace]'
 
 String resultsPropertySheet = '$[resultsPropertySheet]'
 if (!resultsPropertySheet) {
@@ -20,7 +21,6 @@ if (!resultsPropertySheet) {
 //// -- Driver script logic to provision cluster -- //
 EFClient efClient = new EFClient()
 def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clusterOrEnvProjectName, environmentName)
-String namespace= clusterParameters.namespace
 
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
