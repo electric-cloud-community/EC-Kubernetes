@@ -23,4 +23,11 @@
         <required>1</required>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
     </formElement> 
+    <formElement>
+        <type>entry</type>
+        <label>Namespace name:</label>
+        <property>namespace</property>
+        <required>1</required>
+        <documentation>The name of the namespace on which cleanup procedure should be performed.</documentation>
+    </formElement>
 </editor>

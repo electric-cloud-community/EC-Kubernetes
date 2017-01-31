@@ -24,6 +24,7 @@ public class KubernetesClient extends BaseClient {
             EFClient efClient,
             String accessToken,
             String clusterEndpoint,
+            String namespace,
             String serviceName,
             String serviceProjectName,
             String applicationName,
@@ -42,11 +43,13 @@ public class KubernetesClient extends BaseClient {
                 clusterOrEnvProjectName,
                 environmentName)
 
-        createOrUpdateService(clusterEndpoint, serviceDetails, accessToken)
+        createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
-        createOrUpdateDeployment(clusterEndpoint, serviceDetails, accessToken)
+        createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
-        def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, serviceDetails, accessToken)
+        createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+        def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         if (serviceEndpoint) {
             serviceDetails.port?.each { port ->
@@ -69,16 +72,54 @@ public class KubernetesClient extends BaseClient {
         efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
     }
 
-    /**
-     * Retrieves the Deployment instance from Kubernetes cluster.
-     * Returns null if no Deployment instance by the given name is found.
-     */
-    def getDeployment(String clusterEndPoint, String deploymentName, String accessToken) {
+    def createOrCheckNamespace(String clusterEndPoint, String namespace, String accessToken){
 
         if (OFFLINE) return null
 
         def response = doHttpGet(clusterEndPoint,
-                "/apis/extensions/v1beta1/namespaces/default/deployments/${formatName(deploymentName)}",
+                "/api/v1/namespaces/${namespace}",
+                accessToken, /*failOnErrorCode*/ false)
+        if (response.status == 200){
+            logger INFO, "Namespace ${namespace} already exists"
+            return
+        }
+        else if (response.status == 404){
+            def namespaceDefinition = buildNamespacePayload(namespace)
+            logger INFO, "Creating Namespace ${namespace}"
+            doHttpRequest(POST,
+                    clusterEndPoint,
+                    '/api/v1/namespaces',
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true,
+                    namespaceDefinition)
+        }
+        else {
+            logger ERROR, "FATAL ERROR while checking or creating namespace"
+        }
+    }
+
+    String buildNamespacePayload(String namespace){
+        def json = new JsonBuilder()
+        def result = json{
+            kind "Namespace"
+            apiVersion "v1"
+            metadata {
+                name namespace
+            }
+        }
+        return (new JsonBuilder(result)).toPrettyString()
+    }
+
+    /**
+     * Retrieves the Deployment instance from Kubernetes cluster.
+     * Returns null if no Deployment instance by the given name is found.
+     */
+    def getDeployment(String clusterEndPoint, String namespace, String deploymentName, String accessToken) {
+
+        if (OFFLINE) return null
+
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
@@ -87,20 +128,20 @@ public class KubernetesClient extends BaseClient {
      * Retrieves the Service instance from Kubernetes cluster.
      * Returns null if no Service instance by the given name is found.
      */
-    def getService(String clusterEndPoint, String serviceName, String accessToken) {
+    def getService(String clusterEndPoint, String namespace, String serviceName, String accessToken) {
 
         if (OFFLINE) return null
 
         def response = doHttpGet(clusterEndPoint,
-                "/api/v1/namespaces/default/services/$serviceName",
+                "/api/v1/namespaces/${namespace}/services/$serviceName",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
 
-    def createOrUpdateService(String clusterEndPoint, def serviceDetails, String accessToken) {
+    def createOrUpdateService(String clusterEndPoint, String namespace , def serviceDetails, String accessToken) {
 
         String serviceName = formatName(serviceDetails.serviceName)
-        def deployedService = getService(clusterEndPoint, serviceName, accessToken)
+        def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
 
         def serviceDefinition = buildServicePayload(serviceDetails, deployedService)
 
@@ -110,7 +151,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Updating deployed service $serviceName"
             doHttpRequest(PUT,
                     clusterEndPoint,
-                    "/api/v1/namespaces/default/services/$serviceName",
+                    "/api/v1/namespaces/$namespace/services/$serviceName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     serviceDefinition)
@@ -119,14 +160,14 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Creating service $serviceName"
             doHttpRequest(POST,
                     clusterEndPoint,
-                    '/api/v1/namespaces/default/services',
+                    "/api/v1/namespaces/${namespace}/services",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     serviceDefinition)
         }
     }
 
-    def getDeployedServiceEndpoint(String clusterEndPoint, def serviceDetails, String accessToken) {
+    def getDeployedServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
         def lbEndpoint
         def elapsedTime = 0;
@@ -136,7 +177,7 @@ public class KubernetesClient extends BaseClient {
             def before = System.currentTimeMillis()
             Thread.sleep(10*1000)
 
-            def deployedService = getService(clusterEndPoint, serviceName, accessToken)
+            def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
             def lbIngress = deployedService?.status?.loadBalancer?.ingress.find {
                 it.ip != null || it.hostname != null
             }
@@ -159,16 +200,16 @@ public class KubernetesClient extends BaseClient {
         lbEndpoint
     }
 
-def createOrUpdateSecret(def secretName, def username, def password, def repoBaseUrl,
-                         String clusterEndPoint, String accessToken){
-        def existingSecret = getSecret(secretName, clusterEndPoint, accessToken)
+    def createOrUpdateSecret(def secretName, def username, def password, def repoBaseUrl,
+                         String clusterEndPoint, String namespace, String accessToken){
+        def existingSecret = getSecret(secretName, clusterEndPoint, namespace, accessToken)
         def secret = buildSecretPayload(secretName, username, password, repoBaseUrl)
         if (OFFLINE) return null
         if (existingSecret) {
                     logger INFO, "Updating existing Secret $secretName"
                     doHttpRequest(PUT,
                             clusterEndPoint,
-                            "/api/v1/namespaces/default/secrets/${secretName}",
+                            "/api/v1/namespaces/${namespace}/secrets/${secretName}",
                             ['Authorization' : accessToken],
                             /*failOnErrorCode*/ true,
                             secret)
@@ -177,19 +218,19 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                     logger INFO, "Creating deployment $secretName"
                     doHttpRequest(POST,
                             clusterEndPoint,
-                            '/api/v1/namespaces/default/secrets',
+                            "/api/v1/namespaces/${namespace}/secrets",
                             ['Authorization' : accessToken],
                             /*failOnErrorCode*/ true,
                             secret)
                 }
     }
 
-    def getSecret(def secretName, def clusterEndPoint, def accessToken) {
+    def getSecret(def secretName, def clusterEndPoint, String namespace, def accessToken) {
 
         if (OFFLINE) return null
 
         def response = doHttpGet(clusterEndPoint,
-                "/api/v1/namespaces/default/secrets/${secretName}",
+                "/api/v1/namespaces/${namespace}/secrets/${secretName}",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
@@ -223,7 +264,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         return [repoBaseUrl, secretName.replaceAll(':', '-').replaceAll('/', '-')]
     }
 
-    def createOrUpdateDeployment(String clusterEndPoint, def serviceDetails, String accessToken) {
+    def createOrUpdateDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
         // Use the same name as the service name to create a Deployment in Kubernetes
         // that will drive the deployment of the service pods.
@@ -244,7 +285,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 def cred = efClient.getCredentials(svcContainer.credentialName)
                 def (repoBaseUrl, secretName) = constructSecretName(svcContainer.imageName, cred.userName)
                 createOrUpdateSecret(secretName, cred.userName, cred.password, repoBaseUrl,
-                        clusterEndPoint, accessToken)
+                        clusterEndPoint, namespace, accessToken)
                 if (!imagePullSecrets.contains(secretName)) {
                     imagePullSecrets.add(secretName)
                 }
@@ -252,10 +293,9 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         }
 
         def deploymentName = formatName(serviceDetails.serviceName)
-        def existingDeployment = getDeployment(clusterEndPoint, deploymentName, accessToken)
+        def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
         def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
         logger DEBUG, "Deployment payload:\n $deployment"
-
 
         if (OFFLINE) return null
 
@@ -263,7 +303,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
             logger INFO, "Updating existing deployment $deploymentName"
             doHttpRequest(PUT,
                     clusterEndPoint,
-                    "/apis/extensions/v1beta1/namespaces/default/deployments/$deploymentName",
+                    "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -272,7 +312,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
             logger INFO, "Creating deployment $deploymentName"
             doHttpRequest(POST,
                     clusterEndPoint,
-                    '/apis/extensions/v1beta1/namespaces/default/deployments',
+                    "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -442,6 +482,7 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         value?.toString()?.tokenize(',')
     }
 
+
     String buildServicePayload(Map args, def deployedService){
 
         def serviceName = formatName(args.serviceName)
@@ -491,6 +532,16 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
         return cpu * 1000 as int
     }
 
+    Object doHttpHead(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs){
+        doHttpRequest(HEAD,
+                      requestUrl,
+                      requestUri,
+                      ['Authorization' : accessToken],
+                      failOnErrorCode,
+                      null,
+                      queryArgs)
+    }
+
     Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
 
         doHttpRequest(GET,
@@ -498,6 +549,17 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 requestUri,
                 ['Authorization' : accessToken],
                 failOnErrorCode)
+    }
+
+    Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs) {
+
+        doHttpRequest(GET,
+                requestUrl,
+                requestUri,
+                ['Authorization' : accessToken, 'Content-Type': 'application/json'],
+                failOnErrorCode,
+                null,
+                queryArgs)
     }
 
     Object doHttpPost(String requestUrl, String requestUri, String accessToken, String requestBody, boolean failOnErrorCode = true) {
@@ -519,6 +581,16 @@ def createOrUpdateSecret(def secretName, def username, def password, def repoBas
                 failOnErrorCode,
                 requestBody)
     }
+
+    Object doHttpPut(String requestUrl, String requestUri, String accessToken, Object requestBody, boolean failOnErrorCode = true, Map queryArgs) {
+        doHttpRequest(PUT,
+                      requestUrl,
+                      requestUri,
+                      ['Authorization' : accessToken],
+                      failOnErrorCode,
+                      requestBody,
+                      queryArgs)
+    }    
 
     Object doHttpDelete(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
 

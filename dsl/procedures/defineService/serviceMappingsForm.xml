@@ -18,6 +18,15 @@
 <editor>
     <formElement>
         <type>entry</type>
+        <label>Namespace Name:</label>
+        <property>namespace</property>
+        <required>0</required>
+        <value>default</value>
+        <documentation>The name of namespace to which the services and deployments should be deployed.</documentation>
+    </formElement> 
+    
+    <formElement>
+        <type>entry</type>
         <label>LoadBalancer IP:</label>
         <property>loadBalancerIP</property>
         <required>0</required>
