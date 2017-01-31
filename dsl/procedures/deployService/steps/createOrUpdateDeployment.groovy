@@ -12,7 +12,6 @@ if (!clusterOrEnvProjectName) {
 }
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
-String namespace = '$[namespace]'
 
 String resultsPropertySheet = '$[resultsPropertySheet]'
 if (!resultsPropertySheet) {
@@ -25,6 +24,7 @@ def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clus
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
 String accessToken = client.retrieveAccessToken (pluginConfig)
+String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
 def clusterEndpoint = pluginConfig.clusterEndpoint
 
 client.deployService(
