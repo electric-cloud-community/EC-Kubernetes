@@ -24,8 +24,17 @@ def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clus
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
 String accessToken = client.retrieveAccessToken (pluginConfig)
-String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
 def clusterEndpoint = pluginConfig.clusterEndpoint
+
+def serviceDetails = efClient.getServiceDeploymentDetails(
+                serviceName,
+                serviceProjectName,
+                applicationName,
+                applicationRevisionId,
+                clusterName,
+                clusterOrEnvProjectName,
+                environmentName)
+String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
 
 client.deployService(
         efClient,
