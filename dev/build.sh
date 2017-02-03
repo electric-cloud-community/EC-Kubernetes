@@ -19,5 +19,5 @@ if [ $DEPLOY -eq 1 ]; then
   echo "Installing plugin ..."
   ectool --server localhost login admin changeme
   ectool installPlugin ./out/EC-Kubernetes.jar --force 1
-  ectool promotePlugin EC-Kubernetes-1.0.0
+  ectool promotePlugin EC-Kubernetes-1.0.0.11
 fi  
