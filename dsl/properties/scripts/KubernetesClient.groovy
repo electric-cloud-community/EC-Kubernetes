@@ -404,11 +404,44 @@ public class KubernetesClient extends BaseClient {
                                 containerResources.requests = requests
                             }
 
+                            def livenessProbe = [:]
+                            def readinessProbe = [:]
+
+                            // If Liveness Probe is command based
+                            if(svcContainer.livenessCommand){
+                                livenessProbe.exec.command = "${svcContainer.livenessCommand}"
+                            }
+                            // If Liveness probe is HTTP based
+                            if(svcContainer.livenessHttpProbe){
+                                livenessProbe.httpGet.path = "${svcContainer.livenessHttpProbe.path}"
+                                livenessProbe.httpGet.port = "${svcContainer.livenessHttpProbe.port}"
+                                livenessProbe.httpGet.httpHeaders.name = "${svcContainer.livenessHttpProbe.httpHeaderName}"
+                                livenessProbe.httpGet.httpHeaders.value = "${svcContainer.livenessHttpProbe.httpHeaderValue}"
+                            }
+                            if(svcContainer.livenessInitialDelay){
+                                livenessProbe.initialDelaySeconds = "${svcContainer.livenessInitialDelay}"
+                            }
+                            if(svcContainer.livenessPeriod){
+                                livenessProbe.periodSeconds = "${svcContainer.livenessPeriod}"   
+                            }
+
+                            if(svcContainer.readinessCommand){
+                                readinessProbe.exec.command = "${svcContainer.readinessCommand}"
+                            }
+                            if(svcContainer.readinessInitialDelay){
+                                readinessProbe.initialDelaySeconds = "${svcContainer.readinessInitialDelay}"
+                            }
+                            if(svcContainer.readinessPeriod){
+                                readinessProbe.periodSeconds = "${svcContainer.readinessPeriod}"
+                            }
+
                             [
                                     name: formatName(svcContainer.containerName),
                                     image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
                                     command: svcContainer.entryPoint?.split(','),
                                     args: svcContainer.command?.split(','),
+                                    livenessProbe: livenessProbe,
+                                    readinessProbe: readinessProbe,
                                     ports: svcContainer.port?.collect { port ->
                                         [
                                                 name: formatName(port.portName),
