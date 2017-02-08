@@ -421,31 +421,37 @@ public class KubernetesClient extends BaseClient {
                             def readinessProbe = [:]
 
                             // If Liveness Probe is command based
-                            if(svcContainer.livenessCommand){
-                                livenessProbe.exec.command = "${svcContainer.livenessCommand}"
+                            def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand')
+                            if(livenessCommand){
+                                livenessProbe.exec.command = "${livenessCommand}"
                             }
                             // If Liveness probe is HTTP based
-                            if(svcContainer.livenessHttpProbe){
-                                livenessProbe.httpGet.path = "${svcContainer.livenessHttpProbe.path}"
-                                livenessProbe.httpGet.port = "${svcContainer.livenessHttpProbe.port}"
-                                livenessProbe.httpGet.httpHeaders.name = "${svcContainer.livenessHttpProbe.httpHeaderName}"
-                                livenessProbe.httpGet.httpHeaders.value = "${svcContainer.livenessHttpProbe.httpHeaderValue}"
+                            if(getServiceParameter(svcContainer, 'livenessHttpProbe')){
+                                livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbe.path')
+                                livenessProbe.httpGet.port = getServiceParameter(svcContainer, 'livenessHttpProbe.port')
+                                livenessProbe.httpGet.httpHeaders.name = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderName')
+                                livenessProbe.httpGet.httpHeaders.value = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderValue')
                             }
-                            if(svcContainer.livenessInitialDelay){
-                                livenessProbe.initialDelaySeconds = "${svcContainer.livenessInitialDelay}"
+                            def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
+                            if(livenessInitialDelay){
+                                livenessProbe.initialDelaySeconds = "${livenessInitialDelay}"
                             }
-                            if(svcContainer.livenessPeriod){
-                                livenessProbe.periodSeconds = "${svcContainer.livenessPeriod}"   
+                            def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
+                            if(livenessPeriod){
+                                livenessProbe.periodSeconds = "${livenessPeriod}"   
                             }
 
-                            if(svcContainer.readinessCommand){
-                                readinessProbe.exec.command = "${svcContainer.readinessCommand}"
+                            def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand')
+                            if(readinessCommand){
+                                readinessProbe.exec.command = "${readinessCommand}"
                             }
-                            if(svcContainer.readinessInitialDelay){
-                                readinessProbe.initialDelaySeconds = "${svcContainer.readinessInitialDelay}"
+                            def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
+                            if(readinessInitialDelay){
+                                readinessProbe.initialDelaySeconds = "${readinessInitialDelay}"
                             }
-                            if(svcContainer.readinessPeriod){
-                                readinessProbe.periodSeconds = "${svcContainer.readinessPeriod}"
+                            def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
+                            if(readinessPeriod){
+                                readinessProbe.periodSeconds = "${readinessPeriod}"
                             }
 
                             [
