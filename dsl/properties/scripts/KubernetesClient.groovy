@@ -320,6 +320,19 @@ public class KubernetesClient extends BaseClient {
 
     }
 
+    def createResource(String clusterEndPoint, def resourceDetails, String resourceUri, String accessToken) {
+        
+        if (OFFLINE) return null
+
+        logger INFO, "Creating resource at ${resourceUri}"
+        doHttpRequest(POST,
+                    clusterEndPoint,
+                    resourceUri,
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true,
+                    resourceDetails)
+    }
+
     def convertVolumes(data){
         def jsonData = parseJsonToList(data)
         def result = []

@@ -11,5 +11,5 @@ class Logger {
 
     // Default log level used till the configured log level
     // is read from the plugin configuration.
-    static Integer logLevel = INFO
+    static Integer logLevel = DEBUG
 }
