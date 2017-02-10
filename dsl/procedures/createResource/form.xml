@@ -52,4 +52,19 @@
         <required>0</required>
         <documentation>The request body in JSON or YAML format.</documentation>
     </formElement>
+    <formElement>
+        <type>select</type>
+        <label>Create or Update</label>
+        <property>requestType</property>
+        <required>1</required>
+        <option>
+            <name>Create</name>
+            <value>create</value>
+        </option>
+        <option>
+            <name>Update</name>
+            <value>update</value>
+        </option>
+        <documentation>Weather to create or update the resource.</documentation>
+    </formElement>
 </editor>

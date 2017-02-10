@@ -320,17 +320,27 @@ public class KubernetesClient extends BaseClient {
 
     }
 
-    def createResource(String clusterEndPoint, def resourceDetails, String resourceUri, String accessToken) {
+    def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String accessToken) {
         
         if (OFFLINE) return null
 
-        logger INFO, "Creating resource at ${resourceUri}"
-        doHttpRequest(POST,
+        if(createFlag == 'create'){
+            logger INFO, "Creating resource at ${resourceUri}"
+            doHttpRequest(POST,
+                    clusterEndPoint,
+                    resourceUri,
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true,
+                    resourceDetails)    
+        } else {
+            logger INFO, "Updating resource at ${resourceUri}"
+            doHttpRequest(PUT,
                     clusterEndPoint,
                     resourceUri,
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     resourceDetails)
+        }
     }
 
     def convertVolumes(data){
@@ -459,8 +469,8 @@ public class KubernetesClient extends BaseClient {
                                     image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
                                     command: svcContainer.entryPoint?.split(','),
                                     args: svcContainer.command?.split(','),
-                                    livenessProbe: livenessProbe,
-                                    readinessProbe: readinessProbe,
+                                    //livenessProbe: livenessProbe,
+                                    //readinessProbe: readinessProbe,
                                     ports: svcContainer.port?.collect { port ->
                                         [
                                                 name: formatName(port.portName),
