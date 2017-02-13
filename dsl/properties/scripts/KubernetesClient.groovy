@@ -320,6 +320,29 @@ public class KubernetesClient extends BaseClient {
 
     }
 
+    def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String contentType, String accessToken) {
+        
+        if (OFFLINE) return null
+
+        if(createFlag == 'create'){
+            logger INFO, "Creating resource at ${resourceUri}"
+            doHttpRequest(POST,
+                    clusterEndPoint,
+                    resourceUri,
+                    ['Authorization' : accessToken, 'Content-Type': contentType],
+                    /*failOnErrorCode*/ true,
+                    resourceDetails)    
+        } else {
+            logger INFO, "Updating resource at ${resourceUri}"
+            doHttpRequest(PUT,
+                    clusterEndPoint,
+                    resourceUri,
+                    ['Authorization' : accessToken, 'Content-Type': contentType],
+                    /*failOnErrorCode*/ true,
+                    resourceDetails)
+        }
+    }
+
     def convertVolumes(data){
         def jsonData = parseJsonToList(data)
         def result = []
@@ -404,11 +427,50 @@ public class KubernetesClient extends BaseClient {
                                 containerResources.requests = requests
                             }
 
+                            def livenessProbe = [:]
+                            def readinessProbe = [:]
+
+                            // If Liveness Probe is command based
+                            def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand')
+                            if(livenessCommand){
+                                livenessProbe.exec.command = "${livenessCommand}"
+                            }
+                            // If Liveness probe is HTTP based
+                            if(getServiceParameter(svcContainer, 'livenessHttpProbe')){
+                                livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbe.path')
+                                livenessProbe.httpGet.port = getServiceParameter(svcContainer, 'livenessHttpProbe.port')
+                                livenessProbe.httpGet.httpHeaders.name = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderName')
+                                livenessProbe.httpGet.httpHeaders.value = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderValue')
+                            }
+                            def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
+                            if(livenessInitialDelay){
+                                livenessProbe.initialDelaySeconds = "${livenessInitialDelay}"
+                            }
+                            def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
+                            if(livenessPeriod){
+                                livenessProbe.periodSeconds = "${livenessPeriod}"   
+                            }
+
+                            def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand')
+                            if(readinessCommand){
+                                readinessProbe.exec.command = "${readinessCommand}"
+                            }
+                            def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
+                            if(readinessInitialDelay){
+                                readinessProbe.initialDelaySeconds = "${readinessInitialDelay}"
+                            }
+                            def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
+                            if(readinessPeriod){
+                                readinessProbe.periodSeconds = "${readinessPeriod}"
+                            }
+
                             [
                                     name: formatName(svcContainer.containerName),
                                     image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
                                     command: svcContainer.entryPoint?.split(','),
                                     args: svcContainer.command?.split(','),
+                                    //livenessProbe: livenessProbe,
+                                    //readinessProbe: readinessProbe,
                                     ports: svcContainer.port?.collect { port ->
                                         [
                                                 name: formatName(port.portName),

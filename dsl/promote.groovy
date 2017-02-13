@@ -24,6 +24,8 @@ def stepsWithAttachedCredentials = [
 		], [
 				procedureName: 'Cleanup Cluster - Experimental',
 				stepName: 'cleanup'
+		], [	procedureName: 'Create Resource',
+				stepName: 'createResource'
 		]
 ]
 project pluginName, {
