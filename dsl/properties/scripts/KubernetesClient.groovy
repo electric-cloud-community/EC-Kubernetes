@@ -320,7 +320,7 @@ public class KubernetesClient extends BaseClient {
 
     }
 
-    def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String accessToken) {
+    def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String contentType, String accessToken) {
         
         if (OFFLINE) return null
 
@@ -329,7 +329,7 @@ public class KubernetesClient extends BaseClient {
             doHttpRequest(POST,
                     clusterEndPoint,
                     resourceUri,
-                    ['Authorization' : accessToken],
+                    ['Authorization' : accessToken, 'Content-Type': contentType],
                     /*failOnErrorCode*/ true,
                     resourceDetails)    
         } else {
@@ -337,7 +337,7 @@ public class KubernetesClient extends BaseClient {
             doHttpRequest(PUT,
                     clusterEndPoint,
                     resourceUri,
-                    ['Authorization' : accessToken],
+                    ['Authorization' : accessToken, 'Content-Type': contentType],
                     /*failOnErrorCode*/ true,
                     resourceDetails)
         }

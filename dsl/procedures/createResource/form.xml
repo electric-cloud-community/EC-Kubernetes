@@ -65,6 +65,6 @@
             <name>Update</name>
             <value>update</value>
         </option>
-        <documentation>Weather to create or update the resource.</documentation>
+        <documentation>Whether to create or update the resource.</documentation>
     </formElement>
 </editor>

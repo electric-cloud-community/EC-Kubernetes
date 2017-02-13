@@ -1,5 +1,4 @@
 @Grab('org.codehaus.groovy.modules.http-builder:http-builder:0.7.1' )
-@Grab('org.yaml:snakeyaml:1.17')
 
 import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
@@ -13,7 +12,6 @@ import static groovyx.net.http.Method.GET
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.Method.PUT
 
-import org.yaml.snakeyaml.Yaml
 /**
  * Groovy client with common utility functions used in a plugin procedure
  * step such as for making HTTP requests, error handling, etc.
@@ -130,15 +128,6 @@ public class BaseClient {
 
     String formatName(String name){
         return name.replaceAll(' ', '-').replaceAll('_', '-').replaceAll("^-+", "").replaceAll("-+\$", "").toLowerCase()
-    }
-
-    String yamlToJson(String yamlString){
-        Yaml yaml= new Yaml();
-        Map<String,Object> map= (Map<String, Object>) yaml.load(yamlString);
-
-        JsonOutput json = new JsonOutput()
-        String finalJson = json.toJson(map)
-        json.prettyPrint(finalJson)
     }
 
     //Flag for use use during development if there is no internet access
