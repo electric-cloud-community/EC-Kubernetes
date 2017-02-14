@@ -427,20 +427,15 @@ public class KubernetesClient extends BaseClient {
                                 containerResources.requests = requests
                             }
 
-                            def livenessProbe = [:]
-                            def readinessProbe = [:]
+                            def livenessProbe = [httpGet: "", path:"", port:"", httpHeaders:[:]]
+                            def readinessProbe = [exec: [command:[:]]]
 
-                            // If Liveness Probe is command based
-                            def livenessCommand = getServiceParameter(svcContainer, 'livenessCommand')
-                            if(livenessCommand){
-                                livenessProbe.exec.command = "${livenessCommand}"
-                            }
                             // If Liveness probe is HTTP based
                             if(getServiceParameter(svcContainer, 'livenessHttpProbe')){
-                                livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbe.path')
-                                livenessProbe.httpGet.port = getServiceParameter(svcContainer, 'livenessHttpProbe.port')
-                                livenessProbe.httpGet.httpHeaders.name = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderName')
-                                livenessProbe.httpGet.httpHeaders.value = getServiceParameter(svcContainer, 'livenessHttpProbe.httpHeaderValue')
+                                livenessProbe.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
+                                livenessProbe.port = getServiceParameter(svcContainer, 'livenessHttpProbePort')
+                                livenessProbe.httpHeaders.name = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
+                                livenessProbe.httpHeaders.value = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
                             }
                             def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
                             if(livenessInitialDelay){
@@ -469,8 +464,8 @@ public class KubernetesClient extends BaseClient {
                                     image: "${svcContainer.imageName}:${svcContainer.imageVersion?:'latest'}",
                                     command: svcContainer.entryPoint?.split(','),
                                     args: svcContainer.command?.split(','),
-                                    //livenessProbe: livenessProbe,
-                                    //readinessProbe: readinessProbe,
+                                    livenessProbe: livenessProbe,
+                                    readinessProbe: readinessProbe,
                                     ports: svcContainer.port?.collect { port ->
                                         [
                                                 name: formatName(port.portName),
