@@ -130,6 +130,18 @@ public class BaseClient {
         return name.replaceAll(' ', '-').replaceAll('_', '-').replaceAll("^-+", "").replaceAll("-+\$", "").toLowerCase()
     }
 
+    def removeNullKeys(obj) {
+      if(obj instanceof Map) {
+        obj.collectEntries {k, v ->
+          if(v) [(k): removeNullKeys(v)] else [:]
+        }
+      } else if(obj instanceof List) {
+        obj.collect { removeNullKeys(it) }.findAll { it != null }
+      } else {
+        obj
+      }
+    }
+
     //Flag for use use during development if there is no internet access
     //in which case remote calls will become no-ops.
     //Should *never* be checked in with a value of true.

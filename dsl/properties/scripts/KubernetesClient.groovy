@@ -427,37 +427,40 @@ public class KubernetesClient extends BaseClient {
                                 containerResources.requests = requests
                             }
 
-                            def livenessProbe = [httpGet: "", path:"", port:"", httpHeaders:[:]]
-                            def readinessProbe = [exec: [command:[:]]]
+                            def livenessProbe = [:]
+                            def readinessProbe = [:]
 
-                            // If Liveness probe is HTTP based
-                            if(getServiceParameter(svcContainer, 'livenessHttpProbe')){
-                                livenessProbe.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
-                                livenessProbe.port = getServiceParameter(svcContainer, 'livenessHttpProbePort')
-                                livenessProbe.httpHeaders.name = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
-                                livenessProbe.httpHeaders.value = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
-                            }
-                            def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
-                            if(livenessInitialDelay){
-                                livenessProbe.initialDelaySeconds = "${livenessInitialDelay}"
-                            }
-                            def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
-                            if(livenessPeriod){
-                                livenessProbe.periodSeconds = "${livenessPeriod}"   
+                            // Only HTTP based Liveness probe is supported 
+                            if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
+                                def httpHeader = [name:"", value: ""]
+                                livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]]]
+                                livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
+                                livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
+                                
+                                httpHeader.name = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
+                                httpHeader.value = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
+                                
+                                def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
+                                livenessProbe.initialDelaySeconds = livenessInitialDelay.toInteger()
+                                def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
+                                livenessProbe.periodSeconds = livenessPeriod.toInteger() 
+                            } else {
+                                livenessProbe = null
                             }
 
                             def readinessCommand = getServiceParameter(svcContainer, 'readinessCommand')
                             if(readinessCommand){
-                                readinessProbe.exec.command = "${readinessCommand}"
+                                readinessProbe = [exec: [command:[:]]]
+                                readinessProbe.exec.command = ["${readinessCommand}"]
+                                
+                                def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
+                                readinessProbe.initialDelaySeconds = readinessInitialDelay.toInteger()
+                                def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
+                                readinessProbe.periodSeconds = readinessPeriod.toInteger()
+                            } else {
+                                readinessProbe = null
                             }
-                            def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
-                            if(readinessInitialDelay){
-                                readinessProbe.initialDelaySeconds = "${readinessInitialDelay}"
-                            }
-                            def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
-                            if(readinessPeriod){
-                                readinessProbe.periodSeconds = "${readinessPeriod}"
-                            }
+                     
 
                             [
                                     name: formatName(svcContainer.containerName),
