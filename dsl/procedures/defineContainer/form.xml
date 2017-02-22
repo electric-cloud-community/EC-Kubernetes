@@ -58,4 +58,73 @@
         <required>0</required>
         <documentation>Pass-through attributes for the container definition in JSON format. Supports container attributes defined in http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_container.</documentation>
     </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Check Path:</label>
+        <property>livenessHttpProbePath</property>
+        <default>/</default>
+        <required>0</required>
+        <documentation>HTTP path to check liveness of the container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Check Port:</label>
+        <property>livenessHttpProbePort</property>
+        <default></default>
+        <required>0</required>
+        <documentation>HTTP Port to check liveness of container</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Header Name</label>
+        <property>livenessHttpProbeHttpHeaderName</property>
+        <required>0</required>
+        <documentation>Header name if any for liveness check</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Header Value:</label>
+        <property>livenessHttpProbeHttpHeaderValue</property>
+        <required>0</required>
+        <documentation>Header value if any for liveness check</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Intial Delay:</label>
+        <property>livenessInitialDelay</property>
+        <default>3</default>
+        <required>0</required>
+        <documentation>Initial delay before checking the liveness of container,  defaults to 3s.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Liveness Period:</label>
+        <property>livenessPeriod</property>
+        <default>5</default>
+        <required>0</required>
+        <documentation>Interval at which liveness of container should be checked after initial delay,  defaults to 5s.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness command:</label>
+        <property>readinessCommand</property>
+        <required>0</required>
+        <documentation>Command used to check if container is ready to serve traffic</documentation>
+    </formElement>
+        <formElement>
+        <type>entry</type>
+        <label>Readiness Intial Delay:</label>
+        <property>readinessInitialDelay</property>
+        <default>3</default>
+        <required>0</required>
+        <documentation>Initial delay before checking the Readiness of container defaults to 3s.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Readiness Period:</label>
+        <property>readinessPeriod</property>
+        <default>5</default>
+        <required>0</required>
+        <documentation>Interval at which Readiness of container should be checked after initial delay,  defaults to 5s.</documentation>
+    </formElement>
 </editor>
