@@ -80,21 +80,44 @@
         <documentation>Whether to enable client-IP based session affinity. Defaults to round robin if not checked.</documentation>
     </formElement>
 
-    <!--Not needed for the demo. To be considered post demo.
+    <formElement>
+        <type>checkbox</type>
+        <label>Create or update Additional Resource in the Cluster?</label>
+        <property>createOrUpdateResource</property>
+        <required>0</required>
+        <checkedValue>1</checkedValue>
+        <uncheckedValue>0</uncheckedValue>
+        <initiallyChecked>0</initiallyChecked>
+        <documentation>Whether to create or update any additional Kubernetes resource in the cluster.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Additional Resource URI:</label>
+        <property>resourceUri</property>
+        <required>0</required>
+        <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/oapi/v1/namespaces/default/routes'.</documentation>
+    </formElement>
     <formElement>
         <type>textarea</type>
-        <label>Additional Service Attributes:</label>
-        <property>additionalServiceAttributes</property>
+        <label>Additional Resource Payload:</label>
+        <property>resourceData</property>
         <required>0</required>
-        <documentation>Pass-through attributes for the service in JSON format. Supports service attributes defined in http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_service.</documentation>
+        <documentation>The request body in JSON or YAML format for the additional Kubernetes resource to be created or updated during service deployment.</documentation>
     </formElement>
-
     <formElement>
-        <type>textarea</type>
-        <label>Additional Pod Attributes:</label>
-        <property>additionalPodAttributes</property>
+        <type>select</type>
+        <label>Operation Type:</label>
+        <property>requestType</property>
+        <value>create</value>
         <required>0</required>
-        <documentation>Pass-through attributes for the service pods in JSON format. Supports pod attributes defined in http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_pod.</documentation>
+        <option>
+            <name>Create</name>
+            <value>create</value>
+        </option>
+        <option>
+            <name>Update</name>
+            <value>update</value>
+        </option>
+        <documentation>Whether to create or update the resource.</documentation>
     </formElement>
--->
 </editor>
