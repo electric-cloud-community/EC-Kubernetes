@@ -49,6 +49,8 @@ public class KubernetesClient extends BaseClient {
 
         createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+        createOrUpdateResourceIfNeeded(clusterEndpoint, serviceDetails, accessToken)
+
         def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         if (serviceEndpoint) {
@@ -318,6 +320,36 @@ public class KubernetesClient extends BaseClient {
                     deployment)
         }
 
+    }
+
+    def createOrUpdateResourceIfNeeded(String clusterEndPoint, def serviceDetails, String accessToken) {
+        boolean createOrUpdateResource = toBoolean(getServiceParameter(serviceDetails, 'createOrUpdateResource'))
+        if (createOrUpdateResource) {
+            String resourceUri = getServiceParameter(serviceDetails, 'resourceUri')
+            def resourcePayload = getServiceParameter(serviceDetails, 'resourceData')
+            if (resourceUri && resourcePayload) {
+                String contentType = determineContentType(resourcePayload)
+                String createOrUpdate = getServiceParameter(serviceDetails, 'requestType', 'create')
+                createOrUpdateResource(clusterEndPoint, resourcePayload, resourceUri, createOrUpdate, contentType, accessToken)
+            } else {
+                resourceUri ?
+                        handleError("Additional resource payload not provided for creating or updating additional Kubernetes resource.") :
+                        handleError("Additional resource URI not provided for creating or updating additional Kubernetes resource.")
+            }
+        }
+
+    }
+
+    String determineContentType(def payload) {
+        try {
+            new JsonSlurper().parseText(payload)
+            'application/json'
+        } catch (Exception ex) {
+            // Default to yaml and let the kubernetes API deal with it.
+            // Don't want to introduce a dependency on another jar
+            // just to check the format here.
+            'application/yaml'
+        }
     }
 
     def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String contentType, String accessToken) {
