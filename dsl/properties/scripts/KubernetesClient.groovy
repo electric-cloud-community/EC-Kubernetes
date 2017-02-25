@@ -96,7 +96,7 @@ public class KubernetesClient extends BaseClient {
                     namespaceDefinition)
         }
         else {
-            logger ERROR, "FATAL ERROR while checking or creating namespace"
+            handleError("Could not check namespace due to ${response.statusLine}")
         }
     }
 
@@ -323,8 +323,8 @@ public class KubernetesClient extends BaseClient {
     }
 
     def createOrUpdateResourceIfNeeded(String clusterEndPoint, def serviceDetails, String accessToken) {
-        boolean createOrUpdateResource = toBoolean(getServiceParameter(serviceDetails, 'createOrUpdateResource'))
-        if (createOrUpdateResource) {
+        boolean addOrUpdateRsrc = toBoolean(getServiceParameter(serviceDetails, 'createOrUpdateResource'))
+        if (addOrUpdateRsrc) {
             String resourceUri = getServiceParameter(serviceDetails, 'resourceUri')
             def resourcePayload = getServiceParameter(serviceDetails, 'resourceData')
             if (resourceUri && resourcePayload) {
