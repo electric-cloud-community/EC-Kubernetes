@@ -95,7 +95,7 @@
         <label>Additional Resource URI:</label>
         <property>resourceUri</property>
         <required>0</required>
-        <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/oapi/v1/namespaces/default/routes'.</documentation>
+        <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/api/v1/namespaces/default/persistentvolumeclaims'.</documentation>
     </formElement>
     <formElement>
         <type>textarea</type>
