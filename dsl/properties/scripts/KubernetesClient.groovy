@@ -51,6 +51,9 @@ public class KubernetesClient extends BaseClient {
 
         createOrUpdateResourceIfNeeded(clusterEndpoint, serviceDetails, accessToken)
 
+        // hook for other kubernetes based plugins
+        createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
+
         def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         if (serviceEndpoint) {
@@ -96,7 +99,7 @@ public class KubernetesClient extends BaseClient {
                     namespaceDefinition)
         }
         else {
-            handleError("Could not check namespace due to ${response.statusLine}")
+            handleError("Namespace check failed. ${response.statusLine}")
         }
     }
 
@@ -320,6 +323,10 @@ public class KubernetesClient extends BaseClient {
                     deployment)
         }
 
+    }
+
+    def createOrUpdatePlatformSpecificResources(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+        // no-op. Hook for other plugins based on EC-Kubernetes
     }
 
     def createOrUpdateResourceIfNeeded(String clusterEndPoint, def serviceDetails, String accessToken) {
