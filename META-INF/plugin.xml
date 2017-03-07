@@ -6,6 +6,7 @@
   <description>Integrates with Kubernetes orchestration engine to deploy Docker containers.</description>
   <help>help.xml</help>
   <key>EC-Kubernetes</key>
+  <pluginWizardBased>true</pluginWizardBased>
   <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
   <version>1.0.0</version>
