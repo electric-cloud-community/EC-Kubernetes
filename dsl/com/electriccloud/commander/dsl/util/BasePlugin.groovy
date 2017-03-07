@@ -9,22 +9,22 @@ import com.electriccloud.commander.dsl.DslDelegatingScript
 
 abstract class BasePlugin extends DslDelegatingScript {
 
-    def stepPicker (String pickerLabel, String pluginKey, String procedureName, String category, String description  = '') {
+	def stepPicker (String pickerLabel, String pluginKey, String procedureName, String category, String description  = '') {
 
 		// This is important, if the step-picker property does not have a description,
 		// then the plugin lookup when defining procedure step fails with a GWT/JavaScript error.
 		String propDescription = description ?: procedureName
 
 		property "/server/ec_customEditors/pickerStep/$pickerLabel",
-			value:
-				"""<step>
+				value:
+						"""<step>
 						<project>/plugins/$pluginKey/project</project>
 						<procedure>$procedureName</procedure>
 						<category>$category</category>
 					</step>
 				""".stripIndent(),
-			description: propDescription
-	} 
+				description: propDescription
+	}
 
 	def setupPluginMetadata(String pluginDir, String pluginKey, String pluginName, String pluginCategory) {
 		getProcedures(pluginName).each { proc ->
@@ -36,7 +36,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 				def description = proc.description
 				stepPicker (label, pluginKey, proc.procedureName, pluginCategory, description)
 			}
-			
+
 		}
 
 		// configure the plugin icon if is exists
@@ -64,7 +64,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 	def cleanup(String pluginKey, String pluginName, String pluginCategory) {
 		getProcedures(pluginName).each { proc ->
-			
+
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
 			// delete the step picker if it was added by setupPluginMetadata
 			if (addStepPicker) {
@@ -75,7 +75,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 					deleteProperty propertyName: propName
 				}
 			}
-			
+
 		}
 	}
 
@@ -125,36 +125,36 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 		// Loop over the sub-directories in the procedures directory
 		// and evaluate procedures if a procedure.dsl file exists
-		
+
 		File procsDir = new File(pluginDir, 'dsl/procedures')
-		procsDir.eachDir { 
-			
-            File procDslFile = getProcedureDSLFile(it)
+		procsDir.eachDir {
+
+			File procDslFile = getProcedureDSLFile(it)
 			if (procDslFile?.exists()) {
 				println "Processing procedure DSL file ${procDslFile.absolutePath}"
 				def proc = loadProcedure(pluginDir, pluginKey, pluginName, procDslFile.absolutePath)
-				
+
 				//create formal parameters using form.xml
 				File formXml = new File(it, 'form.xml')
 				if (formXml.exists()) {
-				    println "Processing form XML $formXml.absolutePath"
+					println "Processing form XML $formXml.absolutePath"
 					buildFormalParametersFromFormXml(proc, formXml)
 				}
 
 			}
-			
+
 		}
-		
+
 		// plugin boiler-plate
 		setupPluginMetadata(pluginDir, pluginKey, pluginName, pluginCategory)
 	}
 
-    def getProcedureDSLFile(File procedureDir) {
+	def getProcedureDSLFile(File procedureDir) {
 
 		if (procedureDir.name.toLowerCase().endsWith('_ignore')) {
 			return null
 		}
-		
+
 		File procDSLFile = new File(procedureDir, 'procedure.dsl')
 		if(procDSLFile.exists()) {
 			return procDSLFile
@@ -166,10 +166,10 @@ abstract class BasePlugin extends DslDelegatingScript {
 	def loadProcedure(String pluginDir, String pluginKey, String pluginName, String dslFile) {
 		return evalInlineDsl(dslFile, [pluginKey: pluginKey, pluginName: pluginName, pluginDir: pluginDir])
 	}
-	
+
 	//Helper function to load another dsl script and evaluate it in-context
 	def evalInlineDsl(String dslFile, Map bindingMap) {
-	
+
 		CompilerConfiguration cc = new CompilerConfiguration();
 		cc.setScriptBaseClass(DelegatingScript.class.getName());
 		GroovyShell sh = new GroovyShell(this.class.classLoader, bindingMap? new Binding(bindingMap) : new Binding(), cc);
@@ -177,21 +177,21 @@ abstract class BasePlugin extends DslDelegatingScript {
 		script.setDelegate(this);
 		return script.run();
 	}
-	
+
 	def buildFormalParametersFromFormXml(def proc, File formXml) {
-	
+
 		def formElements = new XmlSlurper().parseText(formXml.text)
-		
+
 		procedure proc.procedureName, {
-				
+
 			ec_parameterForm = formXml.text
 			formElements.formElement.each { formElement ->
 				formalParameter "$formElement.property",
-					defaultValue: formElement.value,
-					required: formElement.required,
-					description: formElement.description,
-					type: formElement.type,
-					label: formElement.label
+						defaultValue: formElement.value,
+						required: formElement.required,
+						description: formElement.description,
+						type: formElement.type,
+						label: formElement.label
 
 				if (formElement['attachedAsParameterToStep'] && formElement['attachedAsParameterToStep'] != '') {
 					formElement['attachedAsParameterToStep'].toString().split(',').each { attachToStep ->
@@ -206,13 +206,27 @@ abstract class BasePlugin extends DslDelegatingScript {
 				//setup custom editor data for each parameter
 				property 'ec_customEditorData', procedureName: proc.procedureName, {
 					property 'parameters', {
-                       property "$formElement.property", {
+						property "$formElement.property", {
 							formType = 'standard'
-						    println "Form element $formElement.property, type: '${formElement.type.toString()}'"
+							println "Form element $formElement.property, type: '${formElement.type.toString()}'"
 							if ('checkbox' == formElement.type.toString()) {
 								checkedValue = formElement.checkedValue?:'true'
 								uncheckedValue = formElement.uncheckedValue?:'false'
 								initiallyChecked = formElement.initiallyChecked?:'0'
+							} else if ('select' == formElement.type.toString() ||
+									'radio' == formElement.type.toString()) {
+								int count = 0
+								property "options", {
+									formElement.option.each { option ->
+										count++
+										property "option$count", {
+											property 'text', value: "${option.name}"
+											property 'value', value: "${option.value}"
+										}
+									}
+									type = 'list'
+									optionCount = count
+								}
 							}
 						}
 					}
@@ -223,8 +237,8 @@ abstract class BasePlugin extends DslDelegatingScript {
 	}
 
 	def upgrade(String upgradeAction, String pluginName,
-								String otherPluginName, List steps,
-								String configName = 'ec_plugin_cfgs') {
+				String otherPluginName, List steps,
+				String configName = 'ec_plugin_cfgs') {
 
 		migrationConfigurations(upgradeAction, pluginName, otherPluginName, steps, configName)
 	}
