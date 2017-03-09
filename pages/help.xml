@@ -4,37 +4,28 @@
         <title>EC-Kubernetes Plugin</title>
 		<link rel="stylesheet" href="../../plugins/@PLUGIN_NAME@/pluginhelp.css" type="text/css" media="screen"/>
     </head>
-    <style>
-    table, th, td {
-        border: 1px solid black;
-    }
-    p.important {
-    color: BLUE;
-    }
-    </style>
     <body>
         <div class="help">
             <h1>EC-Kubernetes</h1>
             <p>Plugin version @PLUGIN_VERSION@</p>
             <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
             <h3>Overview</h3>
-            <p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory). 
+            <p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).
 
             You need to have a Kubernetes cluster available for using this plugin.
             </p>
-            <p class="important">Please note that some of names given in Flow UI will be modified to comply with the naming conventions of Kubernetes. Specifically characters such as "space , _ " will be converted to "-". Such parameters are marked with a asterisk (*)  in procedure details</p>
             <h1>Contents</h1>
             <ul>
                 <li><a href="#overview">Overview</a></li>
-                <li><a href="#CreateConfiguration">Plugin  Configuration</a></li>
+                <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
                  <li><a href="#procedures">Plugin Procedures</a></li>
                 <ul>
-                    <li><a href="#ProvisionCluster">Check cluster</a></li>
-                    <li><a href="#DeployService">Deploy service</a></li>
+                    <li><a href="#ProvisionCluster">Check Cluster</a></li>
+                    <li><a href="#DeployService">Deploy Service</a></li>
                 </ul>
             </ul>
             <div id="CreateConfiguration">
-                <a name="CreateConfiguration" id="CreateConfigurationLink"></a>
+                <a name='CreateConfiguration' id="CreateConfiguration"> </a>
                 <h2>Plugin Configurations</h2>
                 <!-- If the plugin has separate configurations then include
                      this section, otherwise omit this whole section. We don't
@@ -90,6 +81,10 @@
 
             </div>            
             <h1 id="procedures">Plugin Procedures</h1>
+            <p>
+                IMPORTANT: For all parameter descriptions below, required parameters are shown in
+                <span class="required">bold italics</span>. Please note that some of names given in ElectricFlow UI will be modified to comply with the naming conventions of Kubernetes. Specifically characters such as "space , _ " will be converted to "-". Such parameters are marked with an asterisk (*).
+            </p>
             <div id="ProvisionCluster">
                 <h2>Check Cluster</h2>
                 <p>The procedure checks if the cluster exists and is reachable with provided details.</p>
@@ -103,19 +98,15 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="required">Configuration *</td>
-                            <td>The berar token for accessing the cluster</td>
-                        </tr>
-                        <tr>
-                            <td class="required">Cluster API endpoint *</td>
-                            <td>The base URL of cluster's API endpoint</td>
+                            <td class="required">Configuration</td>
+                            <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
                         </tr>
 
                     </tbody>
                 </table>
             </div>  
             <div id="DeployService">
-                <h2>Deploy service</h2>
+                <h2>Deploy Service</h2>
                 <p>This procedure deploys a service and application to a already provisioned cluster</p>
                 <h3>Depoy Service Parameters</h3>
                 <table class="grid">
@@ -127,31 +118,31 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td class="required">Service Name *</td>
+                            <td class="required">Service Name</td>
                             <td>The name of the service in Deploy that encapsulates the service to be deployed on the Kubernetes cluster.</td>
                         </tr>
                         <tr>
-                            <td class="required">Service Projet Name *</td>
+                            <td class="required">Service Project Name</td>
                             <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
                         </tr>
                         <tr>
-                            <td class="required">Application Name *</td>
+                            <td>Application Name</td>
                             <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
                         </tr>
                         <tr>
-                            <td class="required">Application Revision ID</td>
+                            <td>Application Revision ID</td>
                             <td>Revision Id of the application version that the service belongs to.</td>
                         </tr>  
                         <tr>
-                            <td class="required">Cluster name *</td>
+                            <td>Cluster Name</td>
                             <td>The name of the cluster in Deploy that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
                         </tr>                        
                         <tr>
-                            <td class="required">Cluster or environment project name</td>
+                            <td>Cluster or environment project name</td>
                             <td>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</td>
                         </tr>
                         <tr>
-                            <td class="required">Environment Name</td>
+                            <td>Environment Name</td>
                             <td>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</td>
                         </tr>
                     </tbody>
