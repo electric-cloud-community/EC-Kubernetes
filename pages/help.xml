@@ -152,7 +152,7 @@
             <h1 id="releaseNotes">Release Notes</h1>
             <h3>EC-Kubernetes 1.0.1</h3>
             <ul>
-                <li>Added helper functions in to support services Discovery in EC-GoogleContainerEngine</li>
+                <li>Added helper functions in base client utility to support services Discovery in EC-GoogleContainerEngine</li>
             </ul>
             <h3>EC-Kubernetes 1.0.0</h3>
             <ul>
