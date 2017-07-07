@@ -5,6 +5,7 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
+import groovy.text.StreamingTemplateEngine
 
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.DELETE
@@ -140,6 +141,11 @@ public class BaseClient {
       } else {
         obj
       }
+    }
+
+    def applyTemplate(String textTemplate, def binding) {
+        def template = new StreamingTemplateEngine().createTemplate(textTemplate)
+        template.make(binding).toString()
     }
 
     //Flag for use use during development if there is no internet access
