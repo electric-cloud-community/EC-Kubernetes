@@ -129,6 +129,19 @@ public class KubernetesClient extends BaseClient {
         response.status == 200 ? response.data : null
     }
 
+    def getDeployments(String clusterEndPoint, String namespace, String accessToken) {
+
+        if (OFFLINE) return null
+
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
+                accessToken, /*failOnErrorCode*/ false)
+
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
+        logger DEBUG, "Deployments found: $str"
+        response.status == 200 ? response.data : null
+    }
+
     /**
      * Retrieves the Service instance from Kubernetes cluster.
      * Returns null if no Service instance by the given name is found.
@@ -140,6 +153,18 @@ public class KubernetesClient extends BaseClient {
         def response = doHttpGet(clusterEndPoint,
                 "/api/v1/namespaces/${namespace}/services/$serviceName",
                 accessToken, /*failOnErrorCode*/ false)
+        response.status == 200 ? response.data : null
+    }
+
+    def getServices(String clusterEndPoint, String namespace, String accessToken) {
+
+        if (OFFLINE) return null
+
+        def response = doHttpGet(clusterEndPoint,
+                "/api/v1/namespaces/${namespace}/services",
+                accessToken, /*failOnErrorCode*/ false)
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
+        logger DEBUG, "Services found: $str"
         response.status == 200 ? response.data : null
     }
 
