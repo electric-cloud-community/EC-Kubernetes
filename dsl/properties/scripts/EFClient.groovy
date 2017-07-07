@@ -151,6 +151,17 @@ public class EFClient extends BaseClient {
 
         doHttpPost("/rest/v1.0/properties", /* request body */ payload)
     }
+
+    def evalDsl(String dsl) {
+        def payload = [:]
+        payload << [
+                dsl: dsl
+        ]
+
+        doHttpPost("/rest/v1.0/server/dsl", /* request body */ payload)
+    }
+
+
 }
 
 
