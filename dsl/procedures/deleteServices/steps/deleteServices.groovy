@@ -28,14 +28,14 @@ for(service in serviceList.data.items){
 }
 
 def deploymentList = client.doHttpGet(clusterEndpoint,
-                                   "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
+                                   "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
                                    accessToken)
 
 for(deployment in deploymentList.data.items){
     def deploymentName = deployment.metadata.name
     efClient.logger INFO, "Deleting deployment $deploymentName"
     client.doHttpDelete(clusterEndpoint,
-                        "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/${deploymentName}",
+                        "/apis/apps/v1beta1/namespaces/${namespace}/deployments/${deploymentName}",
                         accessToken)
 
 }

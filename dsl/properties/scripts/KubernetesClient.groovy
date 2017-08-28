@@ -124,7 +124,7 @@ public class KubernetesClient extends BaseClient {
         if (OFFLINE) return null
 
         def response = doHttpGet(clusterEndPoint,
-                "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
+                "/apis/apps/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
@@ -134,7 +134,7 @@ public class KubernetesClient extends BaseClient {
         if (OFFLINE) return null
 
         def response = doHttpGet(clusterEndPoint,
-                "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
+                "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
                 accessToken, /*failOnErrorCode*/ false)
 
         def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
@@ -333,7 +333,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Updating existing deployment $deploymentName"
             doHttpRequest(PUT,
                     clusterEndPoint,
-                    "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
+                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -342,7 +342,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Creating deployment $deploymentName"
             doHttpRequest(POST,
                     clusterEndPoint,
-                    "/apis/extensions/v1beta1/namespaces/${namespace}/deployments",
+                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -439,7 +439,7 @@ public class KubernetesClient extends BaseClient {
         def serviceName = formatName(args.serviceName)
         def result = json {
             kind "Deployment"
-            apiVersion "extensions/v1beta1"
+            apiVersion "apps/v1beta1"
             metadata {
                 name serviceName
             }
