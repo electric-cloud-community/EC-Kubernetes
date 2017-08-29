@@ -122,9 +122,9 @@ public class KubernetesClient extends BaseClient {
     def getDeployment(String clusterEndPoint, String namespace, String deploymentName, String accessToken) {
 
         if (OFFLINE) return null
-
+        String uriPart = determineDeploymentURI(clusterEndPoint, namespace, accessToken)
         def response = doHttpGet(clusterEndPoint,
-                "/apis/apps/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
+                "/${uriPart}/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
@@ -245,7 +245,7 @@ public class KubernetesClient extends BaseClient {
                             secret)
 
                 } else {
-                    logger INFO, "Creating deployment $secretName"
+                    logger INFO, "Creating secret $secretName"
                     doHttpRequest(POST,
                             clusterEndPoint,
                             "/api/v1/namespaces/${namespace}/secrets",
@@ -322,9 +322,10 @@ public class KubernetesClient extends BaseClient {
             }
         }
 
+        String uriPart = determineDeploymentURI(clusterEndPoint, namespace, accessToken)
         def deploymentName = formatName(serviceDetails.serviceName)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
-        def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
+        def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets, uriPart)
         logger DEBUG, "Deployment payload:\n $deployment"
 
         if (OFFLINE) return null
@@ -333,7 +334,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Updating existing deployment $deploymentName"
             doHttpRequest(PUT,
                     clusterEndPoint,
-                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
+                    "/${uriPart}/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -342,7 +343,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Creating deployment $deploymentName"
             doHttpRequest(POST,
                     clusterEndPoint,
-                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
+                    "/${uriPart}/v1beta1/namespaces/${namespace}/deployments",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -370,6 +371,16 @@ public class KubernetesClient extends BaseClient {
             }
         }
 
+    }
+
+    String determineDeploymentURI(String clusterEndPoint, String namespace, String accessToken) {
+
+        //call the new API (as of v1.7) first
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
+                accessToken, /*failOnErrorCode*/ false)
+
+        response.status == 200 ? 'apis/apps' : 'apis/extensions'
     }
 
     String determineContentType(def payload) {
@@ -423,7 +434,7 @@ public class KubernetesClient extends BaseClient {
     }
 
 
-    String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
+    String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList, def uriPart){
 
         if (!args.defaultCapacity) {
             args.defaultCapacity = 1
@@ -437,9 +448,10 @@ public class KubernetesClient extends BaseClient {
 
         def volumeData = convertVolumes(args.volumes)
         def serviceName = formatName(args.serviceName)
+        String deployApiVersion = uriPart == 'apis/apps' ? 'apps/v1beta1' : 'extensions/v1beta1'
         def result = json {
             kind "Deployment"
-            apiVersion "apps/v1beta1"
+            apiVersion "$deployApiVersion"
             metadata {
                 name serviceName
             }
