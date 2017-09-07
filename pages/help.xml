@@ -60,7 +60,7 @@
                     <ul type="square">
                         <li>1. Base address of API Endpoint URL </li>
                         <li>2. Bearer token which has authorization to access API.  
-                        <p>For creating a bearer token, please follow the steps:</p>
+                        <p>Use the following steps for creating a bearer token:</p>
                         <ul>
                             <li>Download the Kubeconfig file from your Kubernetes cluster. Or if you have direct access to Kubectl shell of the cluster, that will work too.</li>
                             <li>You will need to install Kubectl (http://kubernetes.io/docs/user-guide/prereqs/) or have access to Kubectl shell</li>
@@ -70,11 +70,11 @@
                             <li>Assign cluster-admin role to serviceaccount api-user. Specify serviceaccount name as default:api-user, if it is created in default namespace.
                                 <p>kubectl create clusterrolebinding root-cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=default:api-user</p>
                             </li>
-                            <li>Get details of Service account we just created, from the output determine name of secret in which data is stored:<p>
+                            <li>Get details of the service account we just created, from the output determine name of secret in which data is stored:<p>
                             kubectl get serviceaccount api-user -o yaml
                             </p></li>
                             <li>Assuming name of secret from above step is secret-1234, get details of secret:
-                                <p>kubectl get secrey secret-1234 -o yaml</p></li>
+                                <p>kubectl get secret secret-1234 -o yaml</p></li>
                                 <li>The value of token field in above output is the berar token in encoded format. We need to decode it and use it as berar token. On a Unix like system, following command will decode the password<p>
                                 echo "encoded_string" | base64 --decode
                                 </p></li>
@@ -153,6 +153,10 @@
                 </table>
             </div>
             <h1 id="releaseNotes">Release Notes</h1>
+            <h3>EC-Kubernetes 1.0.2</h3>
+            <ul>
+                <li>Added support for Kubernetes API version 1.7</li>
+            </ul>
             <h3>EC-Kubernetes 1.0.1</h3>
             <ul>
                 <li>Added helper functions in base client utility to support services Discovery in EC-GoogleContainerEngine</li>
