@@ -67,6 +67,9 @@
                             <li>Create a service account with following kubectl command:<p>
                                 kubectl create serviceaccount api-user
                             </p></li>
+                            <li>Assign cluster-admin role to serviceaccount api-user. Specify serviceaccount name as default:api-user, if it is created in default namespace.
+                                <p>kubectl create clusterrolebinding root-cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=default:api-user</p>
+                            </li>
                             <li>Get details of Service account we just created, from the output determine name of secret in which data is stored:<p>
                             kubectl get serviceaccount api-user -o yaml
                             </p></li>
