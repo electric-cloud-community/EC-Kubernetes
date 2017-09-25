@@ -65,6 +65,34 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
+    def undeployService(
+            EFClient efClient,
+            String accessToken,
+            String clusterEndpoint,
+            String namespace,
+            String serviceName,
+            String serviceProjectName,
+            String applicationName,
+            String applicationRevisionId,
+            String clusterName,
+            String clusterOrEnvProjectName,
+            String environmentName) {
+
+        def serviceDetails = efClient.getServiceDeploymentDetails(
+                serviceName,
+                serviceProjectName,
+                applicationName,
+                applicationRevisionId,
+                clusterName,
+                clusterOrEnvProjectName,
+                environmentName)
+
+        deleteService(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+        deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+    }
+
     def getPluginConfig(EFClient efClient, String clusterName, String clusterOrEnvProjectName, String environmentName) {
 
         def clusterParameters = efClient.getProvisionClusterParameters(
@@ -194,6 +222,26 @@ public class KubernetesClient extends BaseClient {
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     serviceDefinition)
+        }
+    }
+
+    def deleteService(String clusterEndPoint, String namespace , def serviceDetails, String accessToken) {
+
+        String serviceName = formatName(serviceDetails.serviceName)
+
+        def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
+
+        if (OFFLINE) return null
+
+        if(deployedService){
+            logger INFO, "Deleting service $serviceName"
+            doHttpRequest(DELETE,
+                    clusterEndPoint,
+                    "/api/v1/namespaces/$namespace/services/$serviceName",
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true)
+        }else{
+            logger INFO, "Service $serviceName does not exist"
         }
     }
 
@@ -346,6 +394,28 @@ public class KubernetesClient extends BaseClient {
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
+        }
+
+    }
+
+
+     def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+
+        def deploymentName = formatName(serviceDetails.serviceName)
+        def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
+
+        if (OFFLINE) return null
+
+        if (existingDeployment) {
+            logger INFO, "Deleting deployment $deploymentName"
+            doHttpRequest(DELETE,
+                    clusterEndPoint,
+                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true)
+
+        } else {
+            logger INFO, "Deployment $deploymentName does not exist"
         }
 
     }

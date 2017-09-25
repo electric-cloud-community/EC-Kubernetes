@@ -22,9 +22,13 @@ def stepsWithAttachedCredentials = [
 				procedureName: 'Deploy Service',
 				stepName: 'createOrUpdateDeployment'
 		], [
+				procedureName: 'Undeploy Service',
+				stepName: 'undeployService'
+		], [
 				procedureName: 'Cleanup Cluster - Experimental',
 				stepName: 'cleanup'
-		], [	procedureName: 'Create Resource',
+		], [	
+				procedureName: 'Create Resource',
 				stepName: 'createResource'
 		]
 ]
