@@ -1,0 +1,75 @@
+<!--
+
+     Copyright 2016 Electric Cloud, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Service Name:</label>
+        <property>serviceName</property>
+        <required>1</required>
+        <documentation>The name of the service in Deploy that encapsulates the service that was previously deployed on the Kubernetes cluster.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Project Name:</label>
+        <property>serviceProjectName</property>
+        <required>1</required>
+        <documentation>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Name:</label>
+        <property>applicationName</property>
+        <required>0</required>
+        <documentation>The name of the application that the service belongs to. Not applicable for a top-level service.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Revision ID:</label>
+        <property>applicationRevisionId</property>
+        <required>0</required>
+        <documentation>Revision Id of the application version that the service belongs to.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Environment Name:</label>
+        <property>environmentName</property>
+        <required>1</required>
+        <documentation>The name of the environment that the cluster belongs to.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Environment Project Name:</label>
+        <property>envProjectName</property>
+        <required>0</required>
+        <documentation>The name of the project that the environment belongs to. If not specified, the environment is assumed to be in the same project as the service.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Cluster Name:</label>
+        <property>clusterName</property>
+        <required>0</required>
+        <documentation>The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.</documentation>
+    </formElement>
+     <formElement>
+        <type>entry</type>
+        <label>Cluster Or Environment Project Name:</label>
+        <property>clusterOrEnvProjectName</property>
+        <required>0</required>
+        <documentation>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</documentation>
+    </formElement>
+</editor>
