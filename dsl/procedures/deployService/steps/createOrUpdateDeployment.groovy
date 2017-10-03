@@ -19,7 +19,6 @@ if (!resultsPropertySheet) {
 }
 //// -- Driver script logic to provision cluster -- //
 EFClient efClient = new EFClient()
-def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clusterOrEnvProjectName, environmentName)
 
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
