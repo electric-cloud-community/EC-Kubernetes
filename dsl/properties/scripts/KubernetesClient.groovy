@@ -205,23 +205,27 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
-        if(deployedService){
-            logger INFO, "Updating deployed service $serviceName"
-            doHttpRequest(PUT,
-                    clusterEndPoint,
-                    "/api/v1/namespaces/$namespace/services/$serviceName",
-                    ['Authorization' : accessToken],
-                    /*failOnErrorCode*/ true,
-                    serviceDefinition)
+        if(serviceDefinition!=null){
+            if(deployedService){
+                logger INFO, "Updating deployed service $serviceName"
+                doHttpRequest(PUT,
+                        clusterEndPoint,
+                        "/api/v1/namespaces/$namespace/services/$serviceName",
+                        ['Authorization' : accessToken],
+                        /*failOnErrorCode*/ true,
+                        serviceDefinition)
 
-        } else {
-            logger INFO, "Creating service $serviceName"
-            doHttpRequest(POST,
-                    clusterEndPoint,
-                    "/api/v1/namespaces/${namespace}/services",
-                    ['Authorization' : accessToken],
-                    /*failOnErrorCode*/ true,
-                    serviceDefinition)
+            } else {
+                logger INFO, "Creating service $serviceName"
+                doHttpRequest(POST,
+                        clusterEndPoint,
+                        "/api/v1/namespaces/${namespace}/services",
+                        ['Authorization' : accessToken],
+                        /*failOnErrorCode*/ true,
+                        serviceDefinition)
+            }
+        }else{
+            logger INFO, "No port mapping defined. Skipping service creation."
         }
     }
 
@@ -681,25 +685,9 @@ public class KubernetesClient extends BaseClient {
 
         def serviceName = formatName(args.serviceName)
         def json = new JsonBuilder()
-        def result = json {
-            kind "Service"
-            apiVersion "v1"
-
-            metadata {
-                name serviceName
-            }
-            //Kubernetes plugin injects this service selector
-            //to link the service to the pod that this
-            //Deploy service encapsulates.
-            spec {
-                //service type is currently hard-coded to LoadBalancer
-                type "LoadBalancer"
-                this.addServiceParameters(delegate, args)
-
-                selector {
-                    "ec-svc" serviceName
-                }
-                ports(args.port.collect { svcPort ->
+        def portMapping = []
+        def payload = null
+        portMapping = args.port.collect { svcPort ->
                     [
                             port: svcPort.listenerPort.toInteger(),
                             //name is required for Kubernetes if more than one port is specified so auto-assign
@@ -709,17 +697,42 @@ public class KubernetesClient extends BaseClient {
                             //protocol: svcPort.protocol?: "TCP"
                             protocol: "TCP"
                     ]
-                })
-            }
-        }
+                }
 
-        def payload = deployedService
-        if (payload) {
-            payload = mergeObjs(payload, result)
+        if (portMapping.size()==0){
+            // no port mapping defined.
+            return null
         } else {
-            payload = result
+            def result = json {
+                kind "Service"
+                apiVersion "v1"
+
+                metadata {
+                    name serviceName
+                }
+                //Kubernetes plugin injects this service selector
+                //to link the service to the pod that this
+                //Deploy service encapsulates.
+                spec {
+                    //service type is currently hard-coded to LoadBalancer
+                    type "LoadBalancer"
+                    this.addServiceParameters(delegate, args)
+
+                    selector {
+                        "ec-svc" serviceName
+                    }
+                    ports(portMapping)
+                }
+            }
+
+            payload = deployedService
+            if (payload) {
+                payload = mergeObjs(payload, result)
+            } else {
+                payload = result
+            }
+            return (new JsonBuilder(payload)).toPrettyString()
         }
-        return (new JsonBuilder(payload)).toPrettyString()
     }
 
     def convertCpuToMilliCpu(float cpu) {
