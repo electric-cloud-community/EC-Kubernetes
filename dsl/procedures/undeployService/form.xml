@@ -65,11 +65,4 @@
         <required>0</required>
         <documentation>The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.</documentation>
     </formElement>
-     <formElement>
-        <type>entry</type>
-        <label>Cluster Or Environment Project Name:</label>
-        <property>clusterOrEnvProjectName</property>
-        <required>0</required>
-        <documentation>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</documentation>
-    </formElement>
 </editor>

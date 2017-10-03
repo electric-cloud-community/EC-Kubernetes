@@ -61,6 +61,30 @@ public class EFClient extends BaseClient {
         values
     }
 
+    def getServiceCluster(String serviceName,
+                          String projectName,
+                          String applicationName,
+                          String applicationRevisionId,
+                          String environmentName,
+                          String envProjectName) {
+
+        def result = doHttpGet("/rest/v1.0/projects/${projectName}/applications/${applicationName}/tierMaps")
+
+        logger INFO, "Tier Maps: " + JsonOutput.toJson(result)
+        // Filter tierMap based on environment.
+        def tierMap = result.data.tierMap.find {
+            it.environmentName == environmentName && it.environmentProjectName == envProjectName
+        }
+
+        logger INFO, "Environment tier map for environment '$environmentName' and environment project '$envProjectName': \n" + JsonOutput.toJson(tierMap)
+        // Filter applicationServiceMapping based on service name.
+        def appSvcMapping = tierMap?.appServiceMappings?.applicationServiceMapping?.find {
+            it.serviceName == serviceName
+        }
+        logger INFO, "Service map for service '$serviceName': \n" + JsonOutput.toJson(appSvcMapping)
+        appSvcMapping?.clusterName
+    }
+
     def getProvisionClusterParameters(String clusterName,
                                       String clusterOrEnvProjectName,
                                       String environmentName) {

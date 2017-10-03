@@ -5,20 +5,28 @@ String serviceName = '$[serviceName]'
 String serviceProjectName = '$[serviceProjectName]'
 String applicationName = '$[applicationName]'
 String clusterName = '$[clusterName]'
-String clusterOrEnvProjectName = '$[clusterOrEnvProjectName]'
-// default cluster project name if not explicitly set
-if (!clusterOrEnvProjectName) {
-    clusterOrEnvProjectName = serviceProjectName
+String envProjectName = '$[envProjectName]'
+// default env project name if not explicitly set
+if (!envProjectName) {
+    envProjectName = serviceProjectName
 }
 String environmentName = '$[environmentName]'
 String applicationRevisionId = '$[applicationRevisionId]'
 
-//// -- Driver script logic to provision cluster -- //
+//// -- Driver script logic to undeploy service -- //
 EFClient efClient = new EFClient()
-def clusterParameters = efClient.getProvisionClusterParameters(clusterName, clusterOrEnvProjectName, environmentName)
+// if cluster is not specified, find the cluster based on the environment that the application is mapped to.
+if (!clusterName) {
+    clusterName = efClient.getServiceCluster(serviceName,
+            serviceProjectName,
+            applicationName,
+            applicationRevisionId,
+            environmentName,
+            envProjectName)
+}
 
 KubernetesClient client = new KubernetesClient()
-def pluginConfig = client.getPluginConfig(efClient, clusterName, clusterOrEnvProjectName, environmentName)
+def pluginConfig = client.getPluginConfig(efClient, clusterName, envProjectName, environmentName)
 String accessToken = client.retrieveAccessToken (pluginConfig)
 def clusterEndpoint = pluginConfig.clusterEndpoint
 
@@ -28,7 +36,7 @@ def serviceDetails = efClient.getServiceDeploymentDetails(
                 applicationName,
                 applicationRevisionId,
                 clusterName,
-                clusterOrEnvProjectName,
+                envProjectName,
                 environmentName)
 String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
 
@@ -42,5 +50,5 @@ client.undeployService(
         applicationName,
         applicationRevisionId,
         clusterName,
-        clusterOrEnvProjectName,
+        envProjectName,
         environmentName)
