@@ -117,6 +117,11 @@ public class KubernetesClient extends BaseClient {
 
         deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+        // Explicitly delete replica sets. Currently can not delete Deployment with cascade option
+        // since sending '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Foreground"}'
+        // as body to DELETE HTTP request is not allowed by HTTPBuilder
+        deleteReplicSet(clusterEndpoint, namespace, serviceDetails, accessToken)
+
     }
 
     def getPluginConfig(EFClient efClient, String clusterName, String clusterOrEnvProjectName, String environmentName) {
@@ -459,6 +464,52 @@ public class KubernetesClient extends BaseClient {
 
     }
 
+
+     def deleteReplicSet(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+     
+        def deploymentName = formatName(serviceDetails.serviceName)
+        def replicaSets = getReplicaSets(clusterEndPoint, namespace, deploymentName, accessToken)
+
+        if (OFFLINE) return null
+
+        for(replSet in replicaSets){
+            logger INFO, "Deleting replicaSet $replSet for deployment $deploymentName"
+            doHttpRequest(DELETE,
+                    clusterEndPoint,
+                    "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/$replSet",
+                    ['Authorization' : accessToken],
+                    /*failOnErrorCode*/ true)     
+        }
+     }
+
+     def getReplicaSets(String clusterEndPoint, String namespace, String deploymentName, String accessToken){
+
+        if (OFFLINE) return null
+
+        def replicaSet = []
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
+                accessToken, /*failOnErrorCode*/ false)
+
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
+     
+        for( replSet in response.data.items){
+
+            // Name of replicaSet follow the convension as <deployment_name>-uniqueId
+            // Filter out replicaSets which contains Deployment name in their names.
+            def matcher = replSet.metadata.name =~ /(.*)-([^-]+)$/
+            try{
+                def replName = matcher[0][1]
+                if(replName == deploymentName){
+                    replicaSet << replSet.metadata.name
+                }
+            }catch(IndexOutOfBoundsException e){
+                // ReplicaSet does not contain deployment name
+                // Continue to next ReplicaSet
+            }
+        }
+        replicaSet
+     }
 
      def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
