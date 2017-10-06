@@ -59,7 +59,7 @@ public class KubernetesClient extends BaseClient {
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
         switch (serviceType) {
             case 'LoadBalancer':
-                def serviceEndpoint = getLBServiceEndpoint(clusterEndPoint, namespace, serviceDetails, accessToken)
+                def serviceEndpoint = getLBServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
 
                 if (serviceEndpoint) {
                     serviceDetails.port?.each { port ->
@@ -68,25 +68,26 @@ public class KubernetesClient extends BaseClient {
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
                     }
                 }
+                break
 
             case 'NodePort':
                 serviceDetails.port?.each { port ->
                     String portName = port.portName
-                    def nodePort = getNodePortServiceEndpoint(clusterEndPoint, namespace, serviceDetails, portName, accessToken)
+                    def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
                     String url = "$nodePort"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
                 }
+                break
 
             default: //ClusterIP
-                def clusterIP = getClusterIPServiceEndpoint(clusterEndPoint, namespace, serviceDetails, accessToken)
-
-                if (serviceEndpoint) {
-                    serviceDetails.port?.each { port ->
-                        String portName = port.portName
-                        String url = "${clusterIP}:${port.listenerPort}"
-                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
-                    }
+                def clusterIP = getClusterIPServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
+                serviceDetails.port?.each { port ->
+                    String portName = port.portName
+                    String url = "${clusterIP}:${port.listenerPort}"
+                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
                 }
+                break
+
         }
     }
 
@@ -210,6 +211,13 @@ public class KubernetesClient extends BaseClient {
         def response = doHttpGet(clusterEndPoint,
                 "/api/v1/namespaces/${namespace}/services/$serviceName",
                 accessToken, /*failOnErrorCode*/ false)
+
+        if (response.data) {
+            def payload = response.data
+            String str = (new JsonBuilder(payload)).toPrettyString()
+            logger INFO, "Deployed service:\n $str"
+        }
+
         response.status == 200 ? response.data : null
     }
 
@@ -315,14 +323,19 @@ public class KubernetesClient extends BaseClient {
 
         String serviceName = formatName(serviceDetails.serviceName)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
-        //TODO: get the clusterIP for the service
+        //get the clusterIP for the service
+        deployedService?.spec?.clusterIP
     }
 
     def getNodePortServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String portName, String accessToken) {
 
         String serviceName = formatName(serviceDetails.serviceName)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
-        //TODO: get the published node port for the specified portName
+        //get the published node port for the specified portName
+        def servicePort = deployedService?.spec?.ports?.find {
+            it.name = portName
+        }
+        servicePort?.nodePort
     }
 
     def createOrUpdateSecret(def secretName, def username, def password, def repoBaseUrl,
@@ -861,7 +874,7 @@ public class KubernetesClient extends BaseClient {
 
     boolean isVersionGreaterThan15() {
         try {
-            float version = Float.toFloat(this.kubernetesVersion)
+            float version = Float.parseFloat(this.kubernetesVersion)
             version >= 1.6
         } catch (NumberFormatException ex) {
             logger WARNING, "Invalid Kubernetes version '$kubernetesVersion'"
@@ -877,7 +890,7 @@ public class KubernetesClient extends BaseClient {
             //validate that the version is numeric
             try {
                 def versionStr = pluginConfig.kubernetesVersion.toString()
-                Float.toFloat(versionStr)
+                Float.parseFloat(versionStr)
                 this.kubernetesVersion = versionStr
             } catch (NumberFormatException ex) {
                 logger WARNING, "Invalid Kubernetes version specified: '$versionStr', " +
