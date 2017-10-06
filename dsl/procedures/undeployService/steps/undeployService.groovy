@@ -27,6 +27,7 @@ if (!clusterName) {
 
 KubernetesClient client = new KubernetesClient()
 def pluginConfig = client.getPluginConfig(efClient, clusterName, envProjectName, environmentName)
+client.setVersion(pluginConfig)
 String accessToken = client.retrieveAccessToken (pluginConfig)
 def clusterEndpoint = pluginConfig.clusterEndpoint
 

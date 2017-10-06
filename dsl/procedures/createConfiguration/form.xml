@@ -48,6 +48,15 @@
         <attachedAsParameterToStep>createAndAttachCredential</attachedAsParameterToStep>
     </formElement>
     <formElement>
+        <type>entry</type>
+        <label>Kubernetes Version:</label>
+        <property>kubernetesVersion</property>
+        <propertyReference>/plugins/@PLUGIN_NAME@/project/ec_options/k8sVersions</propertyReference>
+        <documentation>Kubernetes version running on the cluster master</documentation>
+        <value>1.6</value>
+        <required>0</required>
+    </formElement>
+    <formElement>
         <type>select</type>
         <label>Log Level:</label>
         <property>logLevel</property>

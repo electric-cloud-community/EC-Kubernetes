@@ -109,6 +109,14 @@ project pluginName, {
 		}
 	}
 
+	property 'ec_options', {
+		property 'k8sVersions', {
+			property '1.4', value: '1.4'
+			property '1.5', value: '1.5'
+			property '1.6', value: '1.6'
+		}
+	}
+
 	procedure 'Define Container', {
 		containerMappingsForm = new File(pluginDir, 'dsl/procedures/defineContainer/containerMappingsForm.xml').text
 	}

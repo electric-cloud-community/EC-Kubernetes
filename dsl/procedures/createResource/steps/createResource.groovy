@@ -20,7 +20,7 @@ if(requestFormat == "yaml"){ // If YAML, convert to JSON
 }
 
 KubernetesClient client = new KubernetesClient()
-
+client.setVersion(pluginConfig)
 String accessToken = client.retrieveAccessToken (pluginConfig)
 String clusterEndpoint = pluginConfig.clusterEndpoint
 
