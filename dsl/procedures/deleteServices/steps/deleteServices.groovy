@@ -9,9 +9,12 @@ EFClient efClient = new EFClient()
 def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
 
 KubernetesClient client = new KubernetesClient()
+client.setVersion(pluginConfig)
 
 String accessToken = 'Bearer '+pluginConfig.credential.password
 String clusterEndpoint = pluginConfig.clusterEndpoint
+
+efClient.logger WARNING, "***Using an experimental procedure - not supported for production use!***"
 
 efClient.logger WARNING, "Deleting all services, and deployments in the cluster!"
 def serviceList = client.doHttpGet(clusterEndpoint,
@@ -27,15 +30,16 @@ for(service in serviceList.data.items){
                          accessToken)
 }
 
+String apiPath = client.versionSpecificAPIPath('deployments')
 def deploymentList = client.doHttpGet(clusterEndpoint,
-                                   "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
+                                   "/apis/${apiPath}/namespaces/${namespace}/deployments",
                                    accessToken)
 
 for(deployment in deploymentList.data.items){
     def deploymentName = deployment.metadata.name
     efClient.logger INFO, "Deleting deployment $deploymentName"
     client.doHttpDelete(clusterEndpoint,
-                        "/apis/apps/v1beta1/namespaces/${namespace}/deployments/${deploymentName}",
+                        "/apis/${apiPath}/namespaces/${namespace}/deployments/${deploymentName}",
                         accessToken)
 
 }

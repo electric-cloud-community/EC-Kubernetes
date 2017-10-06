@@ -12,6 +12,8 @@ String clusterEndpoint = pluginConfig.clusterEndpoint
 String healthCheckUrl = "$clusterEndpoint/api/v1"
 
 KubernetesClient client = new KubernetesClient()
+client.setVersion(pluginConfig)
+
 def resp = client.checkClusterHealth(healthCheckUrl, accessToken)
 if (resp.status == 200){ 
 	efClient.logger INFO, "The service is reachable at ${clusterEndpoint}"

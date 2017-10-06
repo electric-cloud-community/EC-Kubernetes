@@ -3,6 +3,8 @@
  */
 public class KubernetesClient extends BaseClient {
 
+    String kubernetesVersion = '1.6'
+
     String retrieveAccessToken(def pluginConfig) {
         "Bearer ${pluginConfig.credential.password}"
     }
@@ -54,14 +56,37 @@ public class KubernetesClient extends BaseClient {
         // hook for other kubernetes based plugins
         createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
 
-        def serviceEndpoint = getDeployedServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
+        def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
+        switch (serviceType) {
+            case 'LoadBalancer':
+                def serviceEndpoint = getLBServiceEndpoint(clusterEndPoint, namespace, serviceDetails, accessToken)
 
-        if (serviceEndpoint) {
-            serviceDetails.port?.each { port ->
-                String portName = port.portName
-                String url = "${serviceEndpoint}:${port.listenerPort}"
-                efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
-            }
+                if (serviceEndpoint) {
+                    serviceDetails.port?.each { port ->
+                        String portName = port.portName
+                        String url = "${serviceEndpoint}:${port.listenerPort}"
+                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+                    }
+                }
+
+            case 'NodePort':
+                serviceDetails.port?.each { port ->
+                    String portName = port.portName
+                    def nodePort = getNodePortServiceEndpoint(clusterEndPoint, namespace, serviceDetails, portName, accessToken)
+                    String url = "$nodePort"
+                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+                }
+
+            default: //ClusterIP
+                def clusterIP = getClusterIPServiceEndpoint(clusterEndPoint, namespace, serviceDetails, accessToken)
+
+                if (serviceEndpoint) {
+                    serviceDetails.port?.each { port ->
+                        String portName = port.portName
+                        String url = "${clusterIP}:${port.listenerPort}"
+                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+                    }
+                }
         }
     }
 
@@ -102,7 +127,9 @@ public class KubernetesClient extends BaseClient {
 
         def configName = clusterParameters.config
         def pluginProjectName = '$[/myProject/projectName]'
-        efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
+        def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
+        this.setVersion(pluginConfig)
+        pluginConfig
     }
 
     def createOrCheckNamespace(String clusterEndPoint, String namespace, String accessToken){
@@ -151,8 +178,9 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
+        String apiPath = versionSpecificAPIPath('deployments')
         def response = doHttpGet(clusterEndPoint,
-                "/apis/apps/v1beta1/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
+                "/apis/${apiPath}/namespaces/${namespace}/deployments/${formatName(deploymentName)}",
                 accessToken, /*failOnErrorCode*/ false)
         response.status == 200 ? response.data : null
     }
@@ -161,8 +189,9 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
+        String apiPath = versionSpecificAPIPath('deployments')
         def response = doHttpGet(clusterEndPoint,
-                "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
+                "/apis/${apiPath}/namespaces/${namespace}/deployments",
                 accessToken, /*failOnErrorCode*/ false)
 
         def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
@@ -249,7 +278,7 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    def getDeployedServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+    def getLBServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
         def lbEndpoint
         def elapsedTime = 0;
@@ -280,6 +309,20 @@ public class KubernetesClient extends BaseClient {
             lbEndpoint = value
         }
         lbEndpoint
+    }
+
+    def getClusterIPServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+
+        String serviceName = formatName(serviceDetails.serviceName)
+        def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
+        //TODO: get the clusterIP for the service
+    }
+
+    def getNodePortServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String portName, String accessToken) {
+
+        String serviceName = formatName(serviceDetails.serviceName)
+        def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
+        //TODO: get the published node port for the specified portName
     }
 
     def createOrUpdateSecret(def secretName, def username, def password, def repoBaseUrl,
@@ -381,11 +424,12 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
+        String apiPath = versionSpecificAPIPath('deployments')
         if (existingDeployment) {
             logger INFO, "Updating existing deployment $deploymentName"
             doHttpRequest(PUT,
                     clusterEndPoint,
-                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
+                    "/apis/${apiPath}/namespaces/${namespace}/deployments/$deploymentName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -394,7 +438,7 @@ public class KubernetesClient extends BaseClient {
             logger INFO, "Creating deployment $deploymentName"
             doHttpRequest(POST,
                     clusterEndPoint,
-                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments",
+                    "/apis/${apiPath}/namespaces/${namespace}/deployments",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true,
                     deployment)
@@ -410,11 +454,12 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
 
+        String apiPath = versionSpecificAPIPath('deployments')
         if (existingDeployment) {
             logger INFO, "Deleting deployment $deploymentName"
             doHttpRequest(DELETE,
                     clusterEndPoint,
-                    "/apis/apps/v1beta1/namespaces/${namespace}/deployments/$deploymentName",
+                    "/apis/${apiPath}/namespaces/${namespace}/deployments/$deploymentName",
                     ['Authorization' : accessToken],
                     /*failOnErrorCode*/ true)
 
@@ -511,9 +556,11 @@ public class KubernetesClient extends BaseClient {
 
         def volumeData = convertVolumes(args.volumes)
         def serviceName = formatName(args.serviceName)
+        String apiPath = versionSpecificAPIPath('deployments')
+
         def result = json {
             kind "Deployment"
-            apiVersion "apps/v1beta1"
+            apiVersion apiPath
             metadata {
                 name serviceName
             }
@@ -651,9 +698,19 @@ public class KubernetesClient extends BaseClient {
 
     def addServiceParameters(def json, Map args) {
 
-        def value = getServiceParameter(args, 'loadBalancerIP')
-        if (value != null) {
-            json.loadBalancerIP value
+        def value = getServiceParameter(args, 'serviceType', 'LoadBalancer')
+        json.type value
+
+        if (value == 'LoadBalancer') {
+
+            value = getServiceParameter(args, 'loadBalancerIP')
+            if (value != null) {
+                json.loadBalancerIP value
+            }
+            value = getServiceParameterArray(args, 'loadBalancerSourceRanges')
+            if (value != null) {
+                json.loadBalancerSourceRanges value
+            }
         }
 
         value = getServiceParameter(args, 'sessionAffinity', 'None')
@@ -661,10 +718,6 @@ public class KubernetesClient extends BaseClient {
             json.sessionAffinity value
         }
 
-        value = getServiceParameterArray(args, 'loadBalancerSourceRanges')
-        if (value != null) {
-            json.loadBalancerSourceRanges value
-        }
     }
 
     def getServiceParameter(Map args, String parameterName, def defaultValue = null) {
@@ -714,8 +767,6 @@ public class KubernetesClient extends BaseClient {
                 //to link the service to the pod that this
                 //Deploy service encapsulates.
                 spec {
-                    //service type is currently hard-coded to LoadBalancer
-                    type "LoadBalancer"
                     this.addServiceParameters(delegate, args)
 
                     selector {
@@ -808,4 +859,40 @@ public class KubernetesClient extends BaseClient {
                 failOnErrorCode)
     }
 
+    boolean isVersionGreaterThan15() {
+        try {
+            float version = Float.toFloat(this.kubernetesVersion)
+            version >= 1.6
+        } catch (NumberFormatException ex) {
+            logger WARNING, "Invalid Kubernetes version '$kubernetesVersion'"
+            // default to considering this > 1.5 version
+            true
+        }
+    }
+
+    def setVersion(def pluginConfig) {
+        // read the version from the plugin config
+        // if it is defined
+        if (pluginConfig.kubernetesVersion) {
+            //validate that the version is numeric
+            try {
+                def versionStr = pluginConfig.kubernetesVersion.toString()
+                Float.toFloat(versionStr)
+                this.kubernetesVersion = versionStr
+            } catch (NumberFormatException ex) {
+                logger WARNING, "Invalid Kubernetes version specified: '$versionStr', " +
+                        "defaulting to version '$kubernetesVersion'"
+            }
+        }
+        logger INFO, "Using Kubernetes version '$kubernetesVersion'"
+    }
+
+    String versionSpecificAPIPath(String resource) {
+        switch (resource) {
+            case 'deployments':
+                return isVersionGreaterThan15() ? 'apps/v1beta1': 'extensions/v1beta1'
+            default:
+                handleError("Unsupported resource '$resource' for determining version specific API path")
+        }
+    }
 }

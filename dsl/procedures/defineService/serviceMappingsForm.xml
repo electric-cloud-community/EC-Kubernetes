@@ -23,8 +23,29 @@
         <required>0</required>
         <value>default</value>
         <documentation>The name of namespace to which the services and deployments should be deployed.</documentation>
-    </formElement> 
-    
+    </formElement>
+
+    <formElement>
+        <type>select</type>
+        <label>Service Type:</label>
+        <property>serviceType</property>
+        <value>LoadBalancer</value>
+        <required>0</required>
+        <option>
+            <name>ClusterIP</name>
+            <value>ClusterIP</value>
+        </option>
+        <option>
+            <name>LoadBalancer</name>
+            <value>LoadBalancer</value>
+        </option>
+        <option>
+            <name>NodePort</name>
+            <value>NodePort</value>
+        </option>
+        <documentation>Kind of Kubernetes service to create.</documentation>
+    </formElement>
+
     <formElement>
         <type>entry</type>
         <label>LoadBalancer IP:</label>
