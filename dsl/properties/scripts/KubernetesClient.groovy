@@ -115,8 +115,14 @@ public class KubernetesClient extends BaseClient {
 
         deleteService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+        // Explicitly delete replica sets. Currently can not delete Deployment with cascade option
+        // since sending '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Foreground"}'
+        // as body to DELETE HTTP request is not allowed by HTTPBuilder
         deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+        deleteReplicaSets(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+        deletePods(clusterEndpoint, namespace, serviceDetails, accessToken)
     }
 
     def getPluginConfig(EFClient efClient, String clusterName, String clusterOrEnvProjectName, String environmentName) {
@@ -459,8 +465,71 @@ public class KubernetesClient extends BaseClient {
 
     }
 
+    def deleteReplicaSets(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
 
-     def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+        if (OFFLINE) return null
+        def deploymentName = formatName(serviceDetails.serviceName)
+        
+        def response = doHttpGet(clusterEndPoint,
+                "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
+                accessToken, /*failOnErrorCode*/ false)
+
+        for(replSet in response.data.items){
+
+            // Name of replicaSet follow the convension as <deployment_name>-uniqueId
+            // Filter out replicaSets which contains Deployment name in their names.
+            def matcher = replSet.metadata.name =~ /(.*)-([^-]+)$/
+            try{
+
+                def replName = matcher[0][1]
+                if(replName == deploymentName){
+
+                    def resp = doHttpRequest(DELETE, clusterEndPoint,
+                        "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${replSet.metadata.name}",
+                        ['Authorization' : accessToken], 
+                        /*failOnErrorCode*/ false)
+                    logger INFO, "Deleting replicaSet ${replSet.metadata.name}. Response : ${resp}"
+                }
+            }catch(IndexOutOfBoundsException e){
+                // ReplicaSet does not contain deployment name
+                // Continue to next ReplicaSet
+            }
+        }
+     }
+
+    def deletePods(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
+     
+        if (OFFLINE) return null
+        def deploymentName = formatName(serviceDetails.serviceName)
+        
+        def response = doHttpGet(clusterEndPoint,
+                "/api/v1/namespaces/${namespace}/pods",
+                accessToken, /*failOnErrorCode*/ false)   
+
+        for( pod in response.data.items ){
+
+            // Name of replicaSet follow the convension as <deployment_name>-replicaSetUniqueId-podUniqueId
+            // Filter out pods which contains Deployment name in their names.
+            def matcher = pod.metadata.name =~ /(.*)-([^-]+)-([^-]+)$/
+            try{
+
+                def podName = matcher[0][1]
+                if(podName == deploymentName){
+
+                    def resp = doHttpRequest(DELETE, clusterEndPoint,
+                        "/api/v1/namespaces/${namespace}/pods/${pod.metadata.name}",
+                        ['Authorization' : accessToken], 
+                        /*failOnErrorCode*/ false)
+                    logger INFO, "Deleting pod ${pod.metadata.name}. Response : ${resp}"
+                }
+            }catch(IndexOutOfBoundsException e){
+                // ReplicaSet does not contain deployment name
+                // Continue to next ReplicaSet
+            }
+        }
+    }
+
+    def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
         def deploymentName = formatName(serviceDetails.serviceName)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
