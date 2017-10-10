@@ -21,7 +21,7 @@
         <label>Service Name:</label>
         <property>serviceName</property>
         <required>1</required>
-        <documentation>The name of the service in Deploy that encapsulates the service that was previously deployed on the Kubernetes cluster.</documentation>
+        <documentation>The name of the service in ElectricFlow that encapsulates the service that was previously deployed on the Kubernetes cluster.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
