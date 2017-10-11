@@ -116,7 +116,8 @@ public class EFClient extends BaseClient {
                                     String applicationRevisionId,
                                     String clusterName,
                                     String clusterProjectName,
-                                    String environmentName) {
+                                    String environmentName,
+                                    String serviceEntityRevisionId = null) {
 
         def partialUri = applicationName ?
                 "projects/$serviceProjectName/applications/$applicationName/services/$serviceName" :
@@ -128,6 +129,11 @@ public class EFClient extends BaseClient {
                 environmentName: environmentName,
                 applicationEntityRevisionId: applicationRevisionId
         ]
+
+        if (serviceEntityRevisionId) {
+            queryArgs << [serviceEntityRevisionId: serviceEntityRevisionId]
+        }
+
         def result = doHttpGet("/rest/v1.0/$partialUri", /*failOnErrorCode*/ true, queryArgs)
 
         def svcDetails = result.data.service

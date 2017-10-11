@@ -80,6 +80,7 @@ project pluginName, {
 					property 'clusterName', value: 'clusterName'
 					property 'clusterOrEnvironmentProjectName', value: 'clusterOrEnvProjectName'
 					property 'environmentName', value: 'environmentName'
+					property 'serviceEntityRevisionId', value: 'serviceEntityRevisionId'
 				}
 			}
 			property 'createConfiguration', {
