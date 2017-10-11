@@ -72,16 +72,7 @@ public class KubernetesClient extends BaseClient {
                 }
                 break
 
-            case 'NodePort':
-                serviceDetails.port?.each { port ->
-                    String portName = port.portName
-                    def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
-                    String url = "$nodePort"
-                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
-                }
-                break
-
-            default: //ClusterIP
+            default: //for both 'NodePort' and 'ClusterIP', service is accessible through ClusterIP:port
                 def clusterIP = getClusterIPServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
                 serviceDetails.port?.each { port ->
                     String portName = port.portName
