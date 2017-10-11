@@ -126,7 +126,11 @@
                             <td>The name of the service in ElectricFlow that encapsulates the service to be deployed on the Kubernetes cluster.</td>
                         </tr>
                         <tr>
-                            <td class="required">Service Project Name</td>
+                            <td>Service Revision ID</td>
+                            <td>Revision Id of the service in ElectricFlow.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Project Name</td>
                             <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
                         </tr>
                         <tr>
