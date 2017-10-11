@@ -70,6 +70,11 @@ $xpath = $ec->attachCredential($projName, $credName,
 $errors .= $ec->checkAllErrors($xpath);
 
 $xpath = $ec->attachCredential($projName, $credName,
+    {procedureName => "Undeploy Service",
+     stepName => "undeployService"});
+$errors .= $ec->checkAllErrors($xpath);
+
+$xpath = $ec->attachCredential($projName, $credName,
     {procedureName => "Cleanup Cluster - Experimental",
      stepName => "cleanup"});
 $errors .= $ec->checkAllErrors($xpath);
