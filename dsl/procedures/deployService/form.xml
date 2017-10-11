@@ -25,6 +25,13 @@
     </formElement>
     <formElement>
         <type>entry</type>
+        <label>Service Revision ID:</label>
+        <property>serviceEntityRevisionId</property>
+        <required>0</required>
+        <documentation>Revision Id of the service in ElectricFlow.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
         <label>Project Name:</label>
         <property>serviceProjectName</property>
         <required>1</required>

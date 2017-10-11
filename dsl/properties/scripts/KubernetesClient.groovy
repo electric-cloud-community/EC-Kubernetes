@@ -34,7 +34,8 @@ public class KubernetesClient extends BaseClient {
             String clusterName,
             String clusterOrEnvProjectName,
             String environmentName,
-            String resultsPropertySheet) {
+            String resultsPropertySheet,
+            String serviceEntityRevisionId = null) {
 
         def serviceDetails = efClient.getServiceDeploymentDetails(
                 serviceName,
@@ -43,7 +44,8 @@ public class KubernetesClient extends BaseClient {
                 applicationRevisionId,
                 clusterName,
                 clusterOrEnvProjectName,
-                environmentName)
+                environmentName,
+                serviceEntityRevisionId)
 
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
@@ -102,7 +104,8 @@ public class KubernetesClient extends BaseClient {
             String applicationRevisionId,
             String clusterName,
             String clusterOrEnvProjectName,
-            String environmentName) {
+            String environmentName,
+            String serviceEntityRevisionId = null) {
 
         def serviceDetails = efClient.getServiceDeploymentDetails(
                 serviceName,
@@ -111,7 +114,8 @@ public class KubernetesClient extends BaseClient {
                 applicationRevisionId,
                 clusterName,
                 clusterOrEnvProjectName,
-                environmentName)
+                environmentName,
+                serviceEntityRevisionId)
 
         deleteService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
