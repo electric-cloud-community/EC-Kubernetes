@@ -160,6 +160,7 @@
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>
                 <li>Added support for Kubernetes API version 1.7</li>
+                <li>Handled race condition in parallel creation of a namespace by multiple steps.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.1</h3>
             <ul>
