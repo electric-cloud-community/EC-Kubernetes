@@ -148,12 +148,19 @@ public class KubernetesClient extends BaseClient {
         else if (response.status == 404){
             def namespaceDefinition = buildNamespacePayload(namespace)
             logger INFO, "Creating Namespace ${namespace}"
-            doHttpRequest(POST,
+            response = doHttpRequest(POST,
                     clusterEndPoint,
                     '/api/v1/namespaces',
                     ['Authorization' : accessToken],
-                    /*failOnErrorCode*/ true,
+                    /*failOnErrorCode*/ false,
                     namespaceDefinition)
+
+            // Ignore if the namespace got created and
+            // we get a 409 conflict for namespace already exists,
+            // otherwise report the error
+            if (response.status >= 400 && response.status != 409) {
+                handleError("Request failed with $response.statusLine")
+            }
         }
         else {
             handleError("Namespace check failed. ${response.statusLine}")
