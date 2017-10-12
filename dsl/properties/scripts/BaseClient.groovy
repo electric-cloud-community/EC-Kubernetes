@@ -60,7 +60,8 @@ public class BaseClient {
                     handleError("Request failed with $resp.statusLine")
                 }
             } else {
-                response.failure = { resp ->
+                response.failure = { resp, reader ->
+                    logger DEBUG, "Error details: $reader"
                     logger INFO, "Response: $resp.statusLine"
                     [statusLine: resp.statusLine,
                      status: resp.status]
