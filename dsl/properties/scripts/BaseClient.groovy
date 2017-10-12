@@ -56,7 +56,7 @@ public class BaseClient {
 
             if (failOnErrorCode) {
                 response.failure = { resp, reader ->
-                    logger ERROR, "Error details: $reader"
+                    logger ERROR, "Response: $reader"
                     handleError("Request failed with $resp.statusLine")
                 }
             } else {
