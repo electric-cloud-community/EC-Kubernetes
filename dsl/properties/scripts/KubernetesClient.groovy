@@ -407,7 +407,11 @@ public class KubernetesClient extends BaseClient {
         }
         String repoBaseUrl = imageDetails[0]
         def secretName = repoBaseUrl + "-" + username
-        return [repoBaseUrl, secretName.replaceAll(':', '-').replaceAll('/', '-').replaceAll('@', '-')]
+        // To comply with DNS-1123 standard for secret names
+        // 1. Replace any non-alphanumeric characters with '-'
+        // 2. Prepend and append character 's', if secret name start and end with non-alphanumeric character
+        // 3. Convert all characters to lower case
+        return [repoBaseUrl, secretName.replaceAll(/[^a-zA-Z\d\.-]/, '-').replaceAll(/^[^a-zA-Z\d]/, 's').replaceAll(/[^a-zA-Z\d]$/, 's').toLowerCase()]
     }
 
     def createOrUpdateDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
