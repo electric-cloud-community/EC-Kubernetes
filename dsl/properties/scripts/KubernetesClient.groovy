@@ -407,7 +407,7 @@ public class KubernetesClient extends BaseClient {
         }
         String repoBaseUrl = imageDetails[0]
         def secretName = repoBaseUrl + "-" + username
-        return [repoBaseUrl, secretName.replaceAll(':', '-').replaceAll('/', '-')]
+        return [repoBaseUrl, secretName.replaceAll(':', '-').replaceAll('/', '-').replaceAll('@', '-')]
     }
 
     def createOrUpdateDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
