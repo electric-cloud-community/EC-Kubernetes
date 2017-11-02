@@ -65,9 +65,29 @@ public class KubernetesClient extends BaseClient {
 
                 if (serviceEndpoint) {
                     serviceDetails.port?.each { port ->
-                        String portName = port.portName
+                        def targetPort = port.subport?:port.listenerPort
                         String url = "${serviceEndpoint}:${port.listenerPort}"
-                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
+                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    }
+                }
+                break
+
+            case 'NodePort':
+                def clusterIP = getClusterIPServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
+                serviceDetails.port?.each { port ->
+                    String portName = port.portName
+                    def targetPort = port.subport?:port.listenerPort
+                    String url = "${clusterIP}:${port.listenerPort}"
+                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
+                    createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    // get the assigned node port for the service port
+                    def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
+                    if (nodePort) {
+                        efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/nodePort", "$nodePort")
+                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
+                    } else {
+                        logger WARNING, "Nodeport not found for deployed service '$serviceName' for port '$portName'"
                     }
                 }
                 break
@@ -75,12 +95,27 @@ public class KubernetesClient extends BaseClient {
             default: //for both 'NodePort' and 'ClusterIP', service is accessible through ClusterIP:port
                 def clusterIP = getClusterIPServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
                 serviceDetails.port?.each { port ->
-                    String portName = port.portName
+                    def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
-                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${portName}/url", url)
+                    efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
+                    createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
                 }
                 break
 
+        }
+    }
+
+    def createPropertyInPipelineContext(EFClient efClient, String applicationName,
+                                        String serviceName, String targetPort,
+                                        String propertyName, String value) {
+        if (efClient.runningInPipeline()) {
+
+            String relativeProp = applicationName ?
+                    "${applicationName}/${serviceName}/${targetPort}" :
+                    "${serviceName}/${targetPort}"
+            String fullProperty = "/myStageRuntime/${relativeProp}/${propertyName}"
+            logger INFO, "Registering pipeline runtime property '$fullProperty' with value $value"
+            efClient.createProperty(fullProperty, value)
         }
     }
 

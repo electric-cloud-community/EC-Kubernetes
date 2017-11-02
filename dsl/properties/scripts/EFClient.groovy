@@ -168,6 +168,11 @@ public class EFClient extends BaseClient {
         handleError(msg)
     }
 
+    boolean runningInPipeline() {
+        def result = getEFProperty('/myPipelineStageRuntime/id', /*ignoreError*/ true)
+        return result.data ? true : false
+    }
+
     def createProperty(String propertyName, String value, Map additionalArgs = [:]) {
         // Creating the property in the context of a job-step by default
         def jobStepId = '$[/myJobStep/jobStepId]'
@@ -191,6 +196,13 @@ public class EFClient extends BaseClient {
         doHttpPost("/rest/v1.0/server/dsl", /* request body */ payload)
     }
 
+    def getEFProperty(String propertyName, boolean ignoreError = false) {
+        // Get the property in the context of a job-step by default
+        def jobStepId = '$[/myJobStep/jobStepId]'
+
+        doHttpGet("/rest/v1.0/properties/${propertyName}",
+                /* failOnErrorCode */ !ignoreError, [jobStepId: jobStepId])
+    }
 
 }
 
