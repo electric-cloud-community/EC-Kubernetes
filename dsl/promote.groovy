@@ -83,6 +83,22 @@ project pluginName, {
 					property 'serviceEntityRevisionId', value: 'serviceEntityRevisionId'
 				}
 			}
+			property 'undeployService', {
+				property 'procedureName', value: 'Undeploy Service'
+				property 'ui_formRefs', {
+					parameterForm = 'ec_parameterForm'
+				}
+				property 'parameterRefs', {
+					property 'serviceName', value: 'serviceName'
+					property 'projectName', value: 'serviceProjectName'
+					property 'applicationName', value: 'applicationName'
+					property 'applicationRevisionId', value: 'applicationRevisionId'
+					property 'clusterName', value: 'clusterName'
+					property 'clusterOrEnvironmentProjectName', value: 'envProjectName'
+					property 'environmentName', value: 'environmentName'
+					property 'serviceEntityRevisionId', value: 'serviceEntityRevisionId'
+				}
+			}
 			property 'createConfiguration', {
 				property 'procedureName', value: 'CreateConfiguration'
 				property 'ui_formRefs', {

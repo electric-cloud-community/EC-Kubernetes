@@ -17,13 +17,6 @@
 -->
 <editor>
     <formElement>
-        <type>textarea</type>
-        <label>Additional Attributes:</label>
-        <property>additionalAttributes</property>
-        <required>0</required>
-        <documentation>Pass-through attributes for the container definition in JSON format. Supports container attributes defined in http://kubernetes.io/docs/api-reference/v1/definitions/#_v1_container.</documentation>
-    </formElement>
-    <formElement>
         <type>entry</type>
         <label>Liveness Check Path:</label>
         <property>livenessHttpProbePath</property>

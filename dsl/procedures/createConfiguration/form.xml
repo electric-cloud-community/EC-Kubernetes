@@ -32,7 +32,7 @@
     </formElement>
     <formElement>
         <type>entry</type>
-        <label>The Kubernetes API Endpoint:</label>
+        <label>Kubernetes API Endpoint:</label>
         <property>clusterEndpoint</property>
         <required>1</required>
         <documentation>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</documentation>
