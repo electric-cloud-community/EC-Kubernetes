@@ -22,6 +22,7 @@
                 <ul>
                     <li><a href="#ProvisionCluster">Check Cluster</a></li>
                     <li><a href="#DeployService">Deploy Service</a></li>
+                    <li><a href="#UndeployService">Undeploy Service</a></li>
                 </ul>
                 <li><a href="#releaseNotes">Release Notes</a></li>
             </ul>
@@ -111,8 +112,8 @@
             </div>  
             <div id="DeployService">
                 <h2>Deploy Service</h2>
-                <p>This procedure deploys a service and application to a already provisioned cluster</p>
-                <h3>Depoy Service Parameters</h3>
+                <p>This procedure deploys a service to a Kubernetes cluster</p>
+                <h3>Deploy Service Parameters</h3>
                 <table class="grid">
                     <thead>
                         <tr>
@@ -156,14 +157,72 @@
                     </tbody>
                 </table>
             </div>
+            <div id="UndeployService">
+                <h2>Undeploy Service</h2>
+                <p>Undeploys a previously deployed service on the Kubernetes cluster</p>
+
+                <h3>Undeploy Service Parameters</h3>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td>Application Name</td>
+                            <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Application Revision ID</td>
+                            <td>Revision Id of the application version that the service belongs to.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Cluster Name</td>
+                            <td>The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.</td>
+                        </tr>
+
+                        <tr>
+                            <td class="required">Environment Name</td>
+                            <td>The name of the environment that the cluster belongs to.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Environment Project Name</td>
+                            <td>The name of the project that the environment belongs to. If not specified, the environment is assumed to be in the same project as the service.</td>
+                        </tr>
+
+                        <tr>
+                            <td class="required">Service Name*</td>
+                            <td>The name of the service in ElectricFlow that encapsulates the service that was previously deployed on the Kubernetes cluster.</td>
+                        </tr>
+                        <tr>
+                            <td>Service Revision ID</td>
+                            <td>Revision Id of the service in ElectricFlow.</td>
+                        </tr>
+                        <tr>
+                            <td class="required">Project Name</td>
+                            <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
             <h1 id="releaseNotes">Release Notes</h1>
             <h3>EC-Kubernetes 1.0.3</h3>
             <ul>
                 <li>Made secrets compliant with DNS-1123 standards.</li>
+                <li>Removed unused parameter <i>additionalAttributes</i> from container mapping configuration.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>
                 <li>Added support for Kubernetes API version 1.7</li>
+                <li>Added procedure <i>Undeploy Service</i> to undeploy a previously deployed service.</li>
                 <li>Handled race condition in parallel creation of a namespace by multiple steps.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.1</h3>
