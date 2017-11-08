@@ -1007,7 +1007,7 @@ public class KubernetesClient extends BaseClient {
                         "defaulting to version '$kubernetesVersion'"
             }
         }
-        logger INFO, "Using Kubernetes version '$kubernetesVersion'"
+        logger INFO, "Using Kubernetes API version '$kubernetesVersion' based on plugin configuration\n"
     }
 
     String versionSpecificAPIPath(String resource) {

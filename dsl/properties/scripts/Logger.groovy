@@ -12,4 +12,18 @@ class Logger {
     // Default log level used till the configured log level
     // is read from the plugin configuration.
     static Integer logLevel = INFO
+
+    def static getLogLevelStr(Integer level) {
+        switch (level) {
+            case DEBUG:
+                return '[DEBUG] '
+            case INFO:
+                return '[INFO] '
+            case WARNING:
+                return '[WARNING] '
+            default://ERROR
+                return '[ERROR] '
+
+        }
+    }
 }
