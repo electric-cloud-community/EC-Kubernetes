@@ -50,7 +50,7 @@ public class EFClient extends BaseClient {
             [(it.propertyName): it.value]
         }
 
-        logger(INFO, "Config values: " + values)
+        logger(INFO, "Plugin configuration values: " + values)
 
         def cred = getCredentials(config)
         values << [credential: [userName: cred.userName, password: cred.password]]
@@ -70,18 +70,18 @@ public class EFClient extends BaseClient {
 
         def result = doHttpGet("/rest/v1.0/projects/${projectName}/applications/${applicationName}/tierMaps")
 
-        logger INFO, "Tier Maps: " + JsonOutput.toJson(result)
+        logger DEBUG, "Tier Maps: " + JsonOutput.toJson(result)
         // Filter tierMap based on environment.
         def tierMap = result.data.tierMap.find {
             it.environmentName == environmentName && it.environmentProjectName == envProjectName
         }
 
-        logger INFO, "Environment tier map for environment '$environmentName' and environment project '$envProjectName': \n" + JsonOutput.toJson(tierMap)
+        logger DEBUG, "Environment tier map for environment '$environmentName' and environment project '$envProjectName': \n" + JsonOutput.toJson(tierMap)
         // Filter applicationServiceMapping based on service name.
         def appSvcMapping = tierMap?.appServiceMappings?.applicationServiceMapping?.find {
             it.serviceName == serviceName
         }
-        logger INFO, "Service map for service '$serviceName': \n" + JsonOutput.toJson(appSvcMapping)
+        logger DEBUG, "Service map for service '$serviceName': \n" + JsonOutput.toJson(appSvcMapping)
         appSvcMapping?.clusterName
     }
 

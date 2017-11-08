@@ -25,9 +25,7 @@ public class BaseClient {
                          Object requestBody = null,
                          def queryArgs = null) {
 
-        logger DEBUG, "requestUrl: $requestUrl"
-        logger DEBUG, "method: $method"
-        logger DEBUG, "URI: $requestUri"
+        logger DEBUG, "Request details:\n  requestUrl: '$requestUrl' \n  method: '$method' \n  URI: '$requestUri'"
         if (queryArgs) {
             logger DEBUG, "queryArgs: '$queryArgs'"
         }
@@ -61,8 +59,8 @@ public class BaseClient {
                 }
             } else {
                 response.failure = { resp, reader ->
-                    logger DEBUG, "Error details: $reader"
-                    logger INFO, "Response: $resp.statusLine"
+                    logger DEBUG, "Response: $reader"
+                    logger DEBUG, "Response: $resp.statusLine"
                     [statusLine: resp.statusLine,
                      status: resp.status]
                 }
@@ -124,7 +122,7 @@ public class BaseClient {
 
     def logger(Integer level, def message) {
         if ( level >= logLevel ) {
-            println message
+            println getLogLevelStr(level) + message
         }
     }
 
