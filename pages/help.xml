@@ -57,7 +57,7 @@
                     <li>Click <b>Configure</b> to open the
                     Kubernetes Configurations page.</li>
                     <li>Click <b>Create Configuration</b>.</li>
-                    <li>For communicating with Kubernetes cluster, you need two configurations - the cluster<br/>
+                    <li>For communicating with the Kubernetes cluster, you need the following details:<br/>
                     <ul type="square">
                         <li>1. Base address of API Endpoint URL </li>
                         <li>2. Bearer token which has authorization to access API.  
@@ -222,6 +222,7 @@
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>
                 <li>Added support for Kubernetes API version 1.7</li>
+                <li>Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster master. The parameter will default to '1.6' if no value is specified.</li>
                 <li>Added procedure <i>Undeploy Service</i> to undeploy a previously deployed service.</li>
                 <li>Handled race condition in parallel creation of a namespace by multiple steps.</li>
             </ul>
