@@ -52,7 +52,13 @@
         <value>default</value>
         <documentation>The name of namespace to which the services and deployments should be deployed.</documentation>
     </formElement>
-
+    <formElement>
+        <type>entry</type>
+        <label>Service Name Override:</label>
+        <property>serviceNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the service in Kubernetes. If no override value is specified here, the service name in ElectricFlow will be used to name the service in Kubernetes.</documentation>
+    </formElement>
     <formElement>
         <type>select</type>
         <label>Service Type:</label>
