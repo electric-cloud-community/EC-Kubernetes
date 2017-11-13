@@ -278,7 +278,7 @@ public class KubernetesClient extends BaseClient {
 
     def createOrUpdateService(String clusterEndPoint, String namespace , def serviceDetails, String accessToken) {
 
-        String serviceName = formatName(serviceDetails.serviceName)
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
 
         def serviceDefinition = buildServicePayload(serviceDetails, deployedService)
@@ -311,7 +311,7 @@ public class KubernetesClient extends BaseClient {
 
     def deleteService(String clusterEndPoint, String namespace , def serviceDetails, String accessToken) {
 
-        String serviceName = formatName(serviceDetails.serviceName)
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
 
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
 
@@ -334,7 +334,7 @@ public class KubernetesClient extends BaseClient {
         def lbEndpoint
         def elapsedTime = 0;
         def timeInSeconds = 5*60
-        String serviceName = formatName(serviceDetails.serviceName)
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
         while (elapsedTime <= timeInSeconds) {
             def before = System.currentTimeMillis()
             Thread.sleep(10*1000)
@@ -364,7 +364,7 @@ public class KubernetesClient extends BaseClient {
 
     def getClusterIPServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
-        String serviceName = formatName(serviceDetails.serviceName)
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
         //get the clusterIP for the service
         deployedService?.spec?.clusterIP
@@ -372,7 +372,7 @@ public class KubernetesClient extends BaseClient {
 
     def getNodePortServiceEndpoint(String clusterEndPoint, String namespace, def serviceDetails, String portName, String accessToken) {
 
-        String serviceName = formatName(serviceDetails.serviceName)
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
         //get the published node port for the specified portName
         def servicePort = deployedService?.spec?.ports?.find {
@@ -477,7 +477,7 @@ public class KubernetesClient extends BaseClient {
             }
         }
 
-        def deploymentName = formatName(serviceDetails.serviceName)
+        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
         def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
         logger DEBUG, "Deployment payload:\n $deployment"
@@ -509,7 +509,7 @@ public class KubernetesClient extends BaseClient {
     def deleteReplicaSets(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
 
         if (OFFLINE) return null
-        def deploymentName = formatName(serviceDetails.serviceName)
+        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
         
         def response = doHttpGet(clusterEndPoint,
                 "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
@@ -541,7 +541,7 @@ public class KubernetesClient extends BaseClient {
     def deletePods(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
      
         if (OFFLINE) return null
-        def deploymentName = formatName(serviceDetails.serviceName)
+        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
         
         def response = doHttpGet(clusterEndPoint,
                 "/api/v1/namespaces/${namespace}/pods",
@@ -572,7 +572,7 @@ public class KubernetesClient extends BaseClient {
 
     def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
-        def deploymentName = formatName(serviceDetails.serviceName)
+        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
 
         if (OFFLINE) return null
@@ -678,7 +678,7 @@ public class KubernetesClient extends BaseClient {
                 (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
 
         def volumeData = convertVolumes(args.volumes)
-        def serviceName = formatName(args.serviceName)
+        def serviceName = getServiceNameToUseForDeployment(args)
         String apiPath = versionSpecificAPIPath('deployments')
 
         def result = json {
@@ -859,7 +859,7 @@ public class KubernetesClient extends BaseClient {
 
     String buildServicePayload(Map args, def deployedService){
 
-        def serviceName = formatName(args.serviceName)
+        def serviceName = getServiceNameToUseForDeployment(args)
         def json = new JsonBuilder()
         def portMapping = []
         def payload = null
@@ -1017,5 +1017,9 @@ public class KubernetesClient extends BaseClient {
             default:
                 handleError("Unsupported resource '$resource' for determining version specific API path")
         }
+    }
+
+    String getServiceNameToUseForDeployment (def serviceDetails) {
+        formatName(getServiceParameter(serviceDetails, "serviceNameOverride", serviceDetails.serviceName))
     }
 }
