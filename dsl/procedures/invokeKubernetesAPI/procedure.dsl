@@ -1,9 +1,7 @@
 import java.io.File
 
-procedure 'Create Resource',
-	description: '[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input', {
-
-    property 'standardStepPicker', value: false
+procedure 'Invoke Kubernetes API',
+	description: 'Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input', {
 
 	step 'setup',
       subproject: '',
@@ -18,8 +16,8 @@ procedure 'Create Resource',
     	  actualParameter 'additionalArtifactVersion', ''
     }
 
-	step 'createResource',
-	  command: new File(pluginDir, 'dsl/procedures/createResource/steps/createResource.groovy').text,
+	step 'invokeAPI',
+	  command: new File(pluginDir, 'dsl/procedures/invokeKubernetesAPI/steps/invokeAPI.groovy').text,
 	  errorHandling: 'failProcedure',
 	  exclusiveMode: 'none',
 	  postProcessor: 'postp',

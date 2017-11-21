@@ -10,6 +10,8 @@ String requestType = '$[requestType]'
 
 //// -- Driver script logic to create resource -- //
 EFClient efClient = new EFClient()
+efClient.logger WARNING, "***Using an deprecated procedure 'Create Resource'! This procedure will be removed in a future release of the plugin. Use procedure 'Invoke Kubernetes API' instead. ***"
+
 def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
 
 def contentType = ""
