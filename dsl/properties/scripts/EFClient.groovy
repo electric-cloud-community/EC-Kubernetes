@@ -78,11 +78,25 @@ public class EFClient extends BaseClient {
 
         logger DEBUG, "Environment tier map for environment '$environmentName' and environment project '$envProjectName': \n" + JsonOutput.toJson(tierMap)
         // Filter applicationServiceMapping based on service name.
-        def appSvcMapping = tierMap?.appServiceMappings?.applicationServiceMapping?.find {
+        def svcMapping = tierMap?.appServiceMappings?.applicationServiceMapping?.find {
             it.serviceName == serviceName
         }
-        logger DEBUG, "Service map for service '$serviceName': \n" + JsonOutput.toJson(appSvcMapping)
-        appSvcMapping?.clusterName
+        // If svcMapping not found, try with serviceClusterMappings for post 8.0 tierMap structure
+        if (!svcMapping) {
+            svcMapping = tierMap?.serviceClusterMappings?.serviceClusterMapping?.find {
+                it.serviceName == serviceName
+            }
+        }
+
+        // Fail if service mapping still not found fail.
+        if (!svcMapping) {
+            handleError("Could not find the service mapping for service '$serviceName', " +
+                    "therefore, the cluster cannot be determined. Try specifying the cluster name " +
+                    "explicitly when invoking 'Undeploy Service' procedure.")
+        }
+        logger DEBUG, "Service map for service '$serviceName': \n" + JsonOutput.toJson(svcMapping)
+        svcMapping.clusterName
+
     }
 
     def getProvisionClusterParameters(String clusterName,
@@ -122,12 +136,14 @@ public class EFClient extends BaseClient {
         def partialUri = applicationName ?
                 "projects/$serviceProjectName/applications/$applicationName/services/$serviceName" :
                 "projects/$serviceProjectName/services/$serviceName"
+        def jobStepId = '$[/myJobStep/jobStepId]'
         def queryArgs = [
                 request: 'getServiceDeploymentDetails',
                 clusterName: clusterName,
                 clusterProjectName: clusterProjectName,
                 environmentName: environmentName,
-                applicationEntityRevisionId: applicationRevisionId
+                applicationEntityRevisionId: applicationRevisionId,
+                jobStepId: jobStepId
         ]
 
         if (serviceEntityRevisionId) {
@@ -140,6 +156,23 @@ public class EFClient extends BaseClient {
         logger DEBUG, "Service Details: " + JsonOutput.toJson(svcDetails)
 
         svcDetails
+    }
+
+    def expandString(String str) {
+        def jobStepId = '$[/myJobStep/jobStepId]'
+        def payload = [
+                value: str,
+                jobStepId: jobStepId
+        ]
+
+        def result = doHttpPost("/rest/v1.0/expandString", /* request body */ payload,
+                /*failOnErrorCode*/ false, [request: 'expandString'])
+
+        if (result.status >= 400){
+            efClient.handleProcedureError("Failed to expand '$str'. $result.statusLine")
+        }
+
+        result.data?.value
     }
 
     def getActualParameters() {

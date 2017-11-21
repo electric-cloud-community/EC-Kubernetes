@@ -60,6 +60,21 @@
         <documentation>Name for the service in Kubernetes. If no override value is specified here, the service name in ElectricFlow will be used to name the service in Kubernetes.</documentation>
     </formElement>
     <formElement>
+        <label>Perform Canary Deployment:</label>
+        <property>canaryDeployment</property>
+        <documentation>A fixed text or property reference e.g., '$[doCanaryDeployment]' that evaluates to 'true' or 'false'. If evaluated to true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.</documentation>
+        <type>entry</type>
+        <required>0</required>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Number of Canary Replicas:</label>
+        <property>numberOfCanaryReplicas</property>
+        <required>0</required>
+        <value>1</value>
+        <documentation>The number of replicas to create if performing a canary deployment. Defaults to 1 replica for the canary deployment.</documentation>
+    </formElement>
+    <formElement>
         <type>select</type>
         <label>Service Type:</label>
         <property>serviceType</property>
