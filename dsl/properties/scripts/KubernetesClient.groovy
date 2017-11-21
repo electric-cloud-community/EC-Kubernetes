@@ -59,6 +59,7 @@ public class KubernetesClient extends BaseClient {
         createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
+        boolean canaryDeployment = isCanaryDeployment(serviceDetails)
         switch (serviceType) {
             case 'LoadBalancer':
                 def serviceEndpoint = getLBServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
@@ -68,7 +69,9 @@ public class KubernetesClient extends BaseClient {
                         def targetPort = port.subport?:port.listenerPort
                         String url = "${serviceEndpoint}:${port.listenerPort}"
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                        if (!canaryDeployment) {
+                            createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                        }
                     }
                 }
                 break
@@ -80,12 +83,16 @@ public class KubernetesClient extends BaseClient {
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                    createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    if (!canaryDeployment) {
+                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    }
                     // get the assigned node port for the service port
                     def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
                     if (nodePort) {
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/nodePort", "$nodePort")
-                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
+                        if (!canaryDeployment) {
+                            createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
+                        }
                     } else {
                         logger WARNING, "Nodeport not found for deployed service '$serviceName' for port '$portName'"
                     }
@@ -98,7 +105,9 @@ public class KubernetesClient extends BaseClient {
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                    createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    if (!canaryDeployment) {
+                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                    }
                 }
                 break
 
@@ -143,16 +152,29 @@ public class KubernetesClient extends BaseClient {
                 environmentName,
                 serviceEntityRevisionId)
 
-        deleteService(clusterEndpoint, namespace, serviceDetails, accessToken)
+        if (!isCanaryDeployment(serviceDetails)) {
+            deleteService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+            // Explicitly delete replica sets. Currently can not delete Deployment with cascade option
+            // since sending '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Foreground"}'
+            // as body to DELETE HTTP request is not allowed by HTTPBuilder
+            deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+            deleteReplicaSets(clusterEndpoint, namespace, serviceDetails, accessToken)
+
+            deletePods(clusterEndpoint, namespace, serviceDetails, accessToken)
+        }
+
+        def canaryDeploymentName = constructCanaryDeploymentName(serviceDetails)
         // Explicitly delete replica sets. Currently can not delete Deployment with cascade option
         // since sending '{"kind":"DeleteOptions","apiVersion":"v1","propagationPolicy":"Foreground"}'
         // as body to DELETE HTTP request is not allowed by HTTPBuilder
-        deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+        deleteDeployment(clusterEndpoint, namespace, serviceDetails, accessToken, canaryDeploymentName)
 
-        deleteReplicaSets(clusterEndpoint, namespace, serviceDetails, accessToken)
+        deleteReplicaSets(clusterEndpoint, namespace, serviceDetails, accessToken, canaryDeploymentName)
 
-        deletePods(clusterEndpoint, namespace, serviceDetails, accessToken)
+        deletePods(clusterEndpoint, namespace, serviceDetails, accessToken, canaryDeploymentName)
+
     }
 
     def getPluginConfig(EFClient efClient, String clusterName, String clusterOrEnvProjectName, String environmentName) {
@@ -477,7 +499,7 @@ public class KubernetesClient extends BaseClient {
             }
         }
 
-        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        def deploymentName = getDeploymentName(serviceDetails)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
         def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
         logger DEBUG, "Deployment payload:\n $deployment"
@@ -506,10 +528,10 @@ public class KubernetesClient extends BaseClient {
 
     }
 
-    def deleteReplicaSets(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
+    def deleteReplicaSets(String clusterEndPoint, String namespace, def serviceDetails, String accessToken, String deploymentName = null){
 
         if (OFFLINE) return null
-        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        deploymentName = deploymentName?:getDeploymentName(serviceDetails)
         
         def response = doHttpGet(clusterEndPoint,
                 "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
@@ -538,10 +560,10 @@ public class KubernetesClient extends BaseClient {
         }
      }
 
-    def deletePods(String clusterEndPoint, String namespace, def serviceDetails, String accessToken){
+    def deletePods(String clusterEndPoint, String namespace, def serviceDetails, String accessToken, String deploymentName = null){
      
         if (OFFLINE) return null
-        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        deploymentName = deploymentName?:getDeploymentName(serviceDetails)
         
         def response = doHttpGet(clusterEndPoint,
                 "/api/v1/namespaces/${namespace}/pods",
@@ -570,9 +592,9 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
+    def deleteDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken, String deploymentName = null) {
 
-        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        deploymentName = deploymentName?:getDeploymentName(serviceDetails)
         def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
 
         if (OFFLINE) return null
@@ -649,6 +671,43 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
+    def invokeKubeAPI(String clusterEndPoint, def resourceDetails, String resourceUri, String requestType, String requestFormat, String accessToken) {
+
+        if (OFFLINE) return null
+        logger DEBUG, "Invoking API with clusterEndPoint: $clusterEndPoint, resourceUri: $resourceUri, requestType: $requestType, requestFormat: $requestFormat, payload: '$resourceDetails'."
+
+        def method = Method.valueOf(requestType)?:GET
+
+        if (method == GET || method == DELETE) {
+            if (resourceDetails) {
+                handleError("Request payload cannot be specified for HTTP method '$requestType'. Clear or unset the request payload parameter and retry.")
+            } else {
+                resourceDetails = null
+            }
+        }
+
+        def contentType = requestFormat == 'yaml' ? 'application/yaml' : 'application/json'
+        //set special content type for PATCH
+        if (method == PATCH) {
+            if (requestFormat == 'yaml') {
+                handleError("Request format 'yaml' not supported for HTTP method '$requestType'. Use request format 'json' and retry.")
+            }
+            contentType = 'application/strategic-merge-patch+json'
+        }
+
+        def response = doHttpRequest(method,
+                clusterEndPoint,
+                resourceUri,
+                ['Authorization' : accessToken, 'Content-Type': contentType],
+                /*failOnErrorCode*/ true,
+                resourceDetails)
+
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
+        logger INFO, "API response: $str"
+
+        response
+    }
+
     def convertVolumes(data){
         def jsonData = parseJsonToList(data)
         def result = []
@@ -664,6 +723,9 @@ public class KubernetesClient extends BaseClient {
 
     }
 
+    boolean isCanaryDeployment(def args) {
+        toBoolean(getServiceParameter(args, 'canaryDeployment'))
+    }
 
     String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
 
@@ -673,22 +735,38 @@ public class KubernetesClient extends BaseClient {
 
         def json = new JsonBuilder()
         //Get the message calculation out of the way
-        int maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
-        int maxUnavailableValue =  args.minCapacity ?
-                (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
+        def replicaCount
+        int maxSurgeValue
+        int maxUnavailableValue
+        boolean isCanary = isCanaryDeployment(args)
+
+        if (isCanary) {
+            replicaCount = getServiceParameter(args, 'numberOfCanaryReplicas', 1).toInteger()
+            maxSurgeValue = 1
+            maxUnavailableValue = 1
+        } else {
+            replicaCount = args.defaultCapacity.toInteger()
+            maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
+            maxUnavailableValue =  args.minCapacity ?
+                    (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
+
+        }
 
         def volumeData = convertVolumes(args.volumes)
         def serviceName = getServiceNameToUseForDeployment(args)
+        def deploymentName = getDeploymentName(args)
         String apiPath = versionSpecificAPIPath('deployments')
+
+        def deploymentFlag = isCanary ? 'canary' : 'stable'
 
         def result = json {
             kind "Deployment"
             apiVersion apiPath
             metadata {
-                name serviceName
+                name deploymentName
             }
             spec {
-                replicas args.defaultCapacity.toInteger()
+                replicas replicaCount
                 strategy {
                     rollingUpdate {
                         maxUnavailable maxUnavailableValue
@@ -702,9 +780,10 @@ public class KubernetesClient extends BaseClient {
                 }
                 template {
                     metadata {
-                        name serviceName
+                        name deploymentName
                         labels {
                             "ec-svc" serviceName
+                            "ec-track" deploymentFlag
                         }
                     }
                     spec{
@@ -847,6 +926,12 @@ public class KubernetesClient extends BaseClient {
         def result = args.parameterDetail?.find {
             it.parameterName == parameterName
         }?.parameterValue
+
+        // expand any property references in the service parameter if required
+        if (result && result.toString().contains('$[')) {
+            EFClient efClient = new EFClient()
+            result = efClient.expandString(result.toString())
+        }
 
         return result != null ? result : defaultValue
     }
@@ -1021,5 +1106,18 @@ public class KubernetesClient extends BaseClient {
 
     String getServiceNameToUseForDeployment (def serviceDetails) {
         formatName(getServiceParameter(serviceDetails, "serviceNameOverride", serviceDetails.serviceName))
+    }
+
+    String getDeploymentName(def serviceDetails) {
+        if (isCanaryDeployment(serviceDetails)) {
+            constructCanaryDeploymentName(serviceDetails)
+        } else {
+            getServiceNameToUseForDeployment (serviceDetails)
+        }
+    }
+
+    String constructCanaryDeploymentName(def serviceDetails) {
+        String name = getServiceNameToUseForDeployment (serviceDetails)
+        "${name}-canary"
     }
 }
