@@ -10,6 +10,7 @@ import groovy.text.StreamingTemplateEngine
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.DELETE
 import static groovyx.net.http.Method.GET
+import static groovyx.net.http.Method.PATCH
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.Method.PUT
 

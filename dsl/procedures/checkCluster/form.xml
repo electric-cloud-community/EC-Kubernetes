@@ -21,6 +21,7 @@
         <label>Configuration:</label>
         <property>config</property>
         <required>1</required>
+        <propertyReference>/plugins/@PLUGIN_NAME@/project/ec_plugin_cfgs</propertyReference>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
     </formElement>
 </editor>

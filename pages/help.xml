@@ -23,6 +23,7 @@
                     <li><a href="#ProvisionCluster">Check Cluster</a></li>
                     <li><a href="#DeployService">Deploy Service</a></li>
                     <li><a href="#UndeployService">Undeploy Service</a></li>
+                    <li><a href="#CreateOrUpdateKubernetesResource">Invoke Kubernetes API</a></li>
                 </ul>
                 <li><a href="#releaseNotes">Release Notes</a></li>
             </ul>
@@ -213,11 +214,58 @@
                 </table>
 
             </div>
+            <div id="CreateOrUpdateKubernetesResource">
+                <h2>Invoke Kubernetes API</h2>
+                <p>Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input.</p>
+
+                <h3>Invoke Kubernetes API Parameters</h3>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td class="required">Configuration</td>
+                            <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
+                        </tr>
+
+                        <tr class="required">
+                            <td>Kubernetes API URI</td>
+                            <td>The URI for the Kubernetes API to invoke. E.g., '/api/v1/namespaces'.</td>
+                        </tr>
+
+                        <tr class="required">
+                            <td>HTTP method for the Kubernetes API</td>
+                            <td>HTTP method for the Kubernetes REST API to be invoked.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Request Payload Format</td>
+                            <td>Format of the request payload. Possible values are 'json' or 'yaml'. Not applicable for HTTP methods 'get' and 'delete'.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Request Payload</td>
+                            <td>The request body/payload in JSON or YAML format. Not applicable for HTTP methods 'get' and 'delete'.</td>
+                        </tr>
+
+
+                    </tbody>
+                </table>
+
+            </div>
             <h1 id="releaseNotes">Release Notes</h1>
             <h3>EC-Kubernetes 1.0.3</h3>
             <ul>
                 <li>Made secrets compliant with DNS-1123 standards.</li>
                 <li>Removed unused parameter <i>additionalAttributes</i> from container mapping configuration.</li>
+                <li>When a microservice is deployed through ElectricFlow on a Kubernetes cluster, and 'NodePort' is specified as the service type in the service mapping, then the provisioned node port is registered as a pipeline stage runtime property <i>/myStageRuntime/&lt;applicationName&gt;/&lt;serviceName&gt;/&lt;targetPort&gt;/nodePort</i>.</li>
+                <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.</li>
+                <li>Deprecated procedure <i>Create Resource</i>. The newly added procedure <i>Invoke Kubernetes API</i> should be used instead for creating or updating a Kubernetes resource.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>

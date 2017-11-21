@@ -42,7 +42,7 @@
         <label>Bearer Token of Kubernetes Cluster:</label>
         <property>credential</property>
         <required>1</required>
-        <passwordLabel>Kubernetes Bearer token:</passwordLabel>
+        <keyLabel>Kubernetes Bearer token:</keyLabel>
         <credentialType>key</credentialType>
         <documentation>The bearer token related to a serviceAccount which has access to create resources in the Kubernetes cluster</documentation>
         <attachedAsParameterToStep>createAndAttachCredential,testConnection</attachedAsParameterToStep>
