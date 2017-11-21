@@ -47,6 +47,8 @@ public class KubernetesClient extends BaseClient {
                 environmentName,
                 serviceEntityRevisionId)
 
+        validateUniquePorts(serviceDetails)
+        
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
         createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
@@ -725,6 +727,19 @@ public class KubernetesClient extends BaseClient {
 
     boolean isCanaryDeployment(def args) {
         toBoolean(getServiceParameter(args, 'canaryDeployment'))
+    }
+
+    def validateUniquePorts(def args){
+
+        def uniquePortNames = []
+        for (container in args.container) {
+            for (port in container.port) {
+                if(!uniquePortNames.contains(port.portName)){
+                    uniquePortNames << port.portName
+                }else{
+                    handleError("Duplicate port name ${port.portName} found in ${container.containerName} container definition.")
+                }
+        }
     }
 
     String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
