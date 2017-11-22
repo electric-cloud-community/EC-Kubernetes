@@ -107,6 +107,14 @@
     </formElement>
     <formElement>
         <type>entry</type>
+        <label>Deployment Timeout in Seconds:</label>
+        <property>deploymentTimeoutInSec</property>
+        <required>0</required>
+        <value>120</value>
+        <documentation>Number of seconds to wait for deployment to complete. If not complete within this period, deployment is marked as failed.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
         <label>Additional Resource URI:</label>
         <property>resourceUri</property>
         <required>0</required>
