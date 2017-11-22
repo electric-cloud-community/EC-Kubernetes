@@ -5,6 +5,7 @@ def pluginProjectName = '$[/myProject/projectName]'
 String configName = '$[config]'
 String requestFormat = '$[requestFormat]'
 String requestType = '$[requestType]'
+String outputProperty = '$[outputProperty]'
 
 //// -- Driver script logic to invoke API -- //
 EFClient efClient = new EFClient()
@@ -19,4 +20,11 @@ client.setVersion(pluginConfig)
 String accessToken = client.retrieveAccessToken (pluginConfig)
 String clusterEndpoint = pluginConfig.clusterEndpoint
 
-client.invokeKubeAPI(clusterEndpoint, resourceData, resourceUri, requestType, requestFormat, accessToken)
+def response = client.invokeKubeAPI(clusterEndpoint, resourceData, resourceUri, requestType, requestFormat, accessToken)
+
+if (!outputProperty) {
+    outputProperty = efClient.runningInPipeline() ? '/myStageRuntime/k8sAPIResult' : '/myJob/k8sAPIResult'
+}
+
+String value = response.data ? (new JsonBuilder(response.data)).toString(): ''
+efClient.createProperty2(outputProperty, value)

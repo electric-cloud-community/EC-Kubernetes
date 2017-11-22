@@ -220,6 +220,21 @@ public class EFClient extends BaseClient {
         doHttpPost("/rest/v1.0/properties", /* request body */ payload)
     }
 
+    def createProperty2(String propertyName, String value, Map additionalArgs = [:]) {
+        // Creating the property in the context of a job-step by default
+        def jobStepId = '$[/myJobStep/jobStepId]'
+        def payload = [:]
+        payload << additionalArgs
+        payload << [
+                propertyName: propertyName,
+                value: value,
+                jobStepId: jobStepId
+        ]
+        // to prevent getting the value getting converted to json
+        payload = JsonOutput.toJson(payload)
+        doHttpPost("/rest/v1.0/properties", /* request body */ payload)
+    }
+
     def evalDsl(String dsl) {
         def payload = [:]
         payload << [
