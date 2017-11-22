@@ -60,6 +60,8 @@ public class KubernetesClient extends BaseClient {
         // hook for other kubernetes based plugins
         createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
 
+        waitForDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
         boolean canaryDeployment = isCanaryDeployment(serviceDetails)
         switch (serviceType) {
@@ -114,6 +116,37 @@ public class KubernetesClient extends BaseClient {
                 break
 
         }
+    }
+
+    def waitForDeployment(def clusterEndpoint, def namespace, def serviceDetails, def accessToken){
+
+        String apiPath = versionSpecificAPIPath('deployments')
+        def deploymentTimeoutInSec = getServiceParameter(serviceDetails, 'deploymentTimeoutInSec').toInteger()
+        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        String resourceUri = "/apis/${apiPath}/namespaces/${namespace}/deployments/$deploymentName/status"
+        def response
+        int elapsedTime = 0
+
+        while(elapsedTime < deploymentTimeoutInSec){
+             response = doHttpGet(clusterEndpoint,
+                resourceUri,
+                accessToken, /*failOnErrorCode*/ false)
+            if(checkResponse(response)){
+                return
+            }
+            sleep(30)
+            elapsedTime += 30
+        }
+        handleError("Deployment did not complete within ${deploymentTimeoutInSec} sec.")
+    }
+
+    def checkResponse(def response){
+        for (condition in response.data.status.conditions){
+            if(condition.reason == "NewReplicaSetAvailable" && condition.status == "True" ){
+                return true
+            }
+        }
+        return false
     }
 
     def createPropertyInPipelineContext(EFClient efClient, String applicationName,
@@ -288,6 +321,7 @@ public class KubernetesClient extends BaseClient {
         response.status == 200 ? response.data : null
     }
 
+    
     def getServices(String clusterEndPoint, String namespace, String accessToken) {
 
         if (OFFLINE) return null
