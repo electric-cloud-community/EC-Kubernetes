@@ -81,4 +81,11 @@
         <required>0</required>
         <documentation>The request body/payload in JSON or YAML format. Not applicable for HTTP methods 'get' and 'delete'.</documentation>
     </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Output Property Location:</label>
+        <property>outputProperty</property>
+        <required>0</required>
+        <documentation>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sAPIResult' else it will default to '/myJob/k8sAPIResult'.</documentation>
+    </formElement>
 </editor>
