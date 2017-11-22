@@ -282,7 +282,10 @@
                     <ol>
                         <li>Set <i>$[/myJob/canaryDeployment]</i> as the property reference value for <b>Perform Canary Deployment</b> and <i>$[/myJob/canaryReplicas]</i> for <b>Number of Canary Replicas</b>.<br/>
                             <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentServiceAttributes.png" alt="screenshot" /></li>
-                        <li>Now add <i>canaryDeployment</i> and <i>canaryReplicas</i> as parameters to your service or application deploy and undeploy processes. These values specified for parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. If <i>canaryDeployment</i> is set to true, then a canary deployment will be performed. Similarly, during undeploy through <i>Undeploy Service</i> procedure, if <i>canaryDeployment</i> is set to true, then the canary deployment will be removed without impacting the previous deployment or the service.</li>
+                        <li>Now add <i>canaryDeployment</i> and <i>canaryReplicas</i> as parameters to your service or application deploy and the undeploy processes. The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. If <i>canaryDeployment</i> is set to true, then a canary deployment will be performed. Similarly, during undeploy through <i>Undeploy Service</i> procedure, if <i>canaryDeployment</i> is set to true, then the canary deployment will be removed without impacting the previous deployment or the service.<br/>
+                            <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentDeployProcessParameters.png" alt="screenshot" />
+                            <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentUndeployProcessParameters.png" alt="screenshot" />
+                        </li>
                         <li>Finally tie the deploy and undeploy processes into an end-to-end service release pipeline including managing the canary deployments and rolling out new releases.<br/>
                             <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentPipeline.png" alt="screenshot" /></li>
                     </ol>
