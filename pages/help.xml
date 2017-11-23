@@ -287,7 +287,13 @@
                             <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentUndeployProcessParameters.png" alt="screenshot" />
                         </li>
                         <li>Finally tie the deploy and undeploy processes into an end-to-end service release pipeline including managing the canary deployments and rolling out new releases.<br/>
-                            <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentPipeline.png" alt="screenshot" /></li>
+                            <img src="../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentPipeline.png" alt="screenshot" />
+                            <ul><li>The 'deploy canary' task performs a canary deployment using the specified version on the same environment where the service is targeted to be deployed or is already deployed.</li>
+                            <li>After the canary deployment is pushed out to the environment, side-by-side with the previous release, a manual approval task is used to approve the roll out of the new version if it is confirmed that the 'canary deployment is safe' and good to be rolled out.</li>
+                            <li>Once the canary deployment is confirmed to be safe and the pipeline is allowed to continue, 'deploy new service version' task deploys the new version of the service.</li>
+                            <li>Finally, regardless of the canary deployment's result, 'undeploy the canary' task undeploys the canary deployment.</li>
+                            </ul>
+                        </li>
                     </ol>
 
                 </p>
