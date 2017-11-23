@@ -729,16 +729,17 @@ public class KubernetesClient extends BaseClient {
         toBoolean(getServiceParameter(args, 'canaryDeployment'))
     }
 
-    def validateUniquePorts(def args){
+    def validateUniquePorts(def args) {
 
         def uniquePortNames = []
         for (container in args.container) {
             for (port in container.port) {
-                if(!uniquePortNames.contains(port.portName)){
+                if (!uniquePortNames.contains(port.portName)) {
                     uniquePortNames << port.portName
-                }else{
+                } else {
                     handleError("Duplicate port name ${port.portName} found in ${container.containerName} container definition.")
                 }
+            }
         }
     }
 
