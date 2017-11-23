@@ -134,7 +134,7 @@ public class KubernetesClient extends BaseClient {
             if(checkResponse(response)){
                 return
             }
-            sleep(30)
+            sleep(30*1000)
             elapsedTime += 30
         }
         handleError("Deployment did not complete within ${deploymentTimeoutInSec} sec.")
