@@ -805,6 +805,7 @@ public class KubernetesClient extends BaseClient {
         def serviceName = getServiceNameToUseForDeployment(args)
         def deploymentName = getDeploymentName(args)
         String apiPath = versionSpecificAPIPath('deployments')
+        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec').toInteger()
 
         def deploymentFlag = isCanary ? 'canary' : 'stable'
 
@@ -816,6 +817,7 @@ public class KubernetesClient extends BaseClient {
             }
             spec {
                 replicas replicaCount
+                progressDeadlineSeconds deploymentTimeoutInSec
                 strategy {
                     rollingUpdate {
                         maxUnavailable maxUnavailableValue
