@@ -309,6 +309,7 @@
                 <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.</li>
                 <li>Deprecated procedure <i>Create Resource</i>. The newly added procedure <i>Invoke Kubernetes API</i> should be used instead for creating or updating a Kubernetes resource.</li>
                 <li>Added support for <b>canary deployments</b>. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.</li>
+                <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>
