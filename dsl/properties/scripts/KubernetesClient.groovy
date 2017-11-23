@@ -47,7 +47,7 @@ public class KubernetesClient extends BaseClient {
                 environmentName,
                 serviceEntityRevisionId)
 
-        //validateUniquePorts(serviceDetails)
+        validateUniquePorts(serviceDetails)
         
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
@@ -729,7 +729,6 @@ public class KubernetesClient extends BaseClient {
         toBoolean(getServiceParameter(args, 'canaryDeployment'))
     }
 
-    /*
     def validateUniquePorts(def args) {
 
         def uniquePortNames = []
@@ -742,7 +741,7 @@ public class KubernetesClient extends BaseClient {
                 }
             }
         }
-    } */
+    }
 
     String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
 
