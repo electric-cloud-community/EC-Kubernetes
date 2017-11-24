@@ -24,6 +24,11 @@ public class EFClient extends BaseClient {
         doHttpRequest(POST, getServerUrl(), requestUri, ['Cookie': "sessionId=$sessionId"], failOnErrorCode, requestBody, query)
     }
 
+    Object doHttpPut(String requestUri, Object requestBody, boolean failOnErrorCode = true, def query = null) {
+        def sessionId = System.getenv('COMMANDER_SESSIONID')
+        doHttpRequest(PUT, getServerUrl(), requestUri, ['Cookie': "sessionId=$sessionId"], failOnErrorCode, requestBody, query)
+    }
+
     def getConfigValues(def configPropertySheet, def config, def pluginProjectName) {
 
         // Get configs property sheet
@@ -233,6 +238,20 @@ public class EFClient extends BaseClient {
         // to prevent getting the value getting converted to json
         payload = JsonOutput.toJson(payload)
         doHttpPost("/rest/v1.0/properties", /* request body */ payload)
+    }
+
+    def setEFProperty(String propertyName, String value, Map additionalArgs = [:]) {
+        // Creating the property in the context of a job-step by default
+        def jobStepId = '$[/myJobStep/jobStepId]'
+        def payload = [:]
+        payload << additionalArgs
+        payload << [
+                value: value,
+                jobStepId: jobStepId
+        ]
+        // to prevent getting the value getting converted to json
+        payload = JsonOutput.toJson(payload)
+        doHttpPut("/rest/v1.0/properties/${propertyName}", /* request body */ payload)
     }
 
     def evalDsl(String dsl) {
