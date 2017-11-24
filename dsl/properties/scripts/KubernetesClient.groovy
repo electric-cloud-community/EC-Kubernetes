@@ -60,7 +60,7 @@ public class KubernetesClient extends BaseClient {
         // hook for other kubernetes based plugins
         createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
 
-        waitForDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+        waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, accessToken)
 
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
         boolean canaryDeployment = isCanaryDeployment(serviceDetails)
@@ -118,30 +118,52 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    def waitForDeployment(def clusterEndpoint, def namespace, def serviceDetails, def accessToken){
+    def waitForDeployment(EFClient efClient, def clusterEndpoint, def namespace, def serviceDetails, def accessToken){
 
         String apiPath = versionSpecificAPIPath('deployments')
-        def deploymentTimeoutInSec = getServiceParameter(serviceDetails, 'deploymentTimeoutInSec').toInteger()
-        def deploymentName = getServiceNameToUseForDeployment(serviceDetails)
+        def deploymentTimeoutInSec = getServiceParameter(serviceDetails, 'deploymentTimeoutInSec', 120).toInteger()
+        def deploymentName = getDeploymentName(serviceDetails)
         String resourceUri = "/apis/${apiPath}/namespaces/${namespace}/deployments/$deploymentName/status"
+
         def response
         int elapsedTime = 0
+        int iteration = 0
+        while(elapsedTime < deploymentTimeoutInSec) {
 
-        while(elapsedTime < deploymentTimeoutInSec){
-             response = doHttpGet(clusterEndpoint,
+            if (iteration > 0) {
+                if (iteration == 1) {
+                    logger INFO, "Waiting for deployment to complete ..."
+                }
+                if (iteration > 1) {
+                    logger INFO, "ElapsedTime: $elapsedTime seconds"
+                }
+
+                 def before = System.currentTimeMillis()
+                 Thread.sleep(10*1000)
+                 def now = System.currentTimeMillis()
+
+                 elapsedTime = elapsedTime + (now - before)/1000
+            }
+            iteration++
+
+            response = doHttpGet(clusterEndpoint,
                 resourceUri,
                 accessToken, /*failOnErrorCode*/ false)
-            if(checkResponse(response)){
+            if(deploymentStatusComplete(response)){
                 return
             }
-            sleep(30*1000)
-            elapsedTime += 30
         }
-        handleError("Deployment did not complete within ${deploymentTimeoutInSec} sec.")
+
+        //If reached here, then deployment did not complete within the specified time.
+        if (response) {
+            def responseStr = (new JsonBuilder(response)).toPrettyString()
+            logger INFO, "Deployment status:\n$responseStr"
+        }
+        efClient.handleProcedureError("Deployment did not complete within ${deploymentTimeoutInSec} seconds.")
     }
 
-    def checkResponse(def response){
-        for (condition in response.data.status.conditions){
+    def deploymentStatusComplete(def response){
+        for (condition in response?.data?.status?.conditions){
             if(condition.reason == "NewReplicaSetAvailable" && condition.status == "True" ){
                 return true
             }
@@ -159,7 +181,7 @@ public class KubernetesClient extends BaseClient {
                     "${serviceName}/${targetPort}"
             String fullProperty = "/myStageRuntime/${relativeProp}/${propertyName}"
             logger INFO, "Registering pipeline runtime property '$fullProperty' with value $value"
-            efClient.createProperty(fullProperty, value)
+            efClient.setEFProperty(fullProperty, value)
         }
     }
 
@@ -806,7 +828,7 @@ public class KubernetesClient extends BaseClient {
         def serviceName = getServiceNameToUseForDeployment(args)
         def deploymentName = getDeploymentName(args)
         String apiPath = versionSpecificAPIPath('deployments')
-        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec').toInteger()
+        int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
 
         def deploymentFlag = isCanary ? 'canary' : 'stable'
 
