@@ -710,22 +710,33 @@ public class KubernetesClient extends BaseClient {
         
         if (OFFLINE) return null
 
-        if(createFlag == 'create'){
-            logger INFO, "Creating resource at ${resourceUri}"
-            doHttpRequest(POST,
-                    clusterEndPoint,
-                    resourceUri,
-                    ['Authorization' : accessToken, 'Content-Type': contentType],
-                    /*failOnErrorCode*/ true,
-                    resourceDetails)    
-        } else {
-            logger INFO, "Updating resource at ${resourceUri}"
-            doHttpRequest(PUT,
-                    clusterEndPoint,
-                    resourceUri,
-                    ['Authorization' : accessToken, 'Content-Type': contentType],
-                    /*failOnErrorCode*/ true,
-                    resourceDetails)
+        switch (createFlag) {
+            case 'create':
+                logger INFO, "Creating resource at ${resourceUri}"
+                return doHttpRequest(POST,
+                        clusterEndPoint,
+                        resourceUri,
+                        ['Authorization' : accessToken, 'Content-Type': contentType],
+                        /*failOnErrorCode*/ true,
+                        resourceDetails)
+            case 'update':
+                logger INFO, "Updating resource at ${resourceUri}"
+                return doHttpRequest(PUT,
+                        clusterEndPoint,
+                        resourceUri,
+                        ['Authorization' : accessToken, 'Content-Type': contentType],
+                        /*failOnErrorCode*/ true,
+                        resourceDetails)
+            case 'patch':
+                //explicitly set the contentType for patch to the support type
+                contentType = 'application/strategic-merge-patch+json'
+                logger INFO, "Patching resource at ${resourceUri}"
+                return doHttpRequest(PATCH,
+                        clusterEndPoint,
+                        resourceUri,
+                        ['Authorization' : accessToken, 'Content-Type': contentType],
+                        /*failOnErrorCode*/ true,
+                        resourceDetails)
         }
     }
 
@@ -827,6 +838,8 @@ public class KubernetesClient extends BaseClient {
         def volumeData = convertVolumes(args.volumes)
         def serviceName = getServiceNameToUseForDeployment(args)
         def deploymentName = getDeploymentName(args)
+        def selectorLabel = getSelectorLabelForDeployment(args)
+
         String apiPath = versionSpecificAPIPath('deployments')
         int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
 
@@ -849,14 +862,14 @@ public class KubernetesClient extends BaseClient {
                 }
                 selector {
                     matchLabels {
-                        "ec-svc" serviceName
+                        "ec-svc" selectorLabel
                     }
                 }
                 template {
                     metadata {
                         name deploymentName
                         labels {
-                            "ec-svc" serviceName
+                            "ec-svc" selectorLabel
                             "ec-track" deploymentFlag
                         }
                     }
@@ -1007,7 +1020,8 @@ public class KubernetesClient extends BaseClient {
             result = efClient.expandString(result.toString())
         }
 
-        return result != null ? result : defaultValue
+        // not using groovy truthiness so that we can account for 0
+        return result != null && result != '' ? result : defaultValue
     }
 
     def getServiceParameterArray(Map args, String parameterName, String defaultValue = null) {
@@ -1019,6 +1033,7 @@ public class KubernetesClient extends BaseClient {
     String buildServicePayload(Map args, def deployedService){
 
         def serviceName = getServiceNameToUseForDeployment(args)
+        def selectorLabel = getSelectorLabelForDeployment(args)
         def json = new JsonBuilder()
         def portMapping = []
         def payload = null
@@ -1052,7 +1067,7 @@ public class KubernetesClient extends BaseClient {
                     this.addServiceParameters(delegate, args)
 
                     selector {
-                        "ec-svc" serviceName
+                        "ec-svc" selectorLabel
                     }
                     ports(portMapping)
                 }
@@ -1178,6 +1193,14 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
+    String getSelectorLabelForDeployment(def serviceDetails) {
+        if (isCanaryDeployment(serviceDetails)) {
+            serviceName
+        } else {
+            getDeploymentName(serviceDetails)
+        }
+    }
+
     String getServiceNameToUseForDeployment (def serviceDetails) {
         formatName(getServiceParameter(serviceDetails, "serviceNameOverride", serviceDetails.serviceName))
     }
@@ -1186,7 +1209,8 @@ public class KubernetesClient extends BaseClient {
         if (isCanaryDeployment(serviceDetails)) {
             constructCanaryDeploymentName(serviceDetails)
         } else {
-            getServiceNameToUseForDeployment (serviceDetails)
+            def serviceName = getServiceNameToUseForDeployment(serviceDetails)
+            formatName(getServiceParameter(serviceDetails, "deploymentNameOverride", serviceName))
         }
     }
 

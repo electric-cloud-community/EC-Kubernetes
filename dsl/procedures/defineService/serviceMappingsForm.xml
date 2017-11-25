@@ -34,6 +34,14 @@
     </formElement>
 
     <formElement>
+        <type>entry</type>
+        <label>Deployment Name Override:</label>
+        <property>deploymentNameOverride</property>
+        <required>0</required>
+        <documentation>Name for the deployment in Kubernetes. If no value is specified here, then the name of the Kubernetes service being created or updated will be used to name the deployment in Kubernetes.</documentation>
+    </formElement>
+
+    <formElement>
         <label>Perform Canary Deployment:</label>
         <property>canaryDeployment</property>
         <documentation>A fixed text or property reference e.g., '$[doCanaryDeployment]' that evaluates to 'true' or 'false'. If evaluated to true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.</documentation>
@@ -135,12 +143,16 @@
         <value>create</value>
         <required>0</required>
         <option>
-            <name>Create</name>
+            <name>Create (POST)</name>
             <value>create</value>
         </option>
         <option>
-            <name>Update</name>
+            <name>Update (PUT)</name>
             <value>update</value>
+        </option>
+        <option>
+            <name>Update (PATCH)</name>
+            <value>patch</value>
         </option>
         <documentation>Whether to create or update the resource.</documentation>
     </formElement>

@@ -28,6 +28,7 @@
                 <li><a href="#usecases">Use Cases</a></li>
                 <ul>
                     <li><a href="#CanaryDeployments">Canary Deployments</a></li>
+                    <li><a href="#BlueGreenDeployments">Blue/Green Deployments</a></li>
                 </ul>
                 <li><a href="#releaseNotes">Release Notes</a></li>
             </ul>
@@ -299,6 +300,9 @@
 
                 </p>
             </div>
+            <div id="BlueGreenDeployments">
+                <h2>Blue/Green Deployments</h2>
+            </div>
 
             <h1 id="releaseNotes">Release Notes</h1>
             <h3>EC-Kubernetes 1.0.4</h3>
@@ -306,6 +310,7 @@
                 <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>
                 <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the EC-Kubernetes plugin will now monitor the deployment progress in Kubernetes and cause the step to fail
                     in case the deployment does not complete within the deployment timeout configured as part of the service mapping. The default timeout value is 120 seconds.</li>
+                <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the deployment name to use in Kubernetes can now be overridden through the service mapping. See section <a href="#BlueGreenDeployments">Blue/Green Deployments</a> for details on how this ability can be used to implement a blue/green deployment strategy.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.3</h3>
             <ul>
