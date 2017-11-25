@@ -301,6 +301,12 @@
             </div>
 
             <h1 id="releaseNotes">Release Notes</h1>
+            <h3>EC-Kubernetes 1.0.4</h3>
+            <ul>
+                <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>
+                <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the EC-Kubernetes plugin will now monitor the deployment progress in Kubernetes and cause the step to fail
+                    in case the deployment does not complete within the deployment timeout configured as part of the service mapping. The default timeout value is 120 seconds.</li>
+            </ul>
             <h3>EC-Kubernetes 1.0.3</h3>
             <ul>
                 <li>Made secrets compliant with DNS-1123 standards.</li>
@@ -309,7 +315,6 @@
                 <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.</li>
                 <li>Deprecated procedure <i>Create Resource</i>. The newly added procedure <i>Invoke Kubernetes API</i> should be used instead for creating or updating a Kubernetes resource.</li>
                 <li>Added support for <b>canary deployments</b>. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.</li>
-                <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>
             </ul>
             <h3>EC-Kubernetes 1.0.2</h3>
             <ul>
