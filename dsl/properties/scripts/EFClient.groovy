@@ -174,7 +174,7 @@ public class EFClient extends BaseClient {
                 /*failOnErrorCode*/ false, [request: 'expandString'])
 
         if (result.status >= 400){
-            efClient.handleProcedureError("Failed to expand '$str'. $result.statusLine")
+            handleProcedureError("Failed to expand '$str'. $result.statusLine")
         }
 
         result.data?.value
