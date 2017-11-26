@@ -838,7 +838,7 @@ public class KubernetesClient extends BaseClient {
         def volumeData = convertVolumes(args.volumes)
         def serviceName = getServiceNameToUseForDeployment(args)
         def deploymentName = getDeploymentName(args)
-        def selectorLabel = getSelectorLabelForDeployment(args)
+        def selectorLabel = getSelectorLabelForDeployment(args, serviceName)
 
         String apiPath = versionSpecificAPIPath('deployments')
         int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
@@ -1033,7 +1033,7 @@ public class KubernetesClient extends BaseClient {
     String buildServicePayload(Map args, def deployedService){
 
         def serviceName = getServiceNameToUseForDeployment(args)
-        def selectorLabel = getSelectorLabelForDeployment(args)
+        def selectorLabel = getSelectorLabelForDeployment(args, serviceName)
         def json = new JsonBuilder()
         def portMapping = []
         def payload = null
@@ -1193,7 +1193,7 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    String getSelectorLabelForDeployment(def serviceDetails) {
+    String getSelectorLabelForDeployment(def serviceDetails, String serviceName) {
         if (isCanaryDeployment(serviceDetails)) {
             serviceName
         } else {
@@ -1202,7 +1202,7 @@ public class KubernetesClient extends BaseClient {
     }
 
     String getServiceNameToUseForDeployment (def serviceDetails) {
-        formatName(getServiceParameter(serviceDetails, "serviceNameOverride", serviceDetails.serviceName))
+        makeNameDNS1035Compliant(getServiceParameter(serviceDetails, "serviceNameOverride", serviceDetails.serviceName))
     }
 
     String getDeploymentName(def serviceDetails) {
@@ -1210,12 +1210,16 @@ public class KubernetesClient extends BaseClient {
             constructCanaryDeploymentName(serviceDetails)
         } else {
             def serviceName = getServiceNameToUseForDeployment(serviceDetails)
-            formatName(getServiceParameter(serviceDetails, "deploymentNameOverride", serviceName))
+            makeNameDNS1035Compliant(getServiceParameter(serviceDetails, "deploymentNameOverride", serviceName))
         }
     }
 
     String constructCanaryDeploymentName(def serviceDetails) {
         String name = getServiceNameToUseForDeployment (serviceDetails)
         "${name}-canary"
+    }
+
+    String makeNameDNS1035Compliant(String name){
+        return formatName(name).replaceAll('\\.', '-')
     }
 }
