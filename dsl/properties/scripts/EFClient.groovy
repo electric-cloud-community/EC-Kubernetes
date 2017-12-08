@@ -240,6 +240,20 @@ public class EFClient extends BaseClient {
         doHttpPost("/rest/v1.0/properties", /* request body */ payload)
     }
 
+    def createPropertyInPipelineContext(String applicationName,
+                                        String serviceName, String targetPort,
+                                        String propertyName, String value) {
+        if (runningInPipeline()) {
+
+            String relativeProp = applicationName ?
+                    "${applicationName}/${serviceName}/${targetPort}" :
+                    "${serviceName}/${targetPort}"
+            String fullProperty = "/myStageRuntime/${relativeProp}/${propertyName}"
+            logger INFO, "Registering pipeline runtime property '$fullProperty' with value $value"
+            setEFProperty(fullProperty, value)
+        }
+    }
+
     def setEFProperty(String propertyName, String value, Map additionalArgs = [:]) {
         // Creating the property in the context of a job-step by default
         def jobStepId = '$[/myJobStep/jobStepId]'
@@ -254,10 +268,13 @@ public class EFClient extends BaseClient {
         doHttpPut("/rest/v1.0/properties/${propertyName}", /* request body */ payload)
     }
 
-    def evalDsl(String dsl) {
+    def evalDsl(String dslStr) {
+        // Run the dsl in the context of a job-step by default
+        def jobStepId = '$[/myJobStep/jobStepId]'
         def payload = [:]
         payload << [
-                dsl: dsl
+                dsl: dslStr,
+                jobStepId: jobStepId
         ]
 
         doHttpPost("/rest/v1.0/server/dsl", /* request body */ payload)
