@@ -349,6 +349,10 @@
             </div>
 
             <h1 id="releaseNotes">Release Notes</h1>
+            <h3>EC-Kubernetes 1.0.5</h3>
+            <ul>
+                <li>All leading and trailing whitespaces in service mapping parameters such as <i>canaryDeployment</i> will be removed before the parameter value is used.</li>
+            </ul>
             <h3>EC-Kubernetes 1.0.4</h3>
             <ul>
                 <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>

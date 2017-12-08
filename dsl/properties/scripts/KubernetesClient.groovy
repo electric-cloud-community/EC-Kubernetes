@@ -74,7 +74,7 @@ public class KubernetesClient extends BaseClient {
                         String url = "${serviceEndpoint}:${port.listenerPort}"
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                         if (!canaryDeployment) {
-                            createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                            efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                         }
                     }
                 }
@@ -88,14 +88,14 @@ public class KubernetesClient extends BaseClient {
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                     if (!canaryDeployment) {
-                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                     }
                     // get the assigned node port for the service port
                     def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
                     if (nodePort) {
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/nodePort", "$nodePort")
                         if (!canaryDeployment) {
-                            createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
+                            efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
                         }
                     } else {
                         logger WARNING, "Nodeport not found for deployed service '$serviceName' for port '$portName'"
@@ -110,7 +110,7 @@ public class KubernetesClient extends BaseClient {
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                     if (!canaryDeployment) {
-                        createPropertyInPipelineContext(efClient, applicationName, serviceName, targetPort, 'url', url)
+                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                     }
                 }
                 break
@@ -169,20 +169,6 @@ public class KubernetesClient extends BaseClient {
             }
         }
         return false
-    }
-
-    def createPropertyInPipelineContext(EFClient efClient, String applicationName,
-                                        String serviceName, String targetPort,
-                                        String propertyName, String value) {
-        if (efClient.runningInPipeline()) {
-
-            String relativeProp = applicationName ?
-                    "${applicationName}/${serviceName}/${targetPort}" :
-                    "${serviceName}/${targetPort}"
-            String fullProperty = "/myStageRuntime/${relativeProp}/${propertyName}"
-            logger INFO, "Registering pipeline runtime property '$fullProperty' with value $value"
-            efClient.setEFProperty(fullProperty, value)
-        }
     }
 
     def undeployService(
@@ -1021,7 +1007,7 @@ public class KubernetesClient extends BaseClient {
         }
 
         // not using groovy truthiness so that we can account for 0
-        return result != null && result != '' ? result : defaultValue
+        return result != null && result.toString().trim() != '' ? result.toString().trim() : defaultValue
     }
 
     def getServiceParameterArray(Map args, String parameterName, String defaultValue = null) {
