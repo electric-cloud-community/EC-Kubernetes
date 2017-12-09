@@ -63,7 +63,11 @@ public class KubernetesClient extends BaseClient {
         waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, accessToken)
 
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
-        boolean canaryDeployment = isCanaryDeployment(serviceDetails)
+        boolean serviceCreatedOrUpdated = !isCanaryDeployment(serviceDetails)
+        if (!serviceCreatedOrUpdated) {
+            return
+        }
+
         switch (serviceType) {
             case 'LoadBalancer':
                 def serviceEndpoint = getLBServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
@@ -73,9 +77,7 @@ public class KubernetesClient extends BaseClient {
                         def targetPort = port.subport?:port.listenerPort
                         String url = "${serviceEndpoint}:${port.listenerPort}"
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                        if (!canaryDeployment) {
-                            efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
-                        }
+                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                     }
                 }
                 break
@@ -87,16 +89,12 @@ public class KubernetesClient extends BaseClient {
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                    if (!canaryDeployment) {
-                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
-                    }
+                    efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                     // get the assigned node port for the service port
                     def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
                     if (nodePort) {
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/nodePort", "$nodePort")
-                        if (!canaryDeployment) {
-                            efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
-                        }
+                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
                     } else {
                         logger WARNING, "Nodeport not found for deployed service '$serviceName' for port '$portName'"
                     }
@@ -109,9 +107,7 @@ public class KubernetesClient extends BaseClient {
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
-                    if (!canaryDeployment) {
-                        efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
-                    }
+                    efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                 }
                 break
 
@@ -370,8 +366,6 @@ public class KubernetesClient extends BaseClient {
                         /*failOnErrorCode*/ true,
                         serviceDefinition)
             }
-        }else{
-            logger INFO, "No port mapping defined. Skipping service creation."
         }
     }
 
@@ -1022,7 +1016,14 @@ public class KubernetesClient extends BaseClient {
         def selectorLabel = getSelectorLabelForDeployment(args, serviceName)
         def json = new JsonBuilder()
         def portMapping = []
-        def payload = null
+        def canary = isCanaryDeployment(args)
+        if (canary) {
+            if (!deployedService) {
+                handleError("Canary deployments can only be performed for existing services. Service '$serviceName' not found in the cluster.")
+            } else {
+                logger INFO, "Performing canary deployment, hence skipping service creation/update."
+            }
+        }
         portMapping = args.port.collect { svcPort ->
                     [
                             port: svcPort.listenerPort.toInteger(),
@@ -1037,6 +1038,7 @@ public class KubernetesClient extends BaseClient {
 
         if (portMapping.size()==0){
             // no port mapping defined.
+            logger INFO, "No port mapping defined. Skipping service creation/update."
             return null
         } else {
             def result = json {
@@ -1059,7 +1061,7 @@ public class KubernetesClient extends BaseClient {
                 }
             }
 
-            payload = deployedService
+            def payload = deployedService
             if (payload) {
                 payload = mergeObjs(payload, result)
             } else {
