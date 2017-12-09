@@ -60,10 +60,14 @@ public class KubernetesClient extends BaseClient {
         // hook for other kubernetes based plugins
         createOrUpdatePlatformSpecificResources(clusterEndpoint, namespace, serviceDetails, accessToken)
 
-        waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, accessToken)
+        // lookup certain key service parameters first
+        boolean isCanary = isCanaryDeployment(serviceDetails)
+        def expectedReplicaCount = getExpectedReplicaCount(serviceDetails, isCanary)
+
+        waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, expectedReplicaCount, accessToken)
 
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
-        boolean serviceCreatedOrUpdated = !isCanaryDeployment(serviceDetails)
+        boolean serviceCreatedOrUpdated = !isCanary
         if (!serviceCreatedOrUpdated) {
             return
         }
@@ -114,7 +118,12 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    def waitForDeployment(EFClient efClient, def clusterEndpoint, def namespace, def serviceDetails, def accessToken){
+    def getExpectedReplicaCount(def args, boolean isCanary) {
+        isCanary ? getServiceParameter(args, 'numberOfCanaryReplicas', 1).toInteger() : args.defaultCapacity.toInteger()
+    }
+
+    def waitForDeployment(EFClient efClient, def clusterEndpoint, def namespace, def serviceDetails,
+                          def expectedReplicaCount, def accessToken){
 
         String apiPath = versionSpecificAPIPath('deployments')
         def deploymentTimeoutInSec = getServiceParameter(serviceDetails, 'deploymentTimeoutInSec', 120).toInteger()
@@ -145,7 +154,8 @@ public class KubernetesClient extends BaseClient {
             response = doHttpGet(clusterEndpoint,
                 resourceUri,
                 accessToken, /*failOnErrorCode*/ false)
-            if(deploymentStatusComplete(response)){
+            if(deploymentStatusComplete(response, expectedReplicaCount)){
+                logger INFO, "Deployment completed"
                 return
             }
         }
@@ -158,13 +168,15 @@ public class KubernetesClient extends BaseClient {
         efClient.handleProcedureError("Deployment did not complete within ${deploymentTimeoutInSec} seconds.")
     }
 
-    def deploymentStatusComplete(def response){
+    def deploymentStatusComplete(def response, def expectedReplicaCount){
         for (condition in response?.data?.status?.conditions){
             if(condition.reason == "NewReplicaSetAvailable" && condition.status == "True" ){
                 return true
             }
         }
-        return false
+        //check for older kubernetes deployment API
+        def availableReplicas = response?.data?.status?.availableReplicas
+        return availableReplicas && expectedReplicaCount == availableReplicas
     }
 
     def undeployService(
