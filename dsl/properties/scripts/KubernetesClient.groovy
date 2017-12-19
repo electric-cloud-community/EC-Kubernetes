@@ -1087,7 +1087,7 @@ public class KubernetesClient extends BaseClient {
             }
         }
             
-        payload = deployedService
+        def payload = deployedService
         if (payload) {
             payload = mergeObjs(payload, result)
         } else {
