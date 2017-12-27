@@ -72,7 +72,11 @@ public class KubernetesClient extends BaseClient {
             return
         }
 
-        switch (serviceType) {
+        if(serviceDetails.port){
+
+            // If port mappings are defined then get Endpoint details
+            // else headless service without any Endpoint IP is created 
+            switch (serviceType) {
             case 'LoadBalancer':
                 def serviceEndpoint = getLBServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
 
@@ -115,7 +119,13 @@ public class KubernetesClient extends BaseClient {
                 }
                 break
 
+            }
+        }else{
+            // Headless service
+            efClient.createProperty("${resultsPropertySheet}/${serviceName}/none/url", "none")
+            efClient.createPropertyInPipelineContext(applicationName, serviceName, "none", 'url', "none")       
         }
+        
     }
 
     def getExpectedReplicaCount(def args, boolean isCanary) {
@@ -1036,6 +1046,7 @@ public class KubernetesClient extends BaseClient {
                 logger INFO, "Performing canary deployment, hence skipping service creation/update."
             }
         }
+
         portMapping = args.port.collect { svcPort ->
                     [
                             port: svcPort.listenerPort.toInteger(),
@@ -1048,39 +1059,42 @@ public class KubernetesClient extends BaseClient {
                     ]
                 }
 
-        if (portMapping.size()==0){
-            // no port mapping defined.
-            logger INFO, "No port mapping defined. Skipping service creation/update."
-            return null
-        } else {
-            def result = json {
-                kind "Service"
-                apiVersion "v1"
+        def result = json {
+            kind "Service"
+            apiVersion "v1"
 
-                metadata {
-                    name serviceName
+            metadata {
+                name serviceName
+            }
+            //Kubernetes plugin injects this service selector
+            //to link the service to the pod that this
+            //Deploy service encapsulates.
+            spec {
+                
+                selector {
+                    "ec-svc" selectorLabel
                 }
-                //Kubernetes plugin injects this service selector
-                //to link the service to the pod that this
-                //Deploy service encapsulates.
-                spec {
-                    this.addServiceParameters(delegate, args)
 
-                    selector {
-                        "ec-svc" selectorLabel
-                    }
+                if (portMapping.size()==0){
+
+                    clusterIP("None")
+                } else {
+                    // Add LoadBalanceIP and other override 
+                    // parameters only if portMappings are defined
+                    this.addServiceParameters(delegate, args)
                     ports(portMapping)
                 }
             }
-
-            def payload = deployedService
-            if (payload) {
-                payload = mergeObjs(payload, result)
-            } else {
-                payload = result
-            }
-            return (new JsonBuilder(payload)).toPrettyString()
         }
+            
+        def payload = deployedService
+        if (payload) {
+            payload = mergeObjs(payload, result)
+        } else {
+            payload = result
+        }
+
+        return (new JsonBuilder(payload)).toPrettyString()
     }
 
     def convertCpuToMilliCpu(float cpu) {
