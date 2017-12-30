@@ -64,7 +64,7 @@ public class KubernetesClient extends BaseClient {
         boolean isCanary = isCanaryDeployment(serviceDetails)
         def expectedReplicaCount = getExpectedReplicaCount(serviceDetails, isCanary)
 
-        waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, expectedReplicaCount, accessToken)
+        waitForDeployment(efClient, clusterEndpoint, namespace, serviceDetails, expectedReplicaCount, isCanary, accessToken)
 
         def serviceType = getServiceParameter(serviceDetails, 'serviceType', 'LoadBalancer')
         boolean serviceCreatedOrUpdated = !isCanary
@@ -133,7 +133,7 @@ public class KubernetesClient extends BaseClient {
     }
 
     def waitForDeployment(EFClient efClient, def clusterEndpoint, def namespace, def serviceDetails,
-                          def expectedReplicaCount, def accessToken){
+                          def expectedReplicaCount, boolean isCanary, def accessToken){
 
         String apiPath = versionSpecificAPIPath('deployments')
         def deploymentTimeoutInSec = getServiceParameter(serviceDetails, 'deploymentTimeoutInSec', 120).toInteger()
@@ -174,8 +174,29 @@ public class KubernetesClient extends BaseClient {
         if (response) {
             def responseStr = (new JsonBuilder(response)).toPrettyString()
             logger INFO, "Deployment status:\n$responseStr"
+            def serviceName = getServiceNameToUseForDeployment(serviceDetails)
+            def selectorLabel = getSelectorLabelForDeployment(serviceDetails, serviceName, isCanary)
+            logDeploymentPodsStatus(clusterEndpoint, namespace, selectorLabel, deploymentName, isCanary, accessToken)
         }
         efClient.handleProcedureError("Deployment did not complete within ${deploymentTimeoutInSec} seconds.")
+    }
+
+    def logDeploymentPodsStatus(String clusterEndpoint, String namespace, String selectorLabel,
+                                String deploymentName, boolean isCanary, String accessToken) {
+
+        def deploymentFlag = isCanary ? 'canary' : 'stable'
+
+        def response = doHttpGet(clusterEndpoint,
+                "/api/v1/namespaces/${namespace}/pods",
+                accessToken, /*failOnErrorCode*/ false,
+                [labelSelector: "ec-track=${deploymentFlag},ec-svc=${selectorLabel}"])
+
+        logger INFO, "Pod(s) associated with deployment '$deploymentName':"
+        for( pod in response?.data?.items ){
+
+            def podStr = (new JsonBuilder(pod)).toPrettyString()
+            logger INFO, "Pod '${pod.metadata.name}':\n$podStr"
+        }
     }
 
     def deploymentStatusComplete(def response, def expectedReplicaCount){
@@ -840,7 +861,7 @@ public class KubernetesClient extends BaseClient {
         def volumeData = convertVolumes(args.volumes)
         def serviceName = getServiceNameToUseForDeployment(args)
         def deploymentName = getDeploymentName(args)
-        def selectorLabel = getSelectorLabelForDeployment(args, serviceName)
+        def selectorLabel = getSelectorLabelForDeployment(args, serviceName, isCanary)
 
         String apiPath = versionSpecificAPIPath('deployments')
         int deploymentTimeoutInSec = getServiceParameter(args, 'deploymentTimeoutInSec', 120).toInteger()
@@ -1035,10 +1056,11 @@ public class KubernetesClient extends BaseClient {
     String buildServicePayload(Map args, def deployedService){
 
         def serviceName = getServiceNameToUseForDeployment(args)
-        def selectorLabel = getSelectorLabelForDeployment(args, serviceName)
+        def canary = isCanaryDeployment(args)
+        def selectorLabel = getSelectorLabelForDeployment(args, serviceName, canary)
         def json = new JsonBuilder()
         def portMapping = []
-        def canary = isCanaryDeployment(args)
+
         if (canary) {
             if (!deployedService) {
                 handleError("Canary deployments can only be performed for existing services. Service '$serviceName' not found in the cluster.")
@@ -1207,8 +1229,8 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    String getSelectorLabelForDeployment(def serviceDetails, String serviceName) {
-        if (isCanaryDeployment(serviceDetails)) {
+    String getSelectorLabelForDeployment(def serviceDetails, String serviceName, boolean isCanary) {
+        if (isCanary) {
             serviceName
         } else {
             getDeploymentName(serviceDetails)
