@@ -220,6 +220,7 @@
                 </table>
 
             </div>
+           
             <div id="CreateOrUpdateKubernetesResource">
                 <h2>Invoke Kubernetes API</h2>
                 <p>Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input.</p>
@@ -268,6 +269,55 @@
                 </table>
 
             </div>
+             <div id="CreateOrUpdateKubernetesResource">
+                <h2>Wait For Kubernetes API</h2>
+                <p>Procedure keeps polling on specified Kubernetes REST API till response field attains desired value. </p>
+
+                <h3>Wait For Kubernetes API Parameters</h3>
+                <table class="grid">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        <tr>
+                            <td class="required">Configuration</td>
+                            <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
+                        </tr>
+
+                        <tr class="required">
+                            <td>Kubernetes API URI</td>
+                            <td>The URI of the Kubernetes API to invoke. E.g., 'apis/v1beta1/namespaces/default/deployments/nginx/status'.</td>
+                        </tr>
+
+                        <tr class="required">
+                            <td>Response Field</td>
+                            <td>Specific field in Kubernetes API response to check for.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Expected value</td>
+                            <td>Value of response field to check for.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Timeout in Sec</td>
+                            <td>Period to wait for response before timing out.</td>
+                        </tr>
+
+                        <tr>
+                            <td>Output Property Location</td>
+                            <td>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+
 
             <h1 id="usecases">Use Cases</h1>
             <div id="RollingUpdates">
@@ -349,6 +399,10 @@
             </div>
 
             <h1 id="releaseNotes">Release Notes</h1>
+            <h3>EC-Kubernetes 1.0.6</h3>
+            <ul>
+                <li>Added 'Wait For Kubernetes API' procedure.</li>
+            </ul>
             <h3>EC-Kubernetes 1.0.5</h3>
             <ul>
                 <li>All leading and trailing whitespaces in service mapping parameters such as <i>canaryDeployment</i> will be removed before the parameter value is used.</li>

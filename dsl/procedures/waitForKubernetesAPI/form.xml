@@ -63,6 +63,6 @@
         <label>Output Property Location:</label>
         <property>outputProperty</property>
         <required>0</required>
-        <documentation>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sAPIResult' else it will default to '/myJob/k8sAPIResult'.</documentation>
+        <documentation>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.</documentation>
     </formElement>
 </editor>
