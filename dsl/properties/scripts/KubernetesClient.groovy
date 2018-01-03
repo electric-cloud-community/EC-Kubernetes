@@ -1,3 +1,7 @@
+@Grab('com.jayway.jsonpath:json-path:2.0.0' )
+
+import static com.jayway.jsonpath.JsonPath.parse
+
 /**
  * Kubernetes API client
  */
@@ -761,6 +765,43 @@ public class KubernetesClient extends BaseClient {
                         /*failOnErrorCode*/ true,
                         resourceDetails)
         }
+    }
+
+    def waitKubeAPI(String clusterEndpoint, 
+                    def resourceData, 
+                    String resourceUri,
+                    String requestType, 
+                    String requestFormat, 
+                    String accessToken,
+                    String responseField, 
+                    String expectedValue,
+                    int timeoutInSec) {
+
+        if (OFFLINE) return null
+
+        logger INFO, "Checking '$responseField' of ${clusterEndpoint}/${resourceUri}"
+
+        int elapsedTime = 0
+        int iteration = 0
+        while(elapsedTime < timeoutInSec) {
+
+            def response = invokeKubeAPI(clusterEndpoint, resourceData, resourceUri, requestType, requestFormat, accessToken)
+            
+            def responseValue = parse(response.data).read('$.' + responseField)
+
+            logger DEBUG, "Got value of '${responseField}' : '${responseValue}'"
+
+            if(responseValue==expectedValue){
+                logger INFO, "Matched : ${responseValue} with ${expectedValue}"
+                return
+            }
+            def before = System.currentTimeMillis()
+            Thread.sleep(10*1000)
+            def now = System.currentTimeMillis()
+
+            elapsedTime = elapsedTime + (now - before)/1000
+        }
+        handleError("Timed out waiting for value of '${responseField}' response field  ('${clusterEndpoint}/${resourceUri}') to attain '${expectedValue}'.")
     }
 
     def invokeKubeAPI(String clusterEndPoint, def resourceDetails, String resourceUri, String requestType, String requestFormat, String accessToken) {

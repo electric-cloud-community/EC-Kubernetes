@@ -1,0 +1,68 @@
+<!--
+
+     Copyright 2016 Electric Cloud, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Configuration:</label>
+        <property>config</property>
+        <required>1</required>
+        <propertyReference>/plugins/@PLUGIN_NAME@/project/ec_plugin_cfgs</propertyReference>
+        <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
+    </formElement>
+    
+    <formElement>
+        <type>entry</type>
+        <label>Kubernetes API URI:</label>
+        <property>resourceUri</property>
+        <required>1</required>
+        <documentation>The URI to poll on E.g., '/api/v1/namespaces/default/pods/nginx'.</documentation>
+    </formElement>
+   
+    <formElement>
+        <type>entry</type>
+        <label>Response Field:</label>
+        <property>responseField</property>
+        <required>1</required>
+        <documentation>Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Expected value:</label>
+        <property>expectedValue</property>
+        <required>1</required>
+        <documentation>Value of response field to check for.E.g., 'Running'</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Timeout (in seconds):</label>
+        <property>timeoutInSec</property>
+        <required>0</required>
+        <value>120</value>
+        <documentation>Period to wait for response field to attain destired value before timing out.</documentation>
+    </formElement>
+
+    <formElement>
+        <type>entry</type>
+        <label>Output Property Location:</label>
+        <property>outputProperty</property>
+        <required>0</required>
+        <documentation>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.</documentation>
+    </formElement>
+</editor>

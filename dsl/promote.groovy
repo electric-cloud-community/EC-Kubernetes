@@ -33,6 +33,9 @@ def stepsWithAttachedCredentials = [
 		], [
 				procedureName: 'Invoke Kubernetes API',
 				stepName: 'invokeAPI'
+		], [
+				procedureName: 'Wait For Kubernetes API',
+				stepName: 'waitAPI'
 		]
 ]
 project pluginName, {
