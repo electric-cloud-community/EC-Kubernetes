@@ -290,22 +290,22 @@
 
                         <tr class="required">
                             <td>Kubernetes API URI</td>
-                            <td>The URI of the Kubernetes API to invoke. E.g., 'apis/v1beta1/namespaces/default/deployments/nginx/status'.</td>
+                            <td>The URI of the Kubernetes API to invoke. E.g., '/api/v1/namespaces/default/pods/nginx'.</td>
                         </tr>
 
                         <tr class="required">
                             <td>Response Field</td>
-                            <td>Specific field in Kubernetes API response to check for.</td>
+                            <td>Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.</td>
                         </tr>
 
                         <tr>
                             <td>Expected value</td>
-                            <td>Value of response field to check for.</td>
+                            <td>Value of response field to check for.E.g., 'Running'</td>
                         </tr>
 
                         <tr>
-                            <td>Timeout in Sec</td>
-                            <td>Period to wait for response before timing out.</td>
+                            <td>Timeout (in seconds)</td>
+                            <td>Period to wait for response field to attain destired value before timing out.</td>
                         </tr>
 
                         <tr>

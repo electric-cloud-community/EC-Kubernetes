@@ -30,7 +30,7 @@
         <label>Kubernetes API URI:</label>
         <property>resourceUri</property>
         <required>1</required>
-        <documentation>The URI to poll on E.g., 'apis/v1beta1/namespaces/default/deployments/nginx/status'.</documentation>
+        <documentation>The URI to poll on E.g., '/api/v1/namespaces/default/pods/nginx'.</documentation>
     </formElement>
    
     <formElement>
@@ -38,7 +38,7 @@
         <label>Response Field:</label>
         <property>responseField</property>
         <required>1</required>
-        <documentation>Specific field in Kubernetes API response to check for.</documentation>
+        <documentation>Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.</documentation>
     </formElement>
 
     <formElement>
@@ -46,16 +46,16 @@
         <label>Expected value:</label>
         <property>expectedValue</property>
         <required>1</required>
-        <documentation>Value of response field to check for.</documentation>
+        <documentation>Value of response field to check for.E.g., 'Running'</documentation>
     </formElement>
 
     <formElement>
         <type>entry</type>
-        <label>Timeout in Sec:</label>
+        <label>Timeout (in seconds):</label>
         <property>timeoutInSec</property>
         <required>0</required>
         <value>120</value>
-        <documentation>Period to wait for response before timing out.</documentation>
+        <documentation>Period to wait for response field to attain destired value before timing out.</documentation>
     </formElement>
 
     <formElement>
