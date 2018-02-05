@@ -1,19 +1,19 @@
 use Cwd;
 use File::Spec;
 use POSIX;
+use Archive::Zip;
+use MIME::Base64;
+use Digest::MD5 qw(md5_hex);
+use File::Temp qw(tempfile tempdir);
 my $dir = getcwd;
 my $logfile ="";
 my $pluginDir;
-
 
 if ( defined $ENV{QUERY_STRING} ) {    # Promotion through UI
     $pluginDir = $ENV{COMMANDER_PLUGINS} . "/$pluginName";
 }
 else {
     my $commanderPluginDir = $commander->getProperty('/server/settings/pluginsDirectory')->findvalue('//value');
-    unless ( $commanderPluginDir && -d $commanderPluginDir ) {
-        die "Cannot find commander plugin dir, please ensure that the option server/settings/pluginsDirectory is set up correctly";
-    }
     $pluginDir = File::Spec->catfile($commanderPluginDir, $pluginName);
 }
 
@@ -25,19 +25,22 @@ $logfile .= "Current directory: $dir\n";
 
 # Evaluate promote.groovy or demote.groovy based on whether plugin is being promoted or demoted ($promoteAction)
 local $/ = undef;
-# If env variable QUERY_STRING exists:
-my $dslFilePath;
-if(defined $ENV{QUERY_STRING}) { # Promotion through UI
-    $dslFilePath = File::Spec->catfile($ENV{COMMANDER_PLUGINS}, $pluginName, "dsl", "$promoteAction.groovy");
-} else {  # Promotion from the command line
-    $dslFilePath = File::Spec->catfile($pluginDir, "dsl", "$promoteAction.groovy");
+my $demoteDsl = q{
+# demote.groovy placeholder
+};
+
+my $promoteDsl = q{
+# promote.groovy placeholder
+};
+
+my $dsl;
+if ($promoteAction eq 'promote') {
+  $dsl = $promoteDsl;
+}
+else {
+  $dsl = $demoteDsl;
 }
 
-$logfile .= "Evaluating dsl file: $dslFilePath\n";
-
-open FILE, $dslFilePath or die "Couldn't open file: $dslFilePath: $!";
-my $dsl = <FILE>;
-close FILE;
 my $dslReponse = $commander->evalDsl(
     $dsl, {
         parameters => qq(
@@ -59,9 +62,56 @@ my $errorMessage = $commander->getError();
 if ( !$errorMessage ) {
 
     # This is here because we cannot do publishArtifactVersion in dsl today
-
     # delete artifact if it exists first
     $commander->deleteArtifactVersion("com.electriccloud:EC-Kubernetes-Grapes:1.0.0");
+
+    my $dependenciesProperty = '/projects/@PLUGIN_NAME@/ec_groovyDependencies';
+    my $base64 = '';
+    my $xpath;
+    eval {
+      $xpath = $commander->getProperties({path => $dependenciesProperty});
+      1;
+    };
+    unless($@) {
+      my $blocks = {};
+      my $checksum = '';
+      for my $prop ($xpath->findnodes('//property')) {
+        my $name = $prop->findvalue('propertyName')->string_value;
+        my $value = $prop->findvalue('value')->string_value;
+        if ($name eq 'checksum') {
+          $checksum = $value;
+        }
+        else {
+          my ($number) = $name =~ /ec_dependencyChunk_(\d+)$/;
+          $blocks->{$number} = $value;
+        }
+      }
+      for my $key (sort {$a <=> $b} keys %$blocks) {
+        $base64 .= $blocks->{$key};
+      }
+
+      my $resultChecksum = md5_hex($base64);
+      unless($checksum) {
+        die "No checksum found in dependendencies property, please reinstall the plugin";
+      }
+      if ($resultChecksum ne $checksum) {
+        die "Wrong dependency checksum: original checksum is $checksum";
+      }
+    }
+
+    my $binary = decode_base64($base64);
+    my ($tempFh, $tempFilename) = tempfile(CLEANUP => 1);
+    binmode($tempFh);
+    print $tempFh $binary;
+    close $tempFh;
+
+    my ($tempDir) = tempdir(CLEANUP => 1);
+    my $zip = Archive::Zip->new();
+    unless($zip->read($tempFilename) == Archive::Zip::AZ_OK()) {
+      die "Cannot read .zip dependencies: $!";
+    }
+    $zip->extractTree("", File::Spec->catfile($tempDir, ''));
+
 
     if ( $promoteAction eq "promote" ) {
 
@@ -72,7 +122,7 @@ if ( !$errorMessage ) {
                 artifactKey     => "EC-Kubernetes-Grapes",
                 version         => "1.0.0",
                 includePatterns => "**",
-                fromDirectory   => "$pluginDir/lib/grapes",
+                fromDirectory   => "$tempDir/lib/grapes",
                 description => "JARs that EC-Kubernetes plugin procedures depend on"
             }
         );
