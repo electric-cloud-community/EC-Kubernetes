@@ -52,7 +52,7 @@ public class KubernetesClient extends BaseClient {
                 serviceEntityRevisionId)
 
         validateUniquePorts(serviceDetails)
-        
+
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
         createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
@@ -79,7 +79,7 @@ public class KubernetesClient extends BaseClient {
         if(serviceDetails.port){
 
             // If port mappings are defined then get Endpoint details
-            // else headless service without any Endpoint IP is created 
+            // else headless service without any Endpoint IP is created
             switch (serviceType) {
             case 'LoadBalancer':
                 def serviceEndpoint = getLBServiceEndpoint(clusterEndpoint, namespace, serviceDetails, accessToken)
@@ -127,9 +127,9 @@ public class KubernetesClient extends BaseClient {
         }else{
             // Headless service
             efClient.createProperty("${resultsPropertySheet}/${serviceName}/none/url", "none")
-            efClient.createPropertyInPipelineContext(applicationName, serviceName, "none", 'url', "none")       
+            efClient.createPropertyInPipelineContext(applicationName, serviceName, "none", 'url', "none")
         }
-        
+
     }
 
     def getExpectedReplicaCount(def args, boolean isCanary) {
@@ -337,17 +337,38 @@ public class KubernetesClient extends BaseClient {
         response.status == 200 ? response.data : null
     }
 
-    def getDeployments(String clusterEndPoint, String namespace, String accessToken) {
+    def getDeployments(String clusterEndPoint, String namespace, String accessToken, parameters = [:]) {
 
         if (OFFLINE) return null
 
+        def query = [:]
+        if (parameters.labelSelector) {
+            query.labelSelector = parameters.labelSelector
+        }
         String apiPath = versionSpecificAPIPath('deployments')
         def response = doHttpGet(clusterEndPoint,
                 "/apis/${apiPath}/namespaces/${namespace}/deployments",
-                accessToken, /*failOnErrorCode*/ false)
+                accessToken, /*failOnErrorCode*/ false, null, query)
 
         def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
         logger DEBUG, "Deployments found: $str"
+        response.status == 200 ? response.data : null
+    }
+
+
+    def getPods(String clusterEndPoint, String namespace, String accessToken, Map parameters = [:]) {
+
+        if (OFFLINE) return null
+
+        def query = [:]
+        if (parameters.labelSelector) {
+            query.labelSelector = parameters.labelSelector
+        }
+
+        def response = doHttpGet(clusterEndPoint, "/api/v1/namespaces/${namespace}/pods", accessToken, /*failOnErrorCode*/ false, null, query)
+
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
+        logger DEBUG, "Pods found: $str"
         response.status == 200 ? response.data : null
     }
 
@@ -372,7 +393,7 @@ public class KubernetesClient extends BaseClient {
         response.status == 200 ? response.data : null
     }
 
-    
+
     def getServices(String clusterEndPoint, String namespace, String accessToken) {
 
         if (OFFLINE) return null
@@ -617,7 +638,7 @@ public class KubernetesClient extends BaseClient {
 
         if (OFFLINE) return null
         deploymentName = deploymentName?:getDeploymentName(serviceDetails)
-        
+
         def response = doHttpGet(clusterEndPoint,
                 "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
                 accessToken, /*failOnErrorCode*/ false)
@@ -634,7 +655,7 @@ public class KubernetesClient extends BaseClient {
 
                     def resp = doHttpRequest(DELETE, clusterEndPoint,
                         "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${replSet.metadata.name}",
-                        ['Authorization' : accessToken], 
+                        ['Authorization' : accessToken],
                         /*failOnErrorCode*/ false)
                     logger INFO, "Deleting replicaSet ${replSet.metadata.name}. Response : ${resp}"
                 }
@@ -646,13 +667,13 @@ public class KubernetesClient extends BaseClient {
      }
 
     def deletePods(String clusterEndPoint, String namespace, def serviceDetails, String accessToken, String deploymentName = null){
-     
+
         if (OFFLINE) return null
         deploymentName = deploymentName?:getDeploymentName(serviceDetails)
-        
+
         def response = doHttpGet(clusterEndPoint,
                 "/api/v1/namespaces/${namespace}/pods",
-                accessToken, /*failOnErrorCode*/ false)   
+                accessToken, /*failOnErrorCode*/ false)
 
         for( pod in response.data.items ){
 
@@ -666,7 +687,7 @@ public class KubernetesClient extends BaseClient {
 
                     def resp = doHttpRequest(DELETE, clusterEndPoint,
                         "/api/v1/namespaces/${namespace}/pods/${pod.metadata.name}",
-                        ['Authorization' : accessToken], 
+                        ['Authorization' : accessToken],
                         /*failOnErrorCode*/ false)
                     logger INFO, "Deleting pod ${pod.metadata.name}. Response : ${resp}"
                 }
@@ -734,7 +755,7 @@ public class KubernetesClient extends BaseClient {
     }
 
     def createOrUpdateResource(String clusterEndPoint, def resourceDetails, String resourceUri, String createFlag, String contentType, String accessToken) {
-        
+
         if (OFFLINE) return null
 
         switch (createFlag) {
@@ -767,13 +788,13 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
-    def waitKubeAPI(String clusterEndpoint, 
-                    def resourceData, 
+    def waitKubeAPI(String clusterEndpoint,
+                    def resourceData,
                     String resourceUri,
-                    String requestType, 
-                    String requestFormat, 
+                    String requestType,
+                    String requestFormat,
                     String accessToken,
-                    String responseField, 
+                    String responseField,
                     String expectedValue,
                     int timeoutInSec) {
 
@@ -786,7 +807,7 @@ public class KubernetesClient extends BaseClient {
         while(elapsedTime < timeoutInSec) {
 
             def response = invokeKubeAPI(clusterEndpoint, resourceData, resourceUri, requestType, requestFormat, accessToken)
-            
+
             def responseValue = parse(response.data).read('$.' + responseField)
 
             logger DEBUG, "Got value of '${responseField}' : '${responseValue}'"
@@ -968,20 +989,20 @@ public class KubernetesClient extends BaseClient {
                             def livenessProbe = [:]
                             def readinessProbe = [:]
 
-                            // Only HTTP based Liveness probe is supported 
+                            // Only HTTP based Liveness probe is supported
                             if(getServiceParameter(svcContainer, 'livenessHttpProbePath') && getServiceParameter(svcContainer, 'livenessHttpProbePort')){
                                 def httpHeader = [name:"", value: ""]
                                 livenessProbe = [httpGet:[path:"", port:"", httpHeaders:[httpHeader]]]
                                 livenessProbe.httpGet.path = getServiceParameter(svcContainer, 'livenessHttpProbePath')
                                 livenessProbe.httpGet.port = (getServiceParameter(svcContainer, 'livenessHttpProbePort')).toInteger()
-                                
+
                                 httpHeader.name = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderName')
                                 httpHeader.value = getServiceParameter(svcContainer, 'livenessHttpProbeHttpHeaderValue')
-                                
+
                                 def livenessInitialDelay = getServiceParameter(svcContainer, 'livenessInitialDelay')
                                 livenessProbe.initialDelaySeconds = livenessInitialDelay.toInteger()
                                 def livenessPeriod = getServiceParameter(svcContainer, 'livenessPeriod')
-                                livenessProbe.periodSeconds = livenessPeriod.toInteger() 
+                                livenessProbe.periodSeconds = livenessPeriod.toInteger()
                             } else {
                                 livenessProbe = null
                             }
@@ -990,7 +1011,7 @@ public class KubernetesClient extends BaseClient {
                             if(readinessCommand){
                                 readinessProbe = [exec: [command:[:]]]
                                 readinessProbe.exec.command = ["${readinessCommand}"]
-                                
+
                                 def readinessInitialDelay = getServiceParameter(svcContainer, 'readinessInitialDelay')
                                 readinessProbe.initialDelaySeconds = readinessInitialDelay.toInteger()
                                 def readinessPeriod = getServiceParameter(svcContainer, 'readinessPeriod')
@@ -998,7 +1019,7 @@ public class KubernetesClient extends BaseClient {
                             } else {
                                 readinessProbe = null
                             }
-                     
+
 
                             [
                                     name: formatName(svcContainer.containerName),
@@ -1133,7 +1154,7 @@ public class KubernetesClient extends BaseClient {
             //to link the service to the pod that this
             //Deploy service encapsulates.
             spec {
-                
+
                 selector {
                     "ec-svc" selectorLabel
                 }
@@ -1142,14 +1163,14 @@ public class KubernetesClient extends BaseClient {
 
                     clusterIP("None")
                 } else {
-                    // Add LoadBalanceIP and other override 
+                    // Add LoadBalanceIP and other override
                     // parameters only if portMappings are defined
                     this.addServiceParameters(delegate, args)
                     ports(portMapping)
                 }
             }
         }
-            
+
         def payload = deployedService
         if (payload) {
             payload = mergeObjs(payload, result)
@@ -1174,13 +1195,13 @@ public class KubernetesClient extends BaseClient {
                       queryArgs)
     }
 
-    Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
+    Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, requestBody = null, query = null) {
 
         doHttpRequest(GET,
                 requestUrl,
                 requestUri,
                 ['Authorization' : accessToken],
-                failOnErrorCode)
+                failOnErrorCode, requestBody, query)
     }
 
     Object doHttpGet(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true, Map queryArgs) {
@@ -1222,7 +1243,7 @@ public class KubernetesClient extends BaseClient {
                       failOnErrorCode,
                       requestBody,
                       queryArgs)
-    }    
+    }
 
     Object doHttpDelete(String requestUrl, String requestUri, String accessToken, boolean failOnErrorCode = true) {
 
