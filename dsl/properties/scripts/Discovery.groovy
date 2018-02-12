@@ -34,19 +34,108 @@ public class Discovery extends EFClient {
                 }
             }
         }
+        efServices
     }
 
-    // Either discovered data or collected from YAML
-    def modelToEF(model) {
+    def saveToEF(services, projectName) {
+        def efServices = getServices(projectName)
+        services.each { service ->
+            prettyPrint(service)
+            createOrUpdateService(projectName, efServices, service)
+        }
+    }
 
+    def createOrUpdateService(projectName, efServices, service) {
+        def existingService = efServices.find { s ->
+            equalNames(s.serviceName, service.service.serviceName)
+        }
+        def result
+        def serviceName
+
+        if (existingService) {
+            serviceName = existingService.serviceName
+            result = updateEFService(existingService, service)
+            logger INFO, "Service ${existingService.serviceName} has been updated"
+        }
+        else {
+            serviceName = service.service.serviceName
+            result = createEFService(projectName, service)
+            logger INFO, "Service ${serviceName} has been created"
+        }
+        def serviceId = result.service.serviceId
+        assert serviceId
+        assert serviceName
+
+        // Containers
+
+        def efContainers = getContainers(projectName, serviceName)
+        service.containers.each { container ->
+            createOrUpdateContainer(projectName, serviceName, container, efContainers)
+            mapContainerPorts(projectName, serviceName, container, service)
+        }
+
+        // TODO mapping
+    }
+
+
+    def mapContainerPorts(projectName, serviceName, container, service) {
+        container.ports?.each { containerPort ->
+            service.ports?.each { servicePort ->
+                if (containerPort.portName == servicePort.portName) {
+                    def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
+                    def generatedPort = [
+                        portName: generatedPortName,
+                        listenerPort: servicePort.listenerPort,
+                        subcontainer: container.container.containerName,
+                        subport: containerPort.portName
+                    ]
+                    createPort(projectName, serviceName, generatedPort)
+                }
+            }
+        }
+    }
+
+    def createOrUpdateContainer(projectName, serviceName, container, efContainers) {
+        def existingContainer = efContainers.find {
+            equalNames(it.containerName, container.container.containerName)
+        }
+        def containerName
+        def result
+        if (existingContainer) {
+            containerName = existingContainer.containerName
+            logger INFO, "Going to update container ${serviceName}/${containerName}"
+            logger INFO, pretty(container.container)
+            result = updateContainer(projectName, existingContainer.serviceName, containerName, container.container)
+            logger INFO, "Container ${serviceName}/${containerName} has been updated"
+        }
+        else {
+            containerName = container.container.containerName
+            logger INFO, "Going to create container ${serviceName}/${containerName}"
+            logger INFO, pretty(container.container)
+            result = createContainer(projectName, serviceName, container.container)
+            logger INFO, "Container ${serviceName}/${containerName} has been created"
+        }
+
+        assert containerName
+        def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
+        prettyPrint(efPorts)
+        container.ports.each { port ->
+            createPort(projectName, serviceName, port, containerName)
+            logger INFO, "Port ${port.portName} has been created"
+        }
+
+        if (container.env) {
+            container.env.each { env ->
+                createEnvironmentVariable(projectName, serviceName, containerName, env)
+                logger INFO, "Environment variable ${env.environmentVariableName} has been created"
+            }
+        }
+        // TODO delete extra ports??
     }
 
     def buildServiceDefinition(kubeService, deployment) {
         def serviceName = kubeService.metadata.name
         def deployName = kubeService.metadata.name
-
-        prettyPrint(kubeService)
-        prettyPrint(deployment)
 
         def efServiceName
         if (serviceName =~ /(?i)${deployName}/) {
@@ -56,7 +145,9 @@ public class Discovery extends EFClient {
             efServiceName = "${serviceName}-${deployName}"
         }
         def efService = [
-            serviceName: efServiceName,
+            service: [
+                serviceName: efServiceName
+            ],
             serviceMapping: [:]
         ]
 
@@ -76,18 +167,21 @@ public class Discovery extends EFClient {
 //   loadBalancerSourceRanges:<ranges>
 //   sessionAffinity:<value>
 
-        efService.defaultCapacity = deployment.spec?.replicas ?: 1
+        // Service Fields
+        def defaultCapacity = deployment.spec?.replicas ?: 1
+        efService.service.defaultCapacity = defaultCapacity
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
-            efService.maxCapacity = getMaxCapacity(efService.defaultCapacity, rollingUpdate.maxSurge)
+            efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
 
-            efService.minCapacity = getMinCapacity(efService.defaultCapacity, rollingUpdate.maxUnavailable)
+            efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
 
         }
         efService.serviceMapping.loadBalancerIP = deployment.spec?.clusterIP
         efService.serviceMapping.type = deployment.spec?.type
-        efService.serviceMapping.sessionAffinity = deployment.spec?.sessionAffinity
+        efService.serviceMapping.sessionAffinity = deployment.spec?.sessionAffinity ? true : false
 
+        // Ports
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
             if (port.name) {
@@ -99,21 +193,58 @@ public class Discovery extends EFClient {
             else {
                 name = "${port.protocol}${port.port}"
             }
-            [name: name, port: port.port]
+            [portName: name, listenerPort: port.port]
         }
 
+        // Containers
         def containers = deployment.spec.template.spec.containers
         efService.containers = containers.collect { kubeContainer ->
-
             def container = buildContainerDefinition(kubeContainer)
             container
         }
 
-        prettyPrint(efService)
+        // Volumes
+        if (deployment.spec.template.spec.volumes) {
+            def volumes = deployment.spec.template.spec.volumes.collect { volume ->
+                def retval = [name: volume.name]
+                if (volume.hostPath?.path) {
+                    retval.hostPath = volume.hostPath.path
+                }
+                retval
+            }
+            efService.service.volume = new JsonBuilder(volumes).toString()
+        }
         efService
     }
 
+    def updateEFService(efService, kubeService) {
+        def payload = kubeService.service
+        def projName = efService.projectName
+        def serviceName = efService.serviceName
+        payload.description = efService.description ?: "Updated by EF Discovery"
+        def result = updateService(projName, serviceName, payload)
+        result
+    }
+
+    def createEFService(projectName, service) {
+        def payload = service.service
+        payload.description = "Created by EF Discovery"
+        def result = createService(projectName, payload)
+        result
+    }
+
+    def equalNames(String oneName, String anotherName) {
+        assert oneName
+        assert anotherName
+        def normalizer = { name ->
+            name = name.toLowerCase()
+            name = name.replaceAll('-', '.')
+        }
+        return normalizer(oneName) == normalizer(anotherName)
+    }
+
     def getMaxCapacity(defaultCapacity, maxSurge) {
+        assert defaultCapacity
         if (maxSurge > 1) {
             return defaultCapacity + maxSurge
         }
@@ -123,6 +254,7 @@ public class Discovery extends EFClient {
     }
 
     def getMinCapacity(defaultCapacity, maxUnavailable) {
+        assert defaultCapacity
         if (maxUnavailable > 1) {
             return defaultCapacity - maxUnavailable
         }
@@ -131,13 +263,56 @@ public class Discovery extends EFClient {
         }
     }
 
+
+    private def parseImage(image) {
+        // Image can consist of
+        // repository url
+        // repo name
+        // image name
+        def parts = image.split('/')
+        // The name always exists
+        def imageName = parts.last()
+    }
+
+    def getImageName(image) {
+        image.split(':').first()
+    }
+
+    def getRepositoryURL(image) {
+        image.split
+    }
+
+    def getImageVersion(image) {
+        def parts = image.split(':')
+        if (parts.size() > 1) {
+            return parts.last()
+        }
+        else {
+            return 'latest'
+        }
+    }
+
     def buildContainerDefinition(kubeContainer) {
+        // TODO private registry
         def container = [
-            name: kubeContainer.name,
-            image: kubeContainer.image
+            container: [
+                containerName: kubeContainer.name,
+                imageName: getImageName(kubeContainer.image),
+                imageVersion: getImageVersion(kubeContainer.image)
+            ]
         ]
-        if (kubeContainer.env) {
-            container.env = kubeContainer.env
+
+        container.env = kubeContainer.env?.collect {
+            [environmentVariableName: it.name, value: it.value]
+        }
+
+        if (kubeContainer.command) {
+            def entryPoint = kubeContainer.command.join(',')
+            container.container.entryPoint = entryPoint
+        }
+        if (kubeContainer.args) {
+            def args = kubeContainer.args.join(',')
+            container.container.command = args
         }
         if (kubeContainer.ports) {
             container.ports = kubeContainer.ports.collect { port ->
@@ -148,18 +323,28 @@ public class Discovery extends EFClient {
                 else {
                     name = "${port.protocol}${port.containerPort}"
                 }
-                [name: name, port: port.containerPort]
+                [portName: name, containerPort: port.containerPort]
             }
         }
         def resources = kubeContainer.resources
-        container.cpuCount = parseCPU(resources?.requests?.cpu)
-        container.memory = parseMemory(resources?.requests?.memory)
-        container.cpuLimit = parseCPU(resources?.limits?.cpu)
-        container.memoryLimit = parseMemory(resources?.limits?.memory)
-        // TODO volumes
-        // TODO volume mounts
-        // TODO command
-        // TODO args
+        container.container.cpuCount = parseCPU(resources?.requests?.cpu)
+        container.container.memorySize = parseMemory(resources?.requests?.memory)
+        container.container.cpuLimit = parseCPU(resources?.limits?.cpu)
+        container.container.memoryLimit = parseMemory(resources?.limits?.memory)
+        // TODO private registry
+
+        // Volume mounts
+        def mounts = kubeContainer.volumeMounts?.collect { vm ->
+            def retval = [name: vm.name]
+            if (vm.mountPath) {
+                retval.mountPath = vm.mountPath
+            }
+            retval
+        }
+        if (mounts) {
+            container.container.volumeMount = new JsonBuilder(mounts).toString()
+        }
+
         container
     }
 
@@ -207,5 +392,14 @@ public class Discovery extends EFClient {
 
     def prettyPrint(object) {
         println new JsonBuilder(object).toPrettyString()
+    }
+
+
+    def pretty(o) {
+        new JsonBuilder(o).toPrettyString()
+    }
+
+    def stop() {
+        throw new RuntimeException('stop')
     }
 }

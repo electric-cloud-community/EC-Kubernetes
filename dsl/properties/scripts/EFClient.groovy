@@ -2,6 +2,7 @@
  * ElectricFlow API client
  */
 public class EFClient extends BaseClient {
+    static final String REST_VERSION = 'v1.0'
 
     def getServerUrl() {
         def commanderServer = System.getenv('COMMANDER_SERVER')
@@ -27,6 +28,26 @@ public class EFClient extends BaseClient {
     Object doHttpPut(String requestUri, Object requestBody, boolean failOnErrorCode = true, def query = null) {
         def sessionId = System.getenv('COMMANDER_SESSIONID')
         doHttpRequest(PUT, getServerUrl(), requestUri, ['Cookie': "sessionId=$sessionId"], failOnErrorCode, requestBody, query)
+    }
+
+    private def payloadToJson(payload) {
+        def refinedPayload = [:]
+        payload.each {k, v ->
+            if (v != null) {
+                refinedPayload[k] = v
+            }
+        }
+        def json = JsonOutput.toJson(refinedPayload)
+    }
+
+    Object doRestPost(String requestUri, Map payload, boolean failOnErrorCode = true, def query = null) {
+        def json = payloadToJson(payload)
+        doHttpPost(requestUri, json, failOnErrorCode, query)
+    }
+
+    Object doRestPut(String requestUri, Map payload, boolean failOnErrorCode = true, def query = null) {
+        def json = payloadToJson(payload)
+        doHttpPut(requestUri, json, failOnErrorCode, query)
     }
 
     def getConfigValues(def configPropertySheet, def config, def pluginProjectName) {
@@ -141,7 +162,8 @@ public class EFClient extends BaseClient {
         def partialUri = applicationName ?
                 "projects/$serviceProjectName/applications/$applicationName/services/$serviceName" :
                 "projects/$serviceProjectName/services/$serviceName"
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = System.getenv('COMMANDER_JOBSTEPID')
+        // def jobStepId = '$[/myJobStep/jobStepId]'
         def queryArgs = [
                 request: 'getServiceDeploymentDetails',
                 clusterName: clusterName,
@@ -287,6 +309,100 @@ public class EFClient extends BaseClient {
         doHttpGet("/rest/v1.0/properties/${propertyName}",
                 /* failOnErrorCode */ !ignoreError, [jobStepId: jobStepId])
     }
+
+    // Discovery methods, EF model generation
+    def createService(projName, payload, applicatioName = null) {
+        if (applicationName) {
+            payload.applicationName = applicationName
+        }
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services", /* request body */ json,
+                /*failOnErrorCode*/ true)
+        result?.data
+    }
+
+    def updateService(projName, serviceName, payload, applicationName = null) {
+        if (applicationName) {
+            payload.applicationName = applicationName
+        }
+        def result = doRestPut("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}", /* request body */ payload,
+                /*failOnErrorCode*/ true)
+        result?.data
+    }
+
+    def getServices(projName, appName = null) {
+        def query = [:]
+        if (appName) {
+            query.applicationName = appName
+        }
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/services", true, query)
+        result?.data?.service
+    }
+
+    def getPorts(projectName, serviceName, appName = null, containerName = null) {
+        def query = [:]
+        if (containerName) {
+            query.containerName = containerName
+        }
+        if (appName) {
+            query.applicationName = appName
+        }
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projectName}/services/${serviceName}/ports", true, query)
+        result?.data?.port
+    }
+
+    def createPort(projName, serviceName, payload, containerName = null, boolean failOnError = false, String appName = null) {
+        if (appName) {
+            payload.applicationName = appName
+        }
+        if (containerName) {
+            payload.containerName = containerName
+        }
+        payload.serviceName = serviceName
+        def json = JsonOutput.toJson(payload)
+        def result = doHttpPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/ports", json, failOnError)
+        result?.data
+    }
+
+    def createEnvironmentVariable(projName, serviceName, containerName, payload, failOnError = false, appName = null) {
+        if (appName) {
+            payload.applicationName = appName
+        }
+        payload.containerName = containerName
+        payload.serviceName = serviceName
+        def json = JsonOutput.toJson(payload)
+        def result = doHttpPost("/rest/${REST_VERSION}/projects/${projName}/containers/${containerName}/environmentVariables", json, failOnError)
+        result?.data
+    }
+
+    def getContainers(projectName, serviceName, applicationName = null) {
+        def query = [
+            serviceName: serviceName
+        ]
+        if (applicationName) {
+            query.applicationName = applicationName
+        }
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projectName}/containers", false, query)
+        result?.data?.container
+    }
+
+    def updateContainer(String projectName, String serviceName, String containerName, payload, appName = null) {
+        payload.serviceName = serviceName
+        if (appName) {
+            payload.applicationName = appName
+        }
+        def result = doRestPut("/rest/${REST_VERSION}/projects/${projectName}/containers/${containerName}", payload, true)
+        result?.data
+    }
+
+    def createContainer(String projectName, String serviceName, payload, appName = null) {
+        payload.serviceName = serviceName
+        if (appName) {
+            payload.appName = appName
+        }
+        def result = doRestPut("/rest/${REST_VERSION}/projects/${projectName}/containers", payload, true)
+        result?.data
+    }
+
 
 }
 
