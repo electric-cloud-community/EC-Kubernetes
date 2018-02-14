@@ -27,7 +27,7 @@ def stepsWithAttachedCredentials = [
 		], [
 				procedureName: 'Cleanup Cluster - Experimental',
 				stepName: 'cleanup'
-		], [	
+		], [
 				procedureName: 'Create Resource',
 				stepName: 'createResource'
 		], [
@@ -36,6 +36,9 @@ def stepsWithAttachedCredentials = [
 		], [
 				procedureName: 'Wait For Kubernetes API',
 				stepName: 'waitAPI'
+		], [
+				procedureName: 'Discover',
+				stepName: 'discover'
 		]
 ]
 project pluginName, {

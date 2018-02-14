@@ -29,7 +29,7 @@ public class Discovery extends EFClient {
                 )
 
                 deployments.items.each { deploy ->
-                    def efService = buildServiceDefinition(kubeService, deploy)
+                    def efService = buildServiceDefinition(kubeService, deploy, namespace)
 
                     // TBD
                     // if (deploy.spec.template.spec.imagePullSecrets) {
@@ -46,7 +46,6 @@ public class Discovery extends EFClient {
     def saveToEF(services, projectName, envProjectName, envName, clusterName) {
         def efServices = getServices(projectName)
         services.each { service ->
-            prettyPrint(service)
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
         }
     }
@@ -95,14 +94,12 @@ public class Discovery extends EFClient {
     def createDeployProcess(projectName, serviceName) {
         def processName = 'Deploy'
         def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'])
-        prettyPrint(process)
         logger INFO, "Process ${processName} has been created for ${serviceName}"
         def processStepName = 'deployService'
         def processStep = createProcessStep(projectName, serviceName, processName, [
             processStepName: processStepName,
             processStepType: 'service', subservice: serviceName
         ])
-        prettyPrint(processStep)
         logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
 
@@ -111,7 +108,6 @@ public class Discovery extends EFClient {
         def mapping = service.serviceMapping
 
         def envMaps = getEnvMaps(projName, serviceName)
-        prettyPrint(envMaps)
         def existingMap = getExistingMapping(projName, serviceName, envProjName, envName)
 
         def envMapName
@@ -157,17 +153,14 @@ public class Discovery extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            prettyPrint(payload)
             def result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
             logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
-            prettyPrint(result)
             serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
         }
 
         assert serviceClusterMappingName
 
         service.containers?.each { container ->
-            prettyPrint(container)
             createServiceMapDetails(
                 projName,
                 serviceName,
@@ -228,7 +221,6 @@ public class Discovery extends EFClient {
 
         assert containerName
         def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
-        prettyPrint(efPorts)
         container.ports.each { port ->
             createPort(projectName, serviceName, port, containerName)
             logger INFO, "Port ${port.portName} has been created"
@@ -265,7 +257,7 @@ public class Discovery extends EFClient {
         retval
     }
 
-    def buildServiceDefinition(kubeService, deployment) {
+    def buildServiceDefinition(kubeService, deployment, namespace) {
         def serviceName = kubeService.metadata.name
         def deployName = kubeService.metadata.name
 
@@ -313,7 +305,9 @@ public class Discovery extends EFClient {
         efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
         def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')
         efService.serviceMapping.loadBalancerSourceRanges = sourceRanges
-
+        if (namespace != 'default') {
+            efService.serviceMapping.namespace = namespace
+        }
         // Ports
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
