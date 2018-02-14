@@ -311,11 +311,11 @@ public class EFClient extends BaseClient {
     }
 
     // Discovery methods, EF model generation
-    def createService(projName, payload, applicatioName = null) {
-        if (applicationName) {
-            payload.applicationName = applicationName
+    def createService(projName, payload, appName = null) {
+        if (appName) {
+            payload.applicationName = appName
         }
-        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services", /* request body */ json,
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services", /* request body */ payload,
                 /*failOnErrorCode*/ true)
         result?.data
     }
@@ -399,10 +399,39 @@ public class EFClient extends BaseClient {
         if (appName) {
             payload.appName = appName
         }
-        def result = doRestPut("/rest/${REST_VERSION}/projects/${projectName}/containers", payload, true)
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projectName}/containers", payload, true)
         result?.data
     }
 
+    def getEnvMaps(projectName, serviceName) {
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projectName}/services/${serviceName}/environmentMaps")
+        result?.data
+    }
+
+    def createEnvMap(projName, serviceName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/environmentMaps", payload, true)
+        result?.data
+    }
+
+    def createServiceClusterMapping(projName, serviceName, envMapName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/environmentMaps/${envMapName}/serviceClusterMappings", payload, true)
+        result?.data
+    }
+
+    def createServiceMapDetails(projName, serviceName, envMapName, serviceClusterMapName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/environmentMaps/${envMapName}/serviceClusterMappings/${serviceClusterMapName}/serviceMapDetails", payload, false)
+        result?.data
+    }
+
+    def createProcess(projName, serviceName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/processes", payload, false)
+        result?.data
+    }
+
+    def createProcessStep(projName, serviceName, processName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/processes/${processName}/processSteps", payload, false)
+        result?.data
+    }
 
 }
 

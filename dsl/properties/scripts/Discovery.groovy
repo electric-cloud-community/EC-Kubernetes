@@ -4,6 +4,8 @@ public class Discovery extends EFClient {
     def accessToken
     def clusterEndpoint
 
+    static final String CREATED_DESCRIPTION = "Created by Container Discovery"
+
     def Discovery(params) {
         kubeClient = params.kubeClient
         pluginConfig = params.pluginConfig
@@ -26,10 +28,14 @@ public class Discovery extends EFClient {
                     [labelSelector: selector]
                 )
 
-                // def pods = kubeClient.getPods(clusterEndpoint, namespace, accessToken, [labelSelector: selector])
-
                 deployments.items.each { deploy ->
                     def efService = buildServiceDefinition(kubeService, deploy)
+
+                    // TBD
+                    // if (deploy.spec.template.spec.imagePullSecrets) {
+                    //     def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
+                    //     efService.secrets = secrets
+                    // }
                     efServices.push(efService)
                 }
             }
@@ -37,15 +43,15 @@ public class Discovery extends EFClient {
         efServices
     }
 
-    def saveToEF(services, projectName) {
+    def saveToEF(services, projectName, envProjectName, envName, clusterName) {
         def efServices = getServices(projectName)
         services.each { service ->
             prettyPrint(service)
-            createOrUpdateService(projectName, efServices, service)
+            createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
         }
     }
 
-    def createOrUpdateService(projectName, efServices, service) {
+    def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service) {
         def existingService = efServices.find { s ->
             equalNames(s.serviceName, service.service.serviceName)
         }
@@ -54,29 +60,131 @@ public class Discovery extends EFClient {
 
         if (existingService) {
             serviceName = existingService.serviceName
-            result = updateEFService(existingService, service)
-            logger INFO, "Service ${existingService.serviceName} has been updated"
+            logger WARNING, "Service ${existingService.serviceName} already exists, skipping"
+            // Future
+            // result = updateEFService(existingService, service)
+            // logger INFO, "Service ${existingService.serviceName} has been updated"
         }
         else {
             serviceName = service.service.serviceName
             result = createEFService(projectName, service)
             logger INFO, "Service ${serviceName} has been created"
         }
-        def serviceId = result.service.serviceId
-        assert serviceId
         assert serviceName
 
         // Containers
-
         def efContainers = getContainers(projectName, serviceName)
+
+        service.secrets?.each { cred ->
+
+        }
+
         service.containers.each { container ->
             createOrUpdateContainer(projectName, serviceName, container, efContainers)
             mapContainerPorts(projectName, serviceName, container, service)
         }
 
-        // TODO mapping
+        if (service.serviceMapping) {
+            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service)
+        }
+
+        // Add deploy process
+        createDeployProcess(projectName, serviceName)
     }
 
+    def createDeployProcess(projectName, serviceName) {
+        def processName = 'Deploy'
+        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'])
+        prettyPrint(process)
+        logger INFO, "Process ${processName} has been created for ${serviceName}"
+        def processStepName = 'deployService'
+        def processStep = createProcessStep(projectName, serviceName, processName, [
+            processStepName: processStepName,
+            processStepType: 'service', subservice: serviceName
+        ])
+        prettyPrint(processStep)
+        logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
+    }
+
+
+    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
+        def mapping = service.serviceMapping
+
+        def envMaps = getEnvMaps(projName, serviceName)
+        prettyPrint(envMaps)
+        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName)
+
+        def envMapName
+        if (existingMap) {
+            logger INFO, "Environment map already exists for service ${serviceName} and cluster ${clusterName}"
+            envMapName = existingMap.environmentMapName
+        }
+        else {
+            def payload = [
+                environmentProjectName: envProjName,
+                environmentName: envName,
+                description: CREATED_DESCRIPTION,
+            ]
+
+            def result = createEnvMap(projName, serviceName, payload)
+            envMapName = result.environmentMap?.environmentMapName
+        }
+
+        assert envMapName
+
+        def existingClusterMapping = existingMap?.serviceClusterMappings?.serviceClusterMapping?.find {
+            it.clusterName == clusterName
+        }
+
+        def serviceClusterMappingName
+        if (existingClusterMapping) {
+            logger INFO, "Cluster mapping already exists"
+            serviceClusterMappingName = existingClusterMapping.serviceClusterMappingName
+        }
+        else {
+            def payload = [
+                clusterName: clusterName,
+                environmentName: envName,
+                environmentProjectName: envProjName
+            ]
+
+            if (mapping) {
+                def actualParameters = []
+                mapping.each {k, v ->
+                    if (v) {
+                        actualParameters.add([actualParameterName: k, value: v])
+                    }
+                }
+                payload.actualParameter = actualParameters
+            }
+            prettyPrint(payload)
+            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
+            logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
+            prettyPrint(result)
+            serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+        }
+
+        assert serviceClusterMappingName
+
+        service.containers?.each { container ->
+            prettyPrint(container)
+            createServiceMapDetails(
+                projName,
+                serviceName,
+                envMapName,
+                serviceClusterMappingName,
+                [containerName: container.container.containerName]
+            )
+        }
+    }
+
+    def getExistingMapping(projectName, serviceName, envProjectName, envName) {
+        def envMaps = getEnvMaps(projectName, serviceName)
+        def existingMap = envMaps.environmentMap?.find {
+            it.environmentProjectName == envProjectName && it.projectName == projectName && it.serviceName == serviceName && it.environmentName == envName
+        }
+        existingMap
+    }
 
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
@@ -103,10 +211,12 @@ public class Discovery extends EFClient {
         def result
         if (existingContainer) {
             containerName = existingContainer.containerName
-            logger INFO, "Going to update container ${serviceName}/${containerName}"
-            logger INFO, pretty(container.container)
-            result = updateContainer(projectName, existingContainer.serviceName, containerName, container.container)
-            logger INFO, "Container ${serviceName}/${containerName} has been updated"
+            logger WARNING, "Container ${containerName} already exists, skipping"
+            // // Future
+            // logger INFO, "Going to update container ${serviceName}/${containerName}"
+            // logger INFO, pretty(container.container)
+            // result = updateContainer(projectName, existingContainer.serviceName, containerName, container.container)
+            // logger INFO, "Container ${serviceName}/${containerName} has been updated"
         }
         else {
             containerName = container.container.containerName
@@ -130,7 +240,29 @@ public class Discovery extends EFClient {
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
-        // TODO delete extra ports??
+        // TODO delete extra ports?? Not now. Keep everything as is.
+    }
+
+    def buildSecretsDefinition(namespace, secrets) {
+        def retval = secrets.collect {
+            def name = it.name
+            def secret = kubeClient.getSecret(name, clusterEndpoint, namespace, accessToken)
+
+            def dockercfg = secret.data['.dockercfg']
+            assert dockercfg
+            def decoded = new String(dockercfg.decodeBase64(), "UTF-8")
+            assert decoded.keySet().size() == 1
+            def repoUrl = decoded.keySet().first()
+            def username = decoded[repoUrl].username
+            def password = decoded[repoUrl].password
+
+            // Password may be absent
+            // In this case we can do nothing
+
+            def cred = [repoUrl: repoUrl, userName: username, password: password]
+            cred
+        }
+        retval
     }
 
     def buildServiceDefinition(kubeService, deployment) {
@@ -173,13 +305,14 @@ public class Discovery extends EFClient {
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
             efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
-
             efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
 
         }
-        efService.serviceMapping.loadBalancerIP = deployment.spec?.clusterIP
-        efService.serviceMapping.type = deployment.spec?.type
-        efService.serviceMapping.sessionAffinity = deployment.spec?.sessionAffinity ? true : false
+        efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
+        efService.serviceMapping.serviceType = kubeService.spec?.type
+        efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
+        def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')
+        efService.serviceMapping.loadBalancerSourceRanges = sourceRanges
 
         // Ports
         efService.ports = kubeService.spec?.ports?.collect { port ->
@@ -193,7 +326,7 @@ public class Discovery extends EFClient {
             else {
                 name = "${port.protocol}${port.port}"
             }
-            [portName: name, listenerPort: port.port]
+            [portName: name.toLowerCase(), listenerPort: port.port]
         }
 
         // Containers
@@ -214,6 +347,7 @@ public class Discovery extends EFClient {
             }
             efService.service.volume = new JsonBuilder(volumes).toString()
         }
+
         efService
     }
 
@@ -272,33 +406,53 @@ public class Discovery extends EFClient {
         def parts = image.split('/')
         // The name always exists
         def imageName = parts.last()
+        def registry
+        def repoName
+        if (parts.size() >= 2) {
+            repoName = parts[parts.size() - 2]
+            // It may be an image without repo, like nginx
+            if (repoName =~ /\./) {
+                registry = repoName
+            }
+        }
+        if (repoName) {
+            imageName = repoName + '/' + imageName
+        }
+        def versioned = imageName.split(':')
+        def version
+        if (versioned.size() > 1) {
+            version = versioned.last()
+        }
+        else {
+            version = 'latest'
+        }
+        imageName = versioned.first()
+        return [imageName: imageName, version: version, repoName: repoName, registry: registry]
     }
 
     def getImageName(image) {
-        image.split(':').first()
+        parseImage(image).imageName
     }
 
     def getRepositoryURL(image) {
-        image.split
+        parseImage(image).repoName
     }
 
     def getImageVersion(image) {
-        def parts = image.split(':')
-        if (parts.size() > 1) {
-            return parts.last()
-        }
-        else {
-            return 'latest'
-        }
+        parseImage(image).version
+    }
+
+    def getRegistryUri(image) {
+        parseImage(image).registry
     }
 
     def buildContainerDefinition(kubeContainer) {
-        // TODO private registry
         def container = [
             container: [
                 containerName: kubeContainer.name,
                 imageName: getImageName(kubeContainer.image),
-                imageVersion: getImageVersion(kubeContainer.image)
+                imageVersion: getImageVersion(kubeContainer.image),
+                registryUri: getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
 
@@ -323,7 +477,7 @@ public class Discovery extends EFClient {
                 else {
                     name = "${port.protocol}${port.containerPort}"
                 }
-                [portName: name, containerPort: port.containerPort]
+                [portName: name.toLowerCase(), containerPort: port.containerPort]
             }
         }
         def resources = kubeContainer.resources
@@ -331,7 +485,6 @@ public class Discovery extends EFClient {
         container.container.memorySize = parseMemory(resources?.requests?.memory)
         container.container.cpuLimit = parseCPU(resources?.limits?.cpu)
         container.container.memoryLimit = parseMemory(resources?.limits?.memory)
-        // TODO private registry
 
         // Volume mounts
         def mounts = kubeContainer.volumeMounts?.collect { vm ->
