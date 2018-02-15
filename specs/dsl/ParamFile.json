@@ -1,0 +1,10 @@
+{
+    "projName": "EC-Kubernetes Specs Discover",
+    "serviceName": "Kube Spec Discover_b2951734-907c-4f2a-8b83-bd21940ecab1",
+    "envName": "Kube Cluster Env",
+    "clusterName": "Kube Spec Cluster",
+    "params": {
+        "imageName": "",
+        "imageVersion": ""
+    }
+}
