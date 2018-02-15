@@ -182,7 +182,9 @@ public class Discovery extends EFClient {
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                if (containerPort.portName == servicePort.portName) {
+                prettyPrint(servicePort)
+                prettyPrint(containerPort)
+                if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
                         portName: generatedPortName,
@@ -191,6 +193,7 @@ public class Discovery extends EFClient {
                         subport: containerPort.portName
                     ]
                     createPort(projectName, serviceName, generatedPort)
+                    logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                 }
             }
         }
@@ -223,7 +226,7 @@ public class Discovery extends EFClient {
         def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
         container.ports.each { port ->
             createPort(projectName, serviceName, port, containerName)
-            logger INFO, "Port ${port.portName} has been created"
+            logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
         }
 
         if (container.env) {
@@ -311,11 +314,8 @@ public class Discovery extends EFClient {
         // Ports
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
-            if (port.name) {
-                name = port.name
-            }
-            else if (port.targetPort) {
-                name = "${port.protocol}${port.targetPort}"
+            if (port.targetPort) {
+                name = port.targetPort
             }
             else {
                 name = "${port.protocol}${port.port}"
@@ -465,6 +465,7 @@ public class Discovery extends EFClient {
         if (kubeContainer.ports) {
             container.ports = kubeContainer.ports.collect { port ->
                 def name
+
                 if (port.name) {
                     name = port.name
                 }
