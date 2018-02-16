@@ -33,7 +33,7 @@ class Discover extends KubeHelper {
                 envProjectName: '',
                 clusterName: '',
                 namespace: '',
-                projName: '',
+                // projName: '',
             ]
         ]
     }
@@ -52,10 +52,10 @@ class Discover extends KubeHelper {
             def res = deployService(projectName, serviceName, [
                 imageName: imageName,
                 imageVersion: imageVersion,
-                registryUri: 'registry.hub.docker.com'
+                registryUri: ''
             ])
             // And deleting it from our env
-            deleteService(projectName, serviceName)
+            // deleteService(projectName, serviceName)
         when: 'discovery procedure runs'
             def result = runProcedureDsl """
                 runProcedure(
@@ -102,4 +102,5 @@ class Discover extends KubeHelper {
             imageName                | imageVersion | defaultCapacity
             'imagostorm/hello-world' | '1.0'        | '1'
     }
+    // TODO expansion is needed
 }
