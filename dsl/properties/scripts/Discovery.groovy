@@ -3,6 +3,7 @@ public class Discovery extends EFClient {
     def pluginConfig
     def accessToken
     def clusterEndpoint
+    def discoveredSummary = [:]
 
     static final String CREATED_DESCRIPTION = "Created by Container Discovery"
 
@@ -48,6 +49,13 @@ public class Discovery extends EFClient {
         services.each { service ->
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
         }
+
+        def lines = ["Discovered services: ${discoveredSummary.size()}"]
+        discoveredSummary.each { serviceName, containers ->
+            def containerNames = containers.collect { k -> k }
+            lines.add("${serviceName}: ${containerNames.join(', ')}")
+        }
+        updateJobSummary(lines.join("\n"))
     }
 
     def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service) {
@@ -56,6 +64,9 @@ public class Discovery extends EFClient {
         }
         def result
         def serviceName
+
+        logger DEBUG, "Service payload:"
+        logger DEBUG, new JsonBuilder(service).toPrettyString()
 
         if (existingService) {
             serviceName = existingService.serviceName
@@ -68,6 +79,7 @@ public class Discovery extends EFClient {
             serviceName = service.service.serviceName
             result = createEFService(projectName, service)
             logger INFO, "Service ${serviceName} has been created"
+            discoveredSummary[serviceName] = [:]
         }
         assert serviceName
 
@@ -205,6 +217,8 @@ public class Discovery extends EFClient {
         }
         def containerName
         def result
+        logger DEBUG, "Container payload:"
+        logger DEBUG, new JsonBuilder(container).toPrettyString()
         if (existingContainer) {
             containerName = existingContainer.containerName
             logger WARNING, "Container ${containerName} already exists, skipping"
@@ -220,6 +234,7 @@ public class Discovery extends EFClient {
             logger INFO, pretty(container.container)
             result = createContainer(projectName, serviceName, container.container)
             logger INFO, "Container ${serviceName}/${containerName} has been created"
+            discoveredSummary[serviceName][containerName] = [:]
         }
 
         assert containerName
@@ -408,6 +423,9 @@ public class Discovery extends EFClient {
             if (repoName =~ /\./) {
                 registry = repoName
             }
+        }
+        if (!registry && parts.size() > 2) {
+            registry = parts.take(parts.size() - 2).join('/')
         }
         if (repoName) {
             imageName = repoName + '/' + imageName

@@ -24,7 +24,7 @@ project projName, {
         imageVersion = '$[imageVersion]'
         memoryLimit = '$[memoryLimit]'
         memorySize = '$[memorySize]'
-        registryUri = null
+        registryUri = '$[registryUri]'
         volumeMount = null
 
         port 'http', {

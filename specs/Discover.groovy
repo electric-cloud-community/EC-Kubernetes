@@ -23,6 +23,7 @@ class Discover extends KubeHelper {
                 minCapacity: '1',
                 memoryLimit: '100',
                 memorySize: '50',
+                registryUri: ''
             ]
         ]
         dslFile 'dsl/Discover.dsl', [
@@ -51,6 +52,7 @@ class Discover extends KubeHelper {
             def res = deployService(projectName, serviceName, [
                 imageName: imageName,
                 imageVersion: imageVersion,
+                registryUri: 'registry.hub.docker.com'
             ])
             // And deleting it from our env
             deleteService(projectName, serviceName)
@@ -81,10 +83,21 @@ class Discover extends KubeHelper {
             assert service.service.container.size() == 1
             def container = service.service.container[0]
             assert container.imageName == imageName
+            assert container.registryUri == 'registry.hub.docker.com'
             assert container.memoryLimit == '100'
             assert container.memorySize == '50'
+
+            def port = service.service?.port
+            assert port
+            assert port.size() == 1
+            assert port[0].listenerPort == '8080'
+
+            def parameterDetail = service.service.parameterDetail
+            assert parameterDetail.find { it.parameterName == 'loadBalancerIP' && it.parameterValue }
+            assert parameterDetail.find { it.parameterName == 'serviceType' && it.parameterValue == 'LoadBalancer'}
+            assert parameterDetail.find { it.parameterName == 'sessionAffinity'}
         cleanup:
-            // deleteService(projectName, discoveredServiceName)
+            deleteService(projectName, discoveredServiceName)
         where:
             imageName                | imageVersion | defaultCapacity
             'imagostorm/hello-world' | '1.0'        | '1'
