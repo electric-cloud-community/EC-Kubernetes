@@ -3,6 +3,7 @@ public class Discovery extends EFClient {
     def pluginConfig
     def accessToken
     def clusterEndpoint
+    def discoveredSummary = [:]
 
     static final String CREATED_DESCRIPTION = "Created by Container Discovery"
 
@@ -48,6 +49,13 @@ public class Discovery extends EFClient {
         services.each { service ->
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
         }
+
+        def lines = ["Discovered services: ${discoveredSummary.size()}"]
+        discoveredSummary.each { serviceName, containers ->
+            def containerNames = containers.collect { k -> k }
+            lines.add("${serviceName}: ${containerNames.join(', ')}")
+        }
+        updateJobSummary(lines.join("\n"))
     }
 
     def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service) {
@@ -56,6 +64,9 @@ public class Discovery extends EFClient {
         }
         def result
         def serviceName
+
+        logger DEBUG, "Service payload:"
+        logger DEBUG, new JsonBuilder(service).toPrettyString()
 
         if (existingService) {
             serviceName = existingService.serviceName
@@ -68,6 +79,7 @@ public class Discovery extends EFClient {
             serviceName = service.service.serviceName
             result = createEFService(projectName, service)
             logger INFO, "Service ${serviceName} has been created"
+            discoveredSummary[serviceName] = [:]
         }
         assert serviceName
 
@@ -182,7 +194,9 @@ public class Discovery extends EFClient {
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                if (containerPort.portName == servicePort.portName) {
+                prettyPrint(servicePort)
+                prettyPrint(containerPort)
+                if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
                         portName: generatedPortName,
@@ -191,6 +205,7 @@ public class Discovery extends EFClient {
                         subport: containerPort.portName
                     ]
                     createPort(projectName, serviceName, generatedPort)
+                    logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                 }
             }
         }
@@ -202,6 +217,8 @@ public class Discovery extends EFClient {
         }
         def containerName
         def result
+        logger DEBUG, "Container payload:"
+        logger DEBUG, new JsonBuilder(container).toPrettyString()
         if (existingContainer) {
             containerName = existingContainer.containerName
             logger WARNING, "Container ${containerName} already exists, skipping"
@@ -217,13 +234,14 @@ public class Discovery extends EFClient {
             logger INFO, pretty(container.container)
             result = createContainer(projectName, serviceName, container.container)
             logger INFO, "Container ${serviceName}/${containerName} has been created"
+            discoveredSummary[serviceName][containerName] = [:]
         }
 
         assert containerName
         def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
         container.ports.each { port ->
             createPort(projectName, serviceName, port, containerName)
-            logger INFO, "Port ${port.portName} has been created"
+            logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
         }
 
         if (container.env) {
@@ -311,11 +329,8 @@ public class Discovery extends EFClient {
         // Ports
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
-            if (port.name) {
-                name = port.name
-            }
-            else if (port.targetPort) {
-                name = "${port.protocol}${port.targetPort}"
+            if (port.targetPort) {
+                name = port.targetPort
             }
             else {
                 name = "${port.protocol}${port.port}"
@@ -409,6 +424,9 @@ public class Discovery extends EFClient {
                 registry = repoName
             }
         }
+        if (!registry && parts.size() > 2) {
+            registry = parts.take(parts.size() - 2).join('/')
+        }
         if (repoName) {
             imageName = repoName + '/' + imageName
         }
@@ -465,6 +483,7 @@ public class Discovery extends EFClient {
         if (kubeContainer.ports) {
             container.ports = kubeContainer.ports.collect { port ->
                 def name
+
                 if (port.name) {
                     name = port.name
                 }

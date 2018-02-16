@@ -54,7 +54,6 @@ public class EFClient extends BaseClient {
 
         // Get configs property sheet
         def result = doHttpGet("/rest/v1.0/projects/$pluginProjectName/$configPropertySheet", /*failOnErrorCode*/ false)
-
         def configPropSheetId = result.data?.property?.propertySheetId
         if (!configPropSheetId) {
             handleProcedureError("No plugin configurations exist!")
@@ -288,6 +287,18 @@ public class EFClient extends BaseClient {
         // to prevent getting the value getting converted to json
         payload = JsonOutput.toJson(payload)
         doHttpPut("/rest/v1.0/properties/${propertyName}", /* request body */ payload)
+    }
+
+
+    def updateJobSummary(String message) {
+        def jobStepId = System.getenv('COMMANDER_JOBSTEPID')
+        def summary = getEFProperty('/myJob/summary', true)?.value
+        def lines = []
+        if (summary) {
+            lines = summary.split(/\n/)
+        }
+        lines.add(message)
+        setEFProperty('/myJob/summary', lines.join("\n"))
     }
 
     def evalDsl(String dslStr) {

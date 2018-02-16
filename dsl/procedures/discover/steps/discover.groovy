@@ -7,10 +7,12 @@ def environmentName = '$[envName]'
 def clusterName = '$[clusterName]'
 def namespace = '$[namespace]'
 def projectName = '$[projName]'
-// All the parameters are required
 
+// All the parameters are required
 EFClient efClient = new EFClient()
 KubernetesClient client = new KubernetesClient()
+
+
 def pluginConfig = client.getPluginConfig(efClient, clusterName, envProjectName, environmentName)
 def discovery = new Discovery(kubeClient: client, pluginConfig: pluginConfig)
 
