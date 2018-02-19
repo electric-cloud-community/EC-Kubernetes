@@ -9,8 +9,8 @@ project projName, {
     service servName, {
       applicationName = null
       defaultCapacity = '1'
-      maxCapacity = '$[maxCapacity]'
-      minCapacity = '$[minCapacity]'
+      maxCapacity = '2'
+      minCapacity = '1'
       volume = null
 
       container 'Spec', {
