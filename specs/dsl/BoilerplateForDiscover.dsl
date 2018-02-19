@@ -8,7 +8,7 @@ def parameters = args.params
 project projName, {
     service servName, {
       applicationName = null
-      defaultCapacity = '$[defaultCapacity]'
+      defaultCapacity = '1'
       maxCapacity = '$[maxCapacity]'
       minCapacity = '$[minCapacity]'
       volume = null
