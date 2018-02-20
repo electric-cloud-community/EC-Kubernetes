@@ -8,9 +8,9 @@ def parameters = args.params
 project projName, {
     service servName, {
       applicationName = null
-      defaultCapacity = '$[defaultCapacity]'
-      maxCapacity = '$[maxCapacity]'
-      minCapacity = '$[minCapacity]'
+      defaultCapacity = '1'
+      maxCapacity = '2'
+      minCapacity = '1'
       volume = null
 
       container 'Spec', {
@@ -20,11 +20,11 @@ project projName, {
         cpuCount = null
         cpuLimit = null
         entryPoint = null
-        imageName = '$[imageName]'
-        imageVersion = '$[imageVersion]'
-        memoryLimit = '$[memoryLimit]'
-        memorySize = '$[memorySize]'
-        registryUri = '$[registryUri]'
+        imageName = '$[imageNameParam]'
+        imageVersion = '$[imageVersionParam]'
+        memoryLimit = '$[memoryLimitParam]'
+        memorySize = '$[memorySizeParam]'
+        registryUri = '$[registryUriParam]'
         volumeMount = null
 
         port 'http', {
@@ -101,7 +101,7 @@ project projName, {
         workspaceName = null
 
         parameters.each { name, defaultValue ->
-            formalParameter name, defaultValue: defaultValue ?: null, {
+            formalParameter name + 'Param', defaultValue: defaultValue ?: null, {
                 type = 'textarea'
             }
         }

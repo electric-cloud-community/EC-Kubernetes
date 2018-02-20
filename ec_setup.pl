@@ -98,42 +98,6 @@ if ( !$errorMessage ) {
         die "Wrong dependency checksum: original checksum is $checksum";
       }
     }
-
-    my $binary = decode_base64($base64);
-    my ($tempFh, $tempFilename) = tempfile(CLEANUP => 1);
-    binmode($tempFh);
-    print $tempFh $binary;
-    close $tempFh;
-
-    my ($tempDir) = tempdir(CLEANUP => 1);
-    my $zip = Archive::Zip->new();
-    unless($zip->read($tempFilename) == Archive::Zip::AZ_OK()) {
-      die "Cannot read .zip dependencies: $!";
-    }
-    $zip->extractTree("", File::Spec->catfile($tempDir, ''));
-
-
-    if ( $promoteAction eq "promote" ) {
-
-        #publish jars to the repo server if the plugin project was created successfully
-        my $am = new ElectricCommander::ArtifactManagement($commander);
-        my $artifactVersion = $am->publish(
-            {   groupId         => "com.electriccloud",
-                artifactKey     => "EC-Kubernetes-Grapes",
-                version         => "1.0.0",
-                includePatterns => "**",
-                fromDirectory   => "$tempDir/lib/grapes",
-                description => "JARs that EC-Kubernetes plugin procedures depend on"
-            }
-        );
-
-        # Print out the xml of the published artifactVersion.
-        $logfile .= $artifactVersion->xml() . "\n";
-
-        if ( $artifactVersion->diagnostics() ) {
-            $logfile .= "\nDetails:\n" . $artifactVersion->diagnostics();
-        }
-    }
 }
 
 # Create output property for plugin setup debug logs

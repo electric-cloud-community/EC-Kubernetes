@@ -50,4 +50,29 @@ class KubeHelper extends ContainerHelper {
         )
     }
 
+    def cleanupCluster(configName) {
+        def procName = 'Cleanup Cluster - Experimental'
+        def result = dsl """
+            runProcedure(
+                projectName: '/plugins/EC-Kubernetes/project',
+                procedureName: "$procName",
+                actualParameter: [
+                    namespace: 'default',
+                    config: '$configName'
+                ]
+            )
+        """
+        assert result.jobId
+
+        def time = 0
+        def timeout = 300
+        def delay = 50
+        while(jobStatus(result.jobId).status != 'completed' && time < timeout) {
+            sleep(delay * 1000)
+            time += delay
+        }
+
+        jobCompleted(result)
+    }
+
 }

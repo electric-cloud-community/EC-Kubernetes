@@ -43,6 +43,7 @@ class Discover extends KubeHelper {
             dsl "deleteProject '$projectName'"
             deleteConfig(configName)
         }
+        cleanupCluster(configName)
     }
 
     @Unroll
@@ -50,9 +51,9 @@ class Discover extends KubeHelper {
         given:
             // Deploying service to Kube
             def res = deployService(projectName, serviceName, [
-                imageName: imageName,
-                imageVersion: imageVersion,
-                registryUri: ''
+                imageNameParam: imageName,
+                imageVersionParam: imageVersion,
+                registryUriParam: 'registry.hub.docker.com'
             ])
             // And deleting it from our env
             // deleteService(projectName, serviceName)
