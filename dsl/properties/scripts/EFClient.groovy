@@ -444,6 +444,11 @@ public class EFClient extends BaseClient {
         result?.data
     }
 
+    def getClusters(projName, envName) {
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/environments/${envName}/clusters")
+        result?.data?.cluster
+    }
+
 }
 
 
