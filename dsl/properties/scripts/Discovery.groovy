@@ -32,11 +32,11 @@ public class Discovery extends EFClient {
                 deployments.items.each { deploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
 
-                    // TBD
-                    // if (deploy.spec.template.spec.imagePullSecrets) {
-                    //     def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
-                    //     efService.secrets = secrets
-                    // }
+
+                    if (deploy.spec.template.spec.imagePullSecrets) {
+                        def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
+                        efService.secrets = secrets
+                    }
                     efServices.push(efService)
                 }
             }
@@ -87,10 +87,17 @@ public class Discovery extends EFClient {
         def efContainers = getContainers(projectName, serviceName)
 
         service.secrets?.each { cred ->
-
+            def credName = getCredName(cred)
+            createCredential(projectName, credName, cred.userName, cred.password)
+            logger INFO, "Credential $credName has been created"
         }
 
         service.containers.each { container ->
+            service.secrets?.each { secret ->
+                if (secret.repoUrl =~ /${container.container.registryUri}/) {
+                    container.container.credentialName = getCredName(secret)
+                }
+            }
             createOrUpdateContainer(projectName, serviceName, container, efContainers)
             mapContainerPorts(projectName, serviceName, container, service)
         }
@@ -254,30 +261,43 @@ public class Discovery extends EFClient {
     }
 
     def buildSecretsDefinition(namespace, secrets) {
-        def retval = secrets.collect {
+        def retval = []
+        secrets.each {
             def name = it.name
             def secret = kubeClient.getSecret(name, clusterEndpoint, namespace, accessToken)
 
             def dockercfg = secret.data['.dockercfg']
-            assert dockercfg
-            def decoded = new String(dockercfg.decodeBase64(), "UTF-8")
-            assert decoded.keySet().size() == 1
-            def repoUrl = decoded.keySet().first()
-            def username = decoded[repoUrl].username
-            def password = decoded[repoUrl].password
+            if (dockercfg) {
+                def decoded = new JsonSlurper().parseText(new String(dockercfg.decodeBase64(), "UTF-8"))
 
-            // Password may be absent
-            // In this case we can do nothing
+                if (decoded.keySet().size() == 1) {
+                    def repoUrl = decoded.keySet().first()
+                    def username = decoded[repoUrl].username
+                    def password = decoded[repoUrl].password
 
-            def cred = [repoUrl: repoUrl, userName: username, password: password]
-            cred
+                    // Password may be absent
+                    // In this case we can do nothing
+
+                    if (password) {
+                        def cred = [
+                            repoUrl: repoUrl,
+                            userName: username,
+                            password: password
+                        ]
+                        retval.add(cred)
+                    }
+                    else {
+                        logger WARNING, "Cannot retrieve password from secret for $repoUrl, please create a credential manually"
+                    }
+                }
+            }
         }
         retval
     }
 
     def buildServiceDefinition(kubeService, deployment, namespace) {
         def serviceName = kubeService.metadata.name
-        def deployName = kubeService.metadata.name
+        def deployName = deployment.metadata.name
 
         def efServiceName
         if (serviceName =~ /(?i)${deployName}/) {
@@ -330,7 +350,7 @@ public class Discovery extends EFClient {
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
             if (port.targetPort) {
-                name = port.targetPort
+                name = port.targetPort as String
             }
             else {
                 name = "${port.protocol}${port.port}"
@@ -556,6 +576,10 @@ public class Discovery extends EFClient {
         }
     }
 
+    def getCredName(cred) {
+        "${cred.repoUrl} - ${cred.userName}"
+    }
+
     def prettyPrint(object) {
         println new JsonBuilder(object).toPrettyString()
     }
@@ -565,7 +589,4 @@ public class Discovery extends EFClient {
         new JsonBuilder(o).toPrettyString()
     }
 
-    def stop() {
-        throw new RuntimeException('stop')
-    }
 }

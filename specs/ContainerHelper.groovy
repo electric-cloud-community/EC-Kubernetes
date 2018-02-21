@@ -45,6 +45,16 @@ class ContainerHelper extends PluginSpockTestSupport {
     }
 
 
+    def pollJob(jobId, timeout = 300) {
+        def time = 0
+        def delay = 30
+        while(jobStatus(jobId).status != 'completed' && time < timeout) {
+            sleep(delay * 1000)
+            time += delay
+        }
+
+    }
+
     def readJobLogs(jobId) {
         def details = dsl """
             getJobDetails(jobId: '$jobId')
@@ -83,7 +93,7 @@ class ContainerHelper extends PluginSpockTestSupport {
                         sub read_file {
                             my (\$file) = @_;
                             print "\$file\n";
-                            open my \$fh, \$file;
+                            open my \$fh, "\$file";
                             my \$content = join('', <\$fh>);
                             close \$fh;
                             print \$content;
@@ -109,13 +119,17 @@ class ContainerHelper extends PluginSpockTestSupport {
                 ]
             )
         """
-        waitUntil {
-            jobCompleted result
-        }
+        pollJob(result.jobId)
 
-        assert jobStatus(result.jobId).outcome == 'success'
+        assert jobStatus(result.jobId).outcome != 'error'
 
-        def logs = dsl "getProperty(propertyName: '/myJob/ec_logs', jobId: '${result.jobId}')"
+        def logs = dsl """
+            getProperty(
+                propertyName: '/myJob/ec_logs',
+                jobId: '${result.jobId}',
+                expand: 0
+            )
+        """
         logger.debug(objectToJson(logs))
         logs?.property?.value
     }
