@@ -449,6 +449,16 @@ public class EFClient extends BaseClient {
         result?.data?.cluster
     }
 
+    def createCredential(projName, credName, userName, password) {
+        def payload = [
+            credentialName: credName,
+            userName: userName,
+            password: password
+        ]
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/credentials", payload, false)
+        result?.data?.credential
+    }
+
 }
 
 

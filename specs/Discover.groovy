@@ -1,31 +1,17 @@
 import spock.lang.*
 import com.electriccloud.spec.*
 
-class Discover extends KubeHelper {
+class DiscoverSecrets extends KubeHelper {
     static def projectName = 'EC-Kubernetes Specs Discover'
-    static def configName = 'Kube Spec'
     static def clusterName = 'Kube Spec Cluster'
     static def envName = 'Kube Spec Env'
-    static def serviceName = 'Kube Spec Discover'
+    static def serviceName = 'kube-spec-discovery-test'
+    static def configName
+    static def secretName
 
     def doSetupSpec() {
+        configName = 'Kube Spec Config'
         createCluster(projectName, envName, clusterName, configName)
-        dslFile 'dsl/BoilerplateForDiscover.dsl', [
-            projName: projectName,
-            envName: envName,
-            clusterName: clusterName,
-            serviceName: serviceName,
-            params: [
-                imageName: '',
-                imageVersion: '1.0',
-                defaultCapacity: '1',
-                maxCapacity: '3',
-                minCapacity: '1',
-                memoryLimit: '100',
-                memorySize: '50',
-                registryUri: ''
-            ]
-        ]
         dslFile 'dsl/Discover.dsl', [
             projectName: projectName,
             params: [
@@ -33,31 +19,26 @@ class Discover extends KubeHelper {
                 envProjectName: '',
                 clusterName: '',
                 namespace: '',
-                // projName: '',
+                projName: '',
             ]
         ]
+
     }
 
     def doCleanupSpec() {
-        if (!System.getenv('NO_CLEANUP')) {
-            dsl "deleteProject '$projectName'"
-            deleteConfig(configName)
-        }
         cleanupCluster(configName)
+        dsl """
+            deleteProject(projectName: '$projectName')
+        """
     }
 
-    @Unroll
-    def "Discover #imageName, #imageVersion"() {
+
+    def "discover sample"() {
         given:
-            // Deploying service to Kube
-            def res = deployService(projectName, serviceName, [
-                imageNameParam: imageName,
-                imageVersionParam: imageVersion,
-                registryUriParam: 'registry.hub.docker.com'
-            ])
-            // And deleting it from our env
-            // deleteService(projectName, serviceName)
-        when: 'discovery procedure runs'
+            def sampleName = 'nginx-spec'
+            cleanupService(sampleName)
+            deploySample(sampleName)
+        when:
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
@@ -72,36 +53,139 @@ class Discover extends KubeHelper {
                 )
             """
         then:
-            // And now it should appear anew
             logger.debug(result.logs)
+            def service = getService(
+                projectName,
+                sampleName,
+                clusterName,
+                envName
+            )
             assert result.outcome != 'error'
-            def discoveredServiceName = serviceName.replaceAll(/\s/, '-').toLowerCase()
-            def service = getService(projectName, discoveredServiceName, clusterName, envName)
-            logger.debug(objectToJson(service))
-
-            assert service.service.defaultCapacity == '1'
-            assert service.service.maxCapacity == '3'
-            assert service.service.container.size() == 1
-            def container = service.service.container[0]
-            assert container.imageName == imageName
-            assert container.registryUri == 'registry.hub.docker.com'
-            assert container.memoryLimit == '100'
-            assert container.memorySize == '50'
-
-            def port = service.service?.port
+            assert service.service
+            def containers = service.service.container
+            assert containers.size() == 1
+            assert containers[0].containerName == 'nginx'
+            assert containers[0].imageName == 'nginx'
+            assert containers[0].imageVersion == '1.10'
+            def port = containers[0].port[0]
             assert port
-            assert port.size() == 1
-            assert port[0].listenerPort == '8080'
-
-            def parameterDetail = service.service.parameterDetail
-            assert parameterDetail.find { it.parameterName == 'loadBalancerIP' && it.parameterValue }
-            assert parameterDetail.find { it.parameterName == 'serviceType' && it.parameterValue == 'LoadBalancer'}
-            assert parameterDetail.find { it.parameterName == 'sessionAffinity'}
-        cleanup:
-            deleteService(projectName, discoveredServiceName)
-        where:
-            imageName                | imageVersion | defaultCapacity
-            'imagostorm/hello-world' | '1.0'        | '1'
+            assert service.service.defaultCapacity == '1'
+            assert port.containerPort == '80'
+            assert service.service.port[0].listenerPort == '80'
     }
-    // TODO expansion is needed
+
+    def "Discover secrets"() {
+        given:
+            cleanupService(serviceName)
+            secretName = deployWithSecret(serviceName)
+        when:
+            def result = runProcedureDsl """
+                runProcedure(
+                    projectName: '$projectName',
+                    procedureName: 'Discover',
+                    actualParameter: [
+                        clusterName: '$clusterName',
+                        namespace: 'default',
+                        envProjectName: '$projectName',
+                        envName: '$envName',
+                        projName: '$projectName'
+                    ]
+                )
+            """
+        then:
+            logger.debug(result.logs)
+            def service = getService(
+                projectName,
+                serviceName,
+                clusterName, envName
+            )
+            logger.debug(objectToJson(service))
+            assert service.service.container.size() == 1
+            assert service.service.container[0].imageName == 'imagostorm/hello-world'
+            assert service.service.container[0].credentialName
+        cleanup:
+            cleanupService(serviceName)
+            deleteSecret(secretName)
+    }
+
+
+    def deploySample(serviceName) {
+        def deployment = [
+          kind: 'Deployment',
+          metadata: [
+            name: serviceName,
+          ],
+          spec: [
+            replicas: 1,
+            template: [
+              spec: [
+                containers: [
+                  [name: 'nginx', image: 'nginx:1.10', ports: [
+                    [containerPort: 80]
+                  ]]
+                ],
+              ],
+              metadata: [labels: [app: 'nginx_test_spec']]
+            ]
+          ]
+        ]
+
+        def service = [
+            kind: 'Service',
+            apiVersion: 'v1',
+            metadata: [name: serviceName],
+            spec: [
+                selector: [app: 'nginx_test_spec'],
+                ports: [[protocol: 'TCP', port: 80, targetPort: 80]]
+            ]
+        ]
+        deploy(service, deployment)
+    }
+
+    def deployWithSecret(serviceName) {
+        def secretName = randomize('spec-secret')
+        secretName = secretName.replaceAll('_', '-')
+        createSecret(secretName, 'registry.hub.docker.com', 'ecplugintest', 'qweqweqwe')
+        def deployment = [
+          kind: 'Deployment',
+          metadata: [
+            name: serviceName,
+          ],
+          spec: [
+            replicas: 1,
+            template: [
+              spec: [
+                containers: [
+                  [name: 'hello', image: 'registry.hub.docker.com/imagostorm/hello-world:1.0', ports: [
+                    [containerPort: 80]
+                  ]]
+                ],
+                imagePullSecrets: [
+                    [name: secretName]
+                ]
+              ],
+              metadata: [
+                labels: [
+                  app: 'nginx_test_spec'
+                ]
+              ]
+            ]
+          ]
+        ]
+
+        def service = [
+            kind: 'Service',
+            apiVersion: 'v1',
+            metadata: [name: serviceName],
+            spec: [
+                selector: [app: 'nginx_test_spec'],
+                ports: [[protocol: 'TCP', port: 80, targetPort: 80] ]
+            ]
+        ]
+        deploy(service, deployment)
+        secretName
+    }
+
+
+
 }
