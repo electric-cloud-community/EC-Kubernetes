@@ -1,7 +1,7 @@
 import spock.lang.*
 import com.electriccloud.spec.*
 
-class DiscoverSecrets extends KubeHelper {
+class Discover extends KubeHelper {
     static def projectName = 'EC-Kubernetes Specs Discover'
     static def clusterName = 'Kube Spec Cluster'
     static def envName = 'Kube Spec Env'
