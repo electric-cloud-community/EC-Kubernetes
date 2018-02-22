@@ -257,7 +257,6 @@ public class Discovery extends EFClient {
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
-        // TODO delete extra ports?? Not now. Keep everything as is.
     }
 
     def buildSecretsDefinition(namespace, secrets) {
