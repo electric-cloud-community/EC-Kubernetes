@@ -95,6 +95,8 @@ class Deploy extends KubeHelper {
                 clusterName: clusterName,
                 envName: envName,
                 imageName: imageName,
+                containerPort: '80',
+                listenerPort: '8080',
                 serviceMappingParameters: [
                     deploymentStrategy: 'rollingDeployment',
                     minAvailabilityPercentage: minAvailabilityPercentage,
@@ -128,9 +130,10 @@ class Deploy extends KubeHelper {
         cleanup:
             undeployService(projectName, serviceName)
             dsl """
-            deleteService
-                serviceName: '$serviceName',
-                projectName: '$projectName'
+                deleteService(
+                    serviceName: '$serviceName',
+                    projectName: '$projectName'
+                )
             """
         where:
             minAvailabilityCount | minAvailabilityPercentage | maxRunningCount |  maxRunningPercentage
@@ -144,10 +147,10 @@ class Deploy extends KubeHelper {
         serviceName.replaceAll(/\s+/, '-').toLowerCase()
     }
     def doCleanupSpec() {
-        // cleanupCluster(configName)
-        // dsl """
-        //     deleteProject(projectName: '$projectName')
-        // """
+        cleanupCluster(configName)
+        dsl """
+            deleteProject(projectName: '$projectName')
+        """
     }
 
 
