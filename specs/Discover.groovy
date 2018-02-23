@@ -32,7 +32,7 @@ class Discover extends KubeHelper {
         """
     }
 
-
+    // TODO other fields
     def "discover sample"() {
         given:
             def sampleName = 'nginx-spec'
@@ -72,6 +72,50 @@ class Discover extends KubeHelper {
             assert service.service.defaultCapacity == '1'
             assert port.containerPort == '80'
             assert service.service.port[0].listenerPort == '80'
+    }
+
+    def "Liveness/readiness probe"() {
+        given:
+            def serviceName = 'kube-spec-liveness'
+            cleanupService(serviceName)
+            deployLiveness(serviceName)
+        when:
+            def result = runProcedureDsl """
+                runProcedure(
+                    projectName: '$projectName',
+                    procedureName: 'Discover',
+                    actualParameter: [
+                        clusterName: '$clusterName',
+                        namespace: 'default',
+                        envProjectName: '$projectName',
+                        envName: '$envName',
+                        projName: '$projectName'
+                    ]
+                )
+            """
+        then:
+            logger.debug(result.logs)
+            def service = getService(
+                projectName,
+                serviceName,
+                clusterName,
+                envName
+            )
+            logger.debug(objectToJson(service))
+
+            def container = service.service.container.first()
+            assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderName')
+            assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderValue')
+            assert getParameterDetail(container, 'livenessHttpProbePath')
+            assert getParameterDetail(container, 'livenessHttpProbePort')
+            assert getParameterDetail(container, 'livenessInitialDelay')
+            assert getParameterDetail(container, 'livenessPeriod')
+            assert getParameterDetail(container, 'readinessInitialDelay')
+            assert getParameterDetail(container, 'readinessPeriod')
+            assert getParameterDetail(container, 'readinessCommand')
+            assert container.command
+        cleanup:
+            cleanupService(serviceName)
     }
 
     def "Discover secrets"() {
@@ -186,6 +230,74 @@ class Discover extends KubeHelper {
         secretName
     }
 
+    def deployLiveness(serviceName) {
+        def container = [
+            args: ['/server'],
+            image: 'k8s.gcr.io/liveness',
+            livenessProbe: [
+                httpGet: [
+                    path: '/healthz',
+                    port: 8080,
+                    httpHeaders: [
+                        [name: 'X-Custom-Header', value: 'Awesome']
+                    ]
+                ],
+                initialDelaySeconds: 15,
+                timeoutSeconds: 1
+            ],
+            readinessProbe: [
+                exec: [
+                    command: [
+                        'cat',
+                        '/tmp/healthy'
+                    ]
+                ],
+                initialDelaySeconds: 5,
+                periodSeconds: 5,
+            ],
+            name: 'liveness-readiness'
+        ]
+        def deployment = [
+          kind: 'Deployment',
+          metadata: [
+            name: serviceName,
+          ],
+          spec: [
+            replicas: 1,
+            template: [
+              spec: [
+                containers: [
+                    container
+                ],
+              ],
+              metadata: [
+                labels: [
+                  app: 'liveness-probe'
+                ]
+              ]
+            ]
+          ]
+        ]
+
+        def service = [
+            kind: 'Service',
+            apiVersion: 'v1',
+            metadata: [name: serviceName],
+            spec: [
+                selector: [app: 'liveness-probe'],
+                ports: [[protocol: 'TCP', port: 80, targetPort: 8080] ]
+            ]
+        ]
+
+        deploy(service, deployment)
+
+    }
+
+    def getParameterDetail(struct, name) {
+        return struct.parameterDetail.find {
+            it.parameterName == name
+        }
+    }
 
 
 }
