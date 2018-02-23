@@ -43,7 +43,7 @@ class KubeHelper extends ContainerHelper {
             kubernetesVersion: '1.7',
             clusterEndpoint: endpoint,
             testConnection: 'false',
-            logLevel: '0'
+            logLevel: '2'
         ]
         def props = [:]
         if (System.getenv('RECREATE_CONFIG')) {
