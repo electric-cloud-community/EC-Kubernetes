@@ -184,7 +184,6 @@ public class Discovery extends EFClient {
             def payload = [
                 containerName: container.container.containerName
             ]
-            prettyPrint(container)
             if (container.mapping) {
                 def actualParameters = []
                 container.mapping.each {k, v ->
@@ -196,7 +195,6 @@ public class Discovery extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            prettyPrint(payload)
             createServiceMapDetails(
                 projName,
                 serviceName,
@@ -218,8 +216,6 @@ public class Discovery extends EFClient {
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                prettyPrint(servicePort)
-                prettyPrint(containerPort)
                 if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
@@ -275,9 +271,6 @@ public class Discovery extends EFClient {
             }
         }
 
-        if (container.mapping) {
-
-        }
     }
 
     def buildSecretsDefinition(namespace, secrets) {
@@ -499,9 +492,6 @@ public class Discovery extends EFClient {
     }
 
     def buildContainerDefinition(kubeContainer) {
-
-        prettyPrint(kubeContainer)
-
         def container = [
             container: [
                 containerName: kubeContainer.name,
