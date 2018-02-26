@@ -117,7 +117,7 @@ class Deploy extends KubeHelper {
                 assert rollingUpdate.maxSurge == maxRunningCount.toInteger()
             }
             if (maxRunningPercentage) {
-                assert rollingUpdate.maxSurge == "${maxRunningPercentage}%"
+                assert rollingUpdate.maxSurge == "${maxRunningPercentage.toInteger() + 100}%"
             }
             if (minAvailabilityPercentage) {
                 def expectedUnavailable = 100 - minAvailabilityPercentage.toInteger()

@@ -934,7 +934,7 @@ public class KubernetesClient extends BaseClient {
                 }
 
                 replicaCount = args.defaultCapacity.toInteger()
-                maxSurgeValue = maxRunningCount ? maxRunningCount.toInteger() : "${maxRunningPercentage.toInteger()}%"
+                maxSurgeValue = maxRunningCount ? maxRunningCount.toInteger() : "${maxRunningPercentage.toInteger() + 100}%"
 
                 if (minAvailabilityCount) {
                     maxUnavailableValue = args.defaultCapacity.toInteger() - minAvailabilityCount.toInteger()
