@@ -3,7 +3,7 @@ import com.electriccloud.spec.*
 
 class ContainerHelper extends PluginSpockTestSupport {
 
-    def deployService(projectName, serviceName, actualParameters) {
+    def deployService(projectName, serviceName) {
         def processName = 'Deploy'
         def map = getEnvMap(projectName, serviceName)
         def envName = map.environmentName
@@ -11,10 +11,6 @@ class ContainerHelper extends PluginSpockTestSupport {
         assert envName
         assert envProjectName
 
-        def paramLines = actualParameters.collect {k, v ->
-            """$k: '$v'"""
-        }
-        def actualParamDsl = paramLines.join(",\n")
         def result = dsl """
             runServiceProcess(
                 projectName: '$projectName',
@@ -22,9 +18,6 @@ class ContainerHelper extends PluginSpockTestSupport {
                 environmentName: '$envName',
                 environmentProjectName: '$envProjectName',
                 processName: '$processName',
-                actualParameter: [
-                    $actualParamDsl
-                ]
             )
         """
         logger.debug(objectToJson(result))
@@ -39,9 +32,32 @@ class ContainerHelper extends PluginSpockTestSupport {
 
         jobCompleted(result)
         def logs = readJobLogs(result.jobId)
-        assert jobStatus(result.jobId).outcome == 'success'
 
-        [jobId: result.jobId, logs: logs]
+        [jobId: result.jobId, logs: logs, outcome: jobStatus(result.jobId).outcome]
+    }
+
+    def undeployService(projectName, serviceName) {
+        def processName = 'Undeploy'
+        def map = getEnvMap(projectName, serviceName)
+        def envName = map.environmentName
+        def envProjectName = map.environmentProjectName
+        assert envName
+        assert envProjectName
+
+        def result = dsl """
+            runServiceProcess(
+                projectName: '$projectName',
+                serviceName: '$serviceName',
+                environmentName: '$envName',
+                environmentProjectName: '$envProjectName',
+                processName: '$processName',
+            )
+        """
+        pollJob(result.jobId)
+        def logs = readJobLogs(result.jobId)
+
+        [jobId: result.jobId, logs: logs, outcome: jobStatus(result.jobId).outcome]
+
     }
 
 

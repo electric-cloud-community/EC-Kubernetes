@@ -1,6 +1,7 @@
 import spock.lang.*
 import com.electriccloud.spec.*
 
+@Ignore
 class DiscoverValidation extends KubeHelper {
     static def projectName = 'EC-Kubernetes Validate Spec'
 

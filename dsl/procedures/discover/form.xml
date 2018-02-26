@@ -42,6 +42,7 @@
         <label>Kubernetes Namespace:</label>
         <property>namespace</property>
         <required>1</required>
+        <value>default</value>
         <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </documentation>
     </formElement>
     <formElement>

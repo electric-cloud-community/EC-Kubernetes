@@ -37,17 +37,21 @@ def serviceDetails = efClient.getServiceDeploymentDetails(
                 serviceEntityRevisionId)
 String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
 
-client.deployService(
-        efClient,
-        accessToken,
-        clusterEndpoint,
-        namespace,
-        serviceName,
-        serviceProjectName,
-        applicationName,
-        applicationRevisionId,
-        clusterName,
-        clusterOrEnvProjectName,
-        environmentName,
-        resultsPropertySheet,
-        serviceEntityRevisionId)
+try {
+    client.deployService(
+            efClient,
+            accessToken,
+            clusterEndpoint,
+            namespace,
+            serviceName,
+            serviceProjectName,
+            applicationName,
+            applicationRevisionId,
+            clusterName,
+            clusterOrEnvProjectName,
+            environmentName,
+            resultsPropertySheet,
+            serviceEntityRevisionId)
+} catch (PluginException e) {
+    efClient.handleProcedureError(e.getMessage())
+}

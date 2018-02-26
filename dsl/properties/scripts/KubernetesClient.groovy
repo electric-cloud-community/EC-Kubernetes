@@ -906,6 +906,10 @@ public class KubernetesClient extends BaseClient {
         toBoolean(getServiceParameter(args, 'canaryDeployment'))
     }
 
+    String getDeploymentStrategy(args) {
+        getServiceParameter(args, 'deploymentStrategy')
+    }
+
     def validateUniquePorts(def args) {
 
         def uniquePortNames = []
@@ -926,11 +930,14 @@ public class KubernetesClient extends BaseClient {
             args.defaultCapacity = 1
         }
 
+        def deploymentStrategy = getDeploymentStrategy(args)
+        println new JsonBuilder(args).toPrettyString()
+
         def json = new JsonBuilder()
         //Get the message calculation out of the way
         def replicaCount
-        int maxSurgeValue
-        int maxUnavailableValue
+        def maxSurgeValue
+        def maxUnavailableValue
         boolean isCanary = isCanaryDeployment(args)
 
         if (isCanary) {
@@ -938,10 +945,36 @@ public class KubernetesClient extends BaseClient {
             maxSurgeValue = 1
             maxUnavailableValue = 1
         } else {
-            replicaCount = args.defaultCapacity.toInteger()
-            maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
-            maxUnavailableValue =  args.minCapacity ?
+            if (deploymentStrategy && deploymentStrategy == 'rollingDeployment') {
+                def minAvailabilityCount = getServiceParameter(args, 'minAvailabilityCount')
+                def minAvailabilityPercentage = getServiceParameter(args, 'minAvailabilityPercentage')
+                def maxRunningCount = getServiceParameter(args, 'maxRunningCount')
+                def maxRunningPercentage = getServiceParameter(args, 'maxRunningPercentage')
+
+                if (!(minAvailabilityPercentage as boolean ^ minAvailabilityCount as boolean)) {
+                    throw new PluginException("Either minAvailabilityCount or minAvailabilityPercentage must be set")
+                }
+                if (!(maxRunningPercentage as boolean ^ maxRunningCount as boolean)) {
+                    throw new PluginException("Either maxRunningCount or maxRunningPercentage must be set")
+                }
+
+                replicaCount = args.defaultCapacity.toInteger()
+                maxSurgeValue = maxRunningCount ? maxRunningCount.toInteger() : "${maxRunningPercentage.toInteger() + 100}%"
+
+                if (minAvailabilityCount) {
+                    maxUnavailableValue = args.defaultCapacity.toInteger() - minAvailabilityCount.toInteger()
+                }
+                else {
+                    maxUnavailableValue = "${100 - minAvailabilityPercentage.toInteger()}%"
+                }
+            }
+            else {
+
+                replicaCount = args.defaultCapacity.toInteger()
+                maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
+                maxUnavailableValue =  args.minCapacity ?
                     (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
+            }
 
         }
 

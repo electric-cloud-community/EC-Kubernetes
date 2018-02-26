@@ -1,3 +1,4 @@
+
 public class Discovery extends EFClient {
     def kubeClient
     def pluginConfig
@@ -180,12 +181,26 @@ public class Discovery extends EFClient {
         assert serviceClusterMappingName
 
         service.containers?.each { container ->
+            def payload = [
+                containerName: container.container.containerName
+            ]
+            if (container.mapping) {
+                def actualParameters = []
+                container.mapping.each {k, v ->
+                    if (v) {
+                        actualParameters.add(
+                            [actualParameterName: k, value: v]
+                        )
+                    }
+                }
+                payload.actualParameter = actualParameters
+            }
             createServiceMapDetails(
                 projName,
                 serviceName,
                 envMapName,
                 serviceClusterMappingName,
-                [containerName: container.container.containerName]
+                payload
             )
         }
     }
@@ -201,8 +216,6 @@ public class Discovery extends EFClient {
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                prettyPrint(servicePort)
-                prettyPrint(containerPort)
                 if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
@@ -257,7 +270,7 @@ public class Discovery extends EFClient {
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
-        // TODO delete extra ports?? Not now. Keep everything as is.
+
     }
 
     def buildSecretsDefinition(namespace, secrets) {
@@ -334,8 +347,25 @@ public class Discovery extends EFClient {
         efService.service.defaultCapacity = defaultCapacity
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
-            efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
-            efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
+            if (rollingUpdate.maxSurge =~ /%/) {
+                efService.serviceMapping.with {
+                    deploymentStrategy = 'rollingDeployment'
+                    maxRunningPercentage = getMaxRunningPercentage(rollingUpdate.maxSurge)
+                }
+            }
+            else {
+                efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
+            }
+
+            if (rollingUpdate.maxUnavailable =~ /%/) {
+                efService.serviceMapping.with {
+                    minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
+                    deploymentStrategy = 'rollingDeployment'
+                }
+            }
+            else {
+                efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
+            }
 
         }
         efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
@@ -426,6 +456,15 @@ public class Discovery extends EFClient {
         }
     }
 
+    def getMinAvailabilityPercentage(percentage) {
+        percentage = percentage.replaceAll('%', '').toInteger()
+        return 100 - percentage
+    }
+
+    def getMaxRunningPercentage(percentage) {
+        percentage = percentage.replaceAll('%', '').toInteger()
+        return 100 + percentage
+    }
 
     private def parseImage(image) {
         // Image can consist of
@@ -500,6 +539,7 @@ public class Discovery extends EFClient {
             def args = kubeContainer.args.join(',')
             container.container.command = args
         }
+        // Ports
         if (kubeContainer.ports) {
             container.ports = kubeContainer.ports.collect { port ->
                 def name
@@ -511,6 +551,55 @@ public class Discovery extends EFClient {
                     name = "${port.protocol}${port.containerPort}"
                 }
                 [portName: name.toLowerCase(), containerPort: port.containerPort]
+            }
+        }
+
+        container.mapping = [:]
+
+        // Liveness probe
+        if (kubeContainer.livenessProbe) {
+            def processedLivenessFields = []
+            def probe = kubeContainer.livenessProbe.httpGet
+            processedLivenessFields << 'httpGet'
+            container.mapping.with {
+                livenessHttpProbePath = probe?.path
+                livenessHttpProbePort = probe?.port
+                livenessInitialDelay = kubeContainer.livenessProbe?.initialDelaySeconds
+                livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
+                processedLivenessFields << 'initialDelaySeconds'
+                processedLivenessFields << 'periodSeconds'
+                if (probe.httpHeaders?.size() > 1) {
+                    logger WARNING, 'Only one liveness header is supported, will take the first'
+                }
+                def header = probe?.httpHeaders?.first()
+                livenessHttpProbeHttpHeaderName = header?.name
+                livenessHttpProbeHttpHeaderValue = header?.value
+            }
+            kubeContainer.livenessProbe?.each { k, v ->
+                if (!(k in processedLivenessFields) && v) {
+                    logger WARNING, "Field ${k} from livenessProbe is not supported"
+                }
+            }
+        }
+        // Readiness probe
+        if (kubeContainer.readinessProbe) {
+            def processedFields = ['command']
+            container.mapping.with {
+                def command = kubeContainer.readinessProbe.exec?.command
+                readinessCommand = command?.first()
+                if (command?.size() > 1) {
+                    logger WARNING, 'Only one readiness command is supported'
+                }
+                processedFields << 'initialDelaySeconds'
+                processedFields << 'periodSeconds'
+                readinessInitialDelay = kubeContainer.readinessProbe?.initialDelaySeconds
+                readinessPeriod = kubeContainer.readinessProbe?.periodSeconds
+            }
+
+            kubeContainer.readinessProbe?.each { k, v ->
+                if (!(k in processedFields) && v) {
+                    logger WARNING, "Field ${k} is from readinessProbe not supported"
+                }
             }
         }
         def resources = kubeContainer.resources

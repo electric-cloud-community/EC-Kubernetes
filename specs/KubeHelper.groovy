@@ -43,7 +43,7 @@ class KubeHelper extends ContainerHelper {
             kubernetesVersion: '1.7',
             clusterEndpoint: endpoint,
             testConnection: 'false',
-            logLevel: '0'
+            logLevel: '2'
         ]
         def props = [:]
         if (System.getenv('RECREATE_CONFIG')) {
@@ -116,6 +116,21 @@ class KubeHelper extends ContainerHelper {
         request(getEndpoint(), uri, POST, null, ["Authorization": "Bearer ${getToken()}"], new JsonBuilder(payload).toPrettyString())
     }
 
+
+    static def getService(name) {
+      def uri = "/api/v1/namespaces/default/services/${name}"
+      request(
+        getEndpoint(), uri, GET,
+        null, ["Authorization": "Bearer ${getToken()}"], null).data
+    }
+
+    static def getDeployment(name) {
+      def uri = "/apis/apps/v1beta1/namespaces/default/deployments/${name}"
+      request(
+        getEndpoint(), uri, GET,
+        null, ["Authorization": "Bearer ${getToken()}"], null).data
+    }
+
     static def createSecret(name, url, username, password) {
         def encodedCreds = (username+":"+password).bytes.encodeBase64().toString()
 
@@ -168,7 +183,6 @@ class KubeHelper extends ContainerHelper {
           }
           headers = requestHeaders
           body = requestBody
-          println uri
 
           response.success = { resp, json ->
               [statusLine: resp.statusLine,
