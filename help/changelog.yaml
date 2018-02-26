@@ -1,0 +1,27 @@
+1.0.0:
+  - First release.
+1.0.1:
+  - Added helper functions in base client utility to support services Discovery in EC-GoogleContainerEngine
+1.0.2:
+  - Added support for Kubernetes API version 1.7
+  - Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster master. The parameter will default to '1.6' if no value is specified.
+  - Added procedure <i>Undeploy Service</i> to undeploy a previously deployed service.
+  - Handled race condition in parallel creation of a namespace by multiple steps.
+1.0.3:
+  - Made secrets compliant with DNS-1123 standards.
+  - Removed unused parameter <i>additionalAttributes</i> from container mapping configuration.
+  - When a microservice is deployed through ElectricFlow on a Kubernetes cluster, and 'NodePort' is specified as the service type in the service mapping, then the provisioned node port is registered as a pipeline stage runtime property <i>/myStageRuntime/&lt;applicationName&gt;/&lt;serviceName&gt;/&lt;targetPort&gt;/nodePort</i>.
+  - When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.
+  - Deprecated procedure <i>Create Resource</i>. The newly added procedure <i>Invoke Kubernetes API</i> should be used instead for creating or updating a Kubernetes resource.
+  - Added support for <b>canary deployments</b>. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.
+1.0.4:
+  - Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.
+  - When deploying a microservice through ElectricFlow on a Kubernetes cluster, the EC-Kubernetes plugin will now monitor the deployment progress in Kubernetes and cause the step to fail in case the deployment does not complete within the deployment timeout configured as part of the service mapping. The default timeout value is 120 seconds.
+  - When deploying a microservice through ElectricFlow on a Kubernetes cluster, the deployment name to use in Kubernetes can now be overridden through the service mapping. See section <a href="#BlueGreenDeployments">Blue/Green Deployments</a> for details on how this ability can be used to implement a blue/green deployment strategy.
+1.0.5:
+  - All leading and trailing whitespaces in service mapping parameters such as <i>canaryDeployment</i> will be removed before the parameter value is used.
+  - When performing a canary deployment, the service will not be created or updated in the Kubernetes cluster. The service must already exist in the cluster. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.
+1.0.6:
+  - Added 'Wait For Kubernetes API' procedure.
+1.1.0:
+  - Added "Discover" procedure.
