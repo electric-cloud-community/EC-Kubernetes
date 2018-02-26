@@ -55,9 +55,19 @@ public class KubernetesClient extends BaseClient {
 
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
-        createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
+        def deploymentStrategy = getServiceParameter(serviceDetails, 'deploymentStrategy', 'rollingDeployment')
+        if (deploymentStrategy == 'blueGreenDeployment') {
+            createOrUpdateDeploymentBlueGreen(clusterEndpoint,
+                namespace,
+                serviceDetails,
+                accessToken
+            )
+        }
+        else {
+            createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+        }
 
-        createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
+        createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         createOrUpdateResourceIfNeeded(clusterEndpoint, serviceDetails, accessToken)
 
@@ -576,6 +586,21 @@ public class KubernetesClient extends BaseClient {
         // 3. Convert all characters to lower case
         return [repoBaseUrl, secretName.replaceAll(/[^a-zA-Z\d\.-]/, '-').replaceAll(/^[^a-zA-Z\d]/, 's').replaceAll(/[^a-zA-Z\d]$/, 's').toLowerCase()]
     }
+
+
+    def createOrUpdateDeploymentBlueGreen(String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
+        def serviceName = getDeploymentName(serviceDetails)
+        def service = getService(clusterEndpoint,
+            namespace,
+            serviceName,
+            accessToken
+        )
+
+        if (service) {
+            println new JsonBuilder(service).toPrettyString()
+        }
+    }
+
 
     def createOrUpdateDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
