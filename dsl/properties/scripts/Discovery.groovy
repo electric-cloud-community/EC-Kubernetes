@@ -1,8 +1,10 @@
+
 public class Discovery extends ServiceFactory {
     def kubeClient
     def pluginConfig
     def accessToken
     def clusterEndpoint
+    def discoveredSummary = [:]
 
     static final String CREATED_DESCRIPTION = "Created by Container Discovery"
 
@@ -31,11 +33,11 @@ public class Discovery extends ServiceFactory {
                 deployments.items.each { deploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
 
-                    // TBD
-                    // if (deploy.spec.template.spec.imagePullSecrets) {
-                    //     def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
-                    //     efService.secrets = secrets
-                    // }
+
+                    if (deploy.spec.template.spec.imagePullSecrets) {
+                        def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
+                        efService.secrets = secrets
+                    }
                     efServices.push(efService)
                 }
             }

@@ -16,7 +16,7 @@ public class ImportFromYAML extends ServiceFactory {
 	// 	efServices
 	// }
 
-	def importFromYAML(namespacem, fileYAML){
+	def importFromYAML(namespace, fileYAML){
 
 		def efServices = []
 		String fileContents = fileYAML.text
@@ -75,7 +75,7 @@ public class ImportFromYAML extends ServiceFactory {
 	def getDeploymentsBySelector(deployments, key, value){
 		def queryDeployments = []
 		deployments.each { deployment -> 
-			deployment.spec.selector.matchLabels.each{ k, v ->
+			deployment.spec.template.metadata.labels.each{ k, v ->
 				if ((k == key) && (v == value)){
 					queryDeployments.push(deployment)
 				}

@@ -3,11 +3,8 @@ public class ServiceFactory extends EFClient {
 
     static final String CREATED_DESCRIPTION = "Created by ServiceFactory"
 
-    def Discovery(params) {
-        kubeClient = params.kubeClient
-        pluginConfig = params.pluginConfig
-        accessToken = kubeClient.retrieveAccessToken(pluginConfig)
-        clusterEndpoint = pluginConfig.clusterEndpoint
+    def Discovery() {
+
     }
 
     def saveToEF(services, projectName, envProjectName, envName, clusterName) {
@@ -53,10 +50,17 @@ public class ServiceFactory extends EFClient {
         def efContainers = getContainers(projectName, serviceName)
 
         service.secrets?.each { cred ->
-
+            def credName = getCredName(cred)
+            createCredential(projectName, credName, cred.userName, cred.password)
+            logger INFO, "Credential $credName has been created"
         }
 
         service.containers.each { container ->
+            service.secrets?.each { secret ->
+                if (secret.repoUrl =~ /${container.container.registryUri}/) {
+                    container.container.credentialName = getCredName(secret)
+                }
+            }
             createOrUpdateContainer(projectName, serviceName, container, efContainers)
             mapContainerPorts(projectName, serviceName, container, service)
         }
@@ -75,11 +79,12 @@ public class ServiceFactory extends EFClient {
         logger INFO, "Process ${processName} has been created for ${serviceName}"
         def processStepName = 'deployService'
         def processStep = createProcessStep(projectName, serviceName, processName, [
-                processStepName: processStepName,
-                processStepType: 'service', subservice: serviceName
+            processStepName: processStepName,
+            processStepType: 'service', subservice: serviceName
         ])
         logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
+
 
     def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
         def mapping = service.serviceMapping
@@ -94,9 +99,9 @@ public class ServiceFactory extends EFClient {
         }
         else {
             def payload = [
-                    environmentProjectName: envProjName,
-                    environmentName: envName,
-                    description: CREATED_DESCRIPTION,
+                environmentProjectName: envProjName,
+                environmentName: envName,
+                description: CREATED_DESCRIPTION,
             ]
 
             def result = createEnvMap(projName, serviceName, payload)
@@ -116,9 +121,9 @@ public class ServiceFactory extends EFClient {
         }
         else {
             def payload = [
-                    clusterName: clusterName,
-                    environmentName: envName,
-                    environmentProjectName: envProjName
+                clusterName: clusterName,
+                environmentName: envName,
+                environmentProjectName: envProjName
             ]
 
             if (mapping) {
@@ -138,12 +143,26 @@ public class ServiceFactory extends EFClient {
         assert serviceClusterMappingName
 
         service.containers?.each { container ->
+            def payload = [
+                containerName: container.container.containerName
+            ]
+            if (container.mapping) {
+                def actualParameters = []
+                container.mapping.each {k, v ->
+                    if (v) {
+                        actualParameters.add(
+                            [actualParameterName: k, value: v]
+                        )
+                    }
+                }
+                payload.actualParameter = actualParameters
+            }
             createServiceMapDetails(
-                    projName,
-                    serviceName,
-                    envMapName,
-                    serviceClusterMappingName,
-                    [containerName: container.container.containerName]
+                projName,
+                serviceName,
+                envMapName,
+                serviceClusterMappingName,
+                payload
             )
         }
     }
@@ -159,15 +178,13 @@ public class ServiceFactory extends EFClient {
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                prettyPrint(servicePort)
-                prettyPrint(containerPort)
                 if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
-                            portName: generatedPortName,
-                            listenerPort: servicePort.listenerPort,
-                            subcontainer: container.container.containerName,
-                            subport: containerPort.portName
+                        portName: generatedPortName,
+                        listenerPort: servicePort.listenerPort,
+                        subcontainer: container.container.containerName,
+                        subport: containerPort.portName
                     ]
                     createPort(projectName, serviceName, generatedPort)
                     logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
@@ -215,34 +232,47 @@ public class ServiceFactory extends EFClient {
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
-        // TODO delete extra ports?? Not now. Keep everything as is.
+
     }
 
     def buildSecretsDefinition(namespace, secrets) {
-        def retval = secrets.collect {
+        def retval = []
+        secrets.each {
             def name = it.name
             def secret = kubeClient.getSecret(name, clusterEndpoint, namespace, accessToken)
 
             def dockercfg = secret.data['.dockercfg']
-            assert dockercfg
-            def decoded = new String(dockercfg.decodeBase64(), "UTF-8")
-            assert decoded.keySet().size() == 1
-            def repoUrl = decoded.keySet().first()
-            def username = decoded[repoUrl].username
-            def password = decoded[repoUrl].password
+            if (dockercfg) {
+                def decoded = new JsonSlurper().parseText(new String(dockercfg.decodeBase64(), "UTF-8"))
 
-            // Password may be absent
-            // In this case we can do nothing
+                if (decoded.keySet().size() == 1) {
+                    def repoUrl = decoded.keySet().first()
+                    def username = decoded[repoUrl].username
+                    def password = decoded[repoUrl].password
 
-            def cred = [repoUrl: repoUrl, userName: username, password: password]
-            cred
+                    // Password may be absent
+                    // In this case we can do nothing
+
+                    if (password) {
+                        def cred = [
+                            repoUrl: repoUrl,
+                            userName: username,
+                            password: password
+                        ]
+                        retval.add(cred)
+                    }
+                    else {
+                        logger WARNING, "Cannot retrieve password from secret for $repoUrl, please create a credential manually"
+                    }
+                }
+            }
         }
         retval
     }
 
     def buildServiceDefinition(kubeService, deployment, namespace) {
         def serviceName = kubeService.metadata.name
-        def deployName = kubeService.metadata.name
+        def deployName = deployment.metadata.name
 
         def efServiceName
         if (serviceName =~ /(?i)${deployName}/) {
@@ -252,27 +282,12 @@ public class ServiceFactory extends EFClient {
             efServiceName = "${serviceName}-${deployName}"
         }
         def efService = [
-                service: [
-                        serviceName: efServiceName
-                ],
-                serviceMapping: [:]
+            service: [
+                serviceName: efServiceName
+            ],
+            serviceMapping: [:]
         ]
 
-//         kind: Service
-// apiVersion: v1
-// metadata:
-//   name: <service_name>
-// spec:
-//   selector:
-//     <name-value-pairs to identify deployment pods>
-//   ports:
-//   - protocol: TCP
-//     port: <port>
-//     targetPort: <target_port>
-//   type:<LoadBalance|ClusterIP|NodePort>
-//   loadBalancerIP:<LB_IP>
-//   loadBalancerSourceRanges:<ranges>
-//   sessionAffinity:<value>
 
         // Service Fields
         def defaultCapacity = deployment.spec?.replicas ?: 1
@@ -295,12 +310,11 @@ public class ServiceFactory extends EFClient {
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
             if (port.targetPort) {
-                name = port.targetPort.toString()
+                name = port.targetPort as String
             }
             else {
                 name = "${port.protocol}${port.port}"
             }
-
             [portName: name.toLowerCase(), listenerPort: port.port]
         }
 
@@ -426,12 +440,12 @@ public class ServiceFactory extends EFClient {
 
     def buildContainerDefinition(kubeContainer) {
         def container = [
-                container: [
-                        containerName: kubeContainer.name,
-                        imageName: getImageName(kubeContainer.image),
-                        imageVersion: getImageVersion(kubeContainer.image),
-                        registryUri: getRegistryUri(kubeContainer.image) ?: null
-                ]
+            container: [
+                containerName: kubeContainer.name,
+                imageName: getImageName(kubeContainer.image),
+                imageVersion: getImageVersion(kubeContainer.image),
+                registryUri: getRegistryUri(kubeContainer.image) ?: null
+            ]
         ]
 
         container.env = kubeContainer.env?.collect {
@@ -446,6 +460,7 @@ public class ServiceFactory extends EFClient {
             def args = kubeContainer.args.join(',')
             container.container.command = args
         }
+        // Ports
         if (kubeContainer.ports) {
             container.ports = kubeContainer.ports.collect { port ->
                 def name
@@ -457,6 +472,55 @@ public class ServiceFactory extends EFClient {
                     name = "${port.protocol}${port.containerPort}"
                 }
                 [portName: name.toLowerCase(), containerPort: port.containerPort]
+            }
+        }
+
+        container.mapping = [:]
+
+        // Liveness probe
+        if (kubeContainer.livenessProbe) {
+            def processedLivenessFields = []
+            def probe = kubeContainer.livenessProbe.httpGet
+            processedLivenessFields << 'httpGet'
+            container.mapping.with {
+                livenessHttpProbePath = probe?.path
+                livenessHttpProbePort = probe?.port
+                livenessInitialDelay = kubeContainer.livenessProbe?.initialDelaySeconds
+                livenessPeriod = kubeContainer.livenessProbe?.periodSeconds
+                processedLivenessFields << 'initialDelaySeconds'
+                processedLivenessFields << 'periodSeconds'
+                if (probe.httpHeaders?.size() > 1) {
+                    logger WARNING, 'Only one liveness header is supported, will take the first'
+                }
+                def header = probe?.httpHeaders?.first()
+                livenessHttpProbeHttpHeaderName = header?.name
+                livenessHttpProbeHttpHeaderValue = header?.value
+            }
+            kubeContainer.livenessProbe?.each { k, v ->
+                if (!(k in processedLivenessFields) && v) {
+                    logger WARNING, "Field ${k} from livenessProbe is not supported"
+                }
+            }
+        }
+        // Readiness probe
+        if (kubeContainer.readinessProbe) {
+            def processedFields = ['command']
+            container.mapping.with {
+                def command = kubeContainer.readinessProbe.exec?.command
+                readinessCommand = command?.first()
+                if (command?.size() > 1) {
+                    logger WARNING, 'Only one readiness command is supported'
+                }
+                processedFields << 'initialDelaySeconds'
+                processedFields << 'periodSeconds'
+                readinessInitialDelay = kubeContainer.readinessProbe?.initialDelaySeconds
+                readinessPeriod = kubeContainer.readinessProbe?.periodSeconds
+            }
+
+            kubeContainer.readinessProbe?.each { k, v ->
+                if (!(k in processedFields) && v) {
+                    logger WARNING, "Field ${k} is from readinessProbe not supported"
+                }
             }
         }
         def resources = kubeContainer.resources
@@ -522,6 +586,10 @@ public class ServiceFactory extends EFClient {
         }
     }
 
+    def getCredName(cred) {
+        "${cred.repoUrl} - ${cred.userName}"
+    }
+
     def prettyPrint(object) {
         println new JsonBuilder(object).toPrettyString()
     }
@@ -529,9 +597,5 @@ public class ServiceFactory extends EFClient {
 
     def pretty(o) {
         new JsonBuilder(o).toPrettyString()
-    }
-
-    def stop() {
-        throw new RuntimeException('stop')
     }
 }
