@@ -593,7 +593,7 @@ public class ServiceFactory extends EFClient {
         }
         if (power) {
             def retval = memoryNumber.toInteger() * (1024 ** power)
-            return retval.toInteger()
+            return Math.ceil(retval).toInteger()
         }
         else {
             return memoryNumber.toInteger()

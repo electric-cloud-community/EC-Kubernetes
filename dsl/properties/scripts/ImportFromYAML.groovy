@@ -4,21 +4,10 @@ import org.yaml.snakeyaml.Yaml
 public class ImportFromYAML extends ServiceFactory {
 	static final String CREATED_DESCRIPTION = "Created by ImportFromYAML"
 	static final String DELIMITER = "---"
-
 	Yaml parser = new Yaml()
-
-	// def simpleImport(namespace){
-	// 	def readedService = parser.load(SERVICE_FILE.text)
-	// 	def readedDeploy = parser.load(DEPLOY_FILE.text)
-	// 	def efServices = []
-	// 	def efService = buildServiceDefinition(readedService, readedDeploy, namespace)
-	// 	efServices.push(efService)
-	// 	efServices
-	// }
 
 	def importFromYAML(namespace, fileYAML){
 
-		// File mFile = fileYAML as File //lalalaalalalallalalalallalal
 		def efServices = []
 		String fileContents = fileYAML
 		def configList = fileContents.split(DELIMITER)
@@ -28,20 +17,23 @@ public class ImportFromYAML extends ServiceFactory {
 			def parsedConfig = parser.load(config)
 			parsedConfigList.push(parsedConfig)
 		}
+		def services
+		try {
+			services = getParsedServices(parsedConfigList)
+		}
+		catch(Exception e) {
+			println "None of the service was found"
+			System.exit(-1)
+		}
 
-		def services = getParsedServices(parsedConfigList)
-		def deployments = getParsedDeployments(parsedConfigList)
-
-		// services.each { service ->
- 	// 		println("SERVICES")
- 	// 		println(service.getClass())
- 	// 		prettyPrint(service)
- 	// 	}
- 	// 	deployments.each { deployment ->
- 	// 		println("DEPLOYMENTS")
- 	// 		prettyPrint(deployment)
- 	// 	}
- 	// 	println(deployments.getClass())
+		def deployments
+		try {
+			deployments = getParsedDeployments(parsedConfigList)
+		}
+		catch(Exception e) {
+			println "None of the deployment was found"
+			System.exit(-1)
+		}
 
 		services.each { kubeService ->
             if (!isSystemService(kubeService)) {
@@ -100,12 +92,12 @@ public class ImportFromYAML extends ServiceFactory {
 		queryDeployments
 	}
 
-	def readMap(map, stringPath, level = 0){
-		map.each{ k, v ->
-			if (v instanceof LinkedHashMap){
-				readMap(v, stringPath + k.toString() + ".", level + 1 )
-			}
-		}
-	}
+	// def readMap(map, stringPath, level = 0){
+	// 	map.each{ k, v ->
+	// 		if (v instanceof LinkedHashMap){
+	// 			readMap(v, stringPath + k.toString() + ".", level + 1 )
+	// 		}
+	// 	}
+	// }
 
 }

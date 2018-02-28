@@ -1,6 +1,6 @@
 import java.io.File
 
-procedure 'Import From YAML',
+procedure 'Import Microservices',
 	description: 'Creating microservice models using Kubernetes YAML file.', 
 	{
 
