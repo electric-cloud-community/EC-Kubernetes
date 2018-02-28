@@ -36,6 +36,9 @@ def serviceDetails = efClient.getServiceDeploymentDetails(
                 environmentName,
                 serviceEntityRevisionId)
 String namespace = client.getServiceParameter(serviceDetails, 'namespace', 'default')
+client.clusterEndpoint = clusterEndpoint
+client.accessToken = accessToken
+client.namespace = namespace
 
 try {
     client.deployService(

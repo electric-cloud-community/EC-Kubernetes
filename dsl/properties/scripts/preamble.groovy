@@ -1,3 +1,4 @@
+$[/myProject/scripts/GrabGrapes]
 $[/myProject/scripts/Logger]
 $[/myProject/scripts/BaseClient]
 $[/myProject/scripts/PluginException]

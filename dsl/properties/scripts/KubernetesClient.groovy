@@ -1,3 +1,5 @@
+import groovy.json.JsonBuilder
+
 @Grab('com.jayway.jsonpath:json-path:2.0.0' )
 
 import static com.jayway.jsonpath.JsonPath.parse
@@ -7,10 +9,24 @@ import static com.jayway.jsonpath.JsonPath.parse
  */
 public class KubernetesClient extends BaseClient {
 
+    public final String BLUE_GREEN_STRATEGY = 'blueGreenDeployment'
+    public final String ROLLING_UPDATE_STRATEGY = 'rollingDeployment'
+    public final String BLUE_GREEN_FLAG = 'ec-bluegreen-flag'
+
+    def blueGreenDeployments
+    def deploymentForBlueGreenUpdate
+    def foundDeploymentForBlueGreenUpdate
+
+    String clusterEndpoint
+    String namespace
+    String accessToken
+
     String kubernetesVersion = '1.6'
 
     String retrieveAccessToken(def pluginConfig) {
-        "Bearer ${pluginConfig.credential.password}"
+        def token = "Bearer ${pluginConfig.credential.password}"
+        this.accessToken = token
+        return token
     }
 
     /**
@@ -25,6 +41,122 @@ public class KubernetesClient extends BaseClient {
                 "/apis",
                 accessToken, /*failOnErrorCode*/ false)
     }
+
+
+    def findBlueGreenDeployments(args) {
+        if (!this.blueGreenDeployments) {
+            String serviceName = getServiceNameToUseForDeployment(args)
+            String selectorLabel = getSelectorLabelForDeployment(args, serviceName, isCanaryDeployment(args))
+            def deployments = getDeployments(this.clusterEndpoint, this.namespace,
+                this.accessToken, [labelSelector: "ec-svc=${selectorLabel},ec-track=stable"]
+            )
+
+            println new JsonBuilder(deployments).toPrettyString()
+            this.blueGreenDeployments = deployments
+        }
+        return this.blueGreenDeployments
+    }
+
+    def getDeploymentForBlueGreenUpdate(def args) {
+        if (!this.foundDeploymentForBlueGreenUpdate) {
+            String serviceName = getServiceNameToUseForDeployment(args)
+            def service = getService(this.clusterEndpoint, this.namespace, serviceName, this.accessToken)
+            if (!service) {
+                return
+            }
+
+            String serviceFlag = service.spec?.selector?.get(BLUE_GREEN_FLAG, '')
+            if (serviceFlag) {
+                logger INFO, "Service is pointing to $serviceFlag deployment"
+            }
+            else {
+                logger INFO, "Service is not pointing to blue or green deployment"
+            }
+            def deployments = findBlueGreenDeployments(args)
+            def items = deployments.items
+            def deploy
+            if (items && items.size() == 2) {
+                def matchingDeployments = items.findAll {
+                    it.metadata.labels.get(BLUE_GREEN_FLAG, '') == serviceFlag
+                }
+                if (matchingDeployments.size() != 1) {
+                    logger ERROR, "Found blue/green deployments: "
+                    logger ERROR, new JsonBuilder(matchingDeployments).toPrettyString()
+                    throw new PluginException("There should be only one deployment with ec-bluegreen-flag = ${serviceFlag}")
+                }
+                deploy = items.find {
+                    it.metadata.labels.get(BLUE_GREEN_FLAG, '') != serviceFlag
+                }
+                logger INFO, "Found deployment for update: " + new JsonBuilder(deploy).toPrettyString()
+            }
+            this.deploymentForBlueGreenUpdate = deploy
+            this.foundDeploymentForBlueGreenUpdate = true
+        }
+        return this.deploymentForBlueGreenUpdate
+    }
+
+
+    def updateServiceAfterDeployment(Map serviceDetails) {
+        if (isBlueGreenDeployment(serviceDetails)) {
+//            Switching service to deployment
+            def serviceName = getServiceNameToUseForDeployment(serviceDetails)
+            def selectorLabel = getSelectorLabelForDeployment(serviceDetails, serviceName, isCanaryDeployment(serviceDetails))
+            def blueGreenFlag = getBlueGreenFlag(serviceDetails)
+            assert blueGreenFlag
+
+            logger INFO, "Switching service to selector ${BLUE_GREEN_FLAG} = ${blueGreenFlag}"
+            def json = new JsonBuilder()
+            def payload = json {
+                spec {
+                    selector {
+                        "ec-svc" selectorLabel
+                        "ec-bluegreen-flag" blueGreenFlag
+                    }
+                }
+            }
+
+            doHttpRequest(PATCH,
+                this.clusterEndpoint,
+                "/api/v1/namespaces/${this.namespace}/services/$serviceName",
+                [
+                    'Authorization' : this.accessToken,
+                    'Content-Type': 'application/strategic-merge-patch+json'
+                ],
+                /*failOnErrorCode*/ true,
+                json.toPrettyString()
+            )
+        }
+    }
+
+    def deleteExtraBlueGreenDeployment(Map serviceDetails) {
+        def teardown = getServiceParameter(serviceDetails, 'teardownOlderDeployment', '').toBoolean()
+        if (!teardown) {
+            logger INFO, "The old deployment wil NOT be torn down"
+            return
+        }
+        def deployments = findBlueGreenDeployments(serviceDetails)
+        def deploymentToUpdate = getDeploymentForBlueGreenUpdate(serviceDetails)
+        if (deployments.items.size() != 2) {
+            return
+        }
+        def oldDeployment = deployments.items.find {
+            it.metadata.name != deploymentToUpdate.metadata.name
+        }
+        if (oldDeployment) {
+            String deploymentName = oldDeployment.metadata.name
+            logger INFO, "The old deployment will be torn down: ${deploymentName}"
+            deleteDeployment(this.clusterEndpoint, this.namespace,
+                serviceDetails, this.accessToken, deploymentName
+            )
+            deleteReplicaSets(this.clusterEndpoint, this.namespace,
+                serviceDetails, this.accessToken, deploymentName
+            )
+            deletePods(this.clusterEndpoint, this.namespace,
+                serviceDetails, this.accessToken, deploymentName
+            )
+        }
+    }
+
 
     def deployService(
             EFClient efClient,
@@ -55,19 +187,9 @@ public class KubernetesClient extends BaseClient {
 
         createOrCheckNamespace(clusterEndpoint, namespace, accessToken)
 
-        def deploymentStrategy = getServiceParameter(serviceDetails, 'deploymentStrategy', 'rollingDeployment')
-        if (deploymentStrategy == 'blueGreenDeployment') {
-            createOrUpdateDeploymentBlueGreen(clusterEndpoint,
-                namespace,
-                serviceDetails,
-                accessToken
-            )
-        }
-        else {
-            createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
-        }
+        def updated = createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
 
-        createOrUpdateService(clusterEndpoint, namespace, serviceDetails, accessToken)
+        createOrUpdateDeployment(clusterEndpoint, namespace, serviceDetails, accessToken)
 
         createOrUpdateResourceIfNeeded(clusterEndpoint, serviceDetails, accessToken)
 
@@ -85,6 +207,10 @@ public class KubernetesClient extends BaseClient {
         if (!serviceCreatedOrUpdated) {
             return
         }
+        if (updated) {
+            updateServiceAfterDeployment(serviceDetails)
+        }
+        deleteExtraBlueGreenDeployment(serviceDetails)
 
         if(serviceDetails.port){
 
@@ -421,9 +547,12 @@ public class KubernetesClient extends BaseClient {
         String serviceName = getServiceNameToUseForDeployment(serviceDetails)
         def deployedService = getService(clusterEndPoint, namespace, serviceName, accessToken)
 
+        logger INFO, "Deployed service: " + new JsonBuilder(deployedService).toPrettyString()
         def serviceDefinition = buildServicePayload(serviceDetails, deployedService)
 
         if (OFFLINE) return null
+
+        def updated = false
 
         if(serviceDefinition!=null){
             if(deployedService){
@@ -434,6 +563,7 @@ public class KubernetesClient extends BaseClient {
                         ['Authorization' : accessToken],
                         /*failOnErrorCode*/ true,
                         serviceDefinition)
+                updated = true
 
             } else {
                 logger INFO, "Creating service $serviceName"
@@ -445,6 +575,7 @@ public class KubernetesClient extends BaseClient {
                         serviceDefinition)
             }
         }
+        return updated
     }
 
     def deleteService(String clusterEndPoint, String namespace , def serviceDetails, String accessToken) {
@@ -588,19 +719,6 @@ public class KubernetesClient extends BaseClient {
     }
 
 
-    def createOrUpdateDeploymentBlueGreen(String clusterEndpoint, String namespace, def serviceDetails, String accessToken) {
-        def serviceName = getDeploymentName(serviceDetails)
-        def service = getService(clusterEndpoint,
-            namespace,
-            serviceName,
-            accessToken
-        )
-
-        if (service) {
-            println new JsonBuilder(service).toPrettyString()
-        }
-    }
-
 
     def createOrUpdateDeployment(String clusterEndPoint, String namespace, def serviceDetails, String accessToken) {
 
@@ -631,7 +749,25 @@ public class KubernetesClient extends BaseClient {
         }
 
         def deploymentName = getDeploymentName(serviceDetails)
-        def existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
+        String deploymentStrategy = getDeploymentStrategy(serviceDetails)
+        def existingDeployment
+        switch(deploymentStrategy) {
+            case BLUE_GREEN_STRATEGY:
+                existingDeployment = getDeploymentForBlueGreenUpdate(serviceDetails)
+                if (existingDeployment) {
+                    logger INFO, "Found deployment for update: ${existingDeployment.metadata.name}"
+                }
+                else {
+                    logger INFO, "No deployment found for blue-green deployment, creating a new one"
+                }
+                break
+            case ROLLING_UPDATE_STRATEGY:
+                existingDeployment = getDeployment(clusterEndPoint, namespace, deploymentName, accessToken)
+                break
+            default:
+                existingDeployment = getDeployment(clusterEndpoint, namespace, deploymentName, accessToken)
+        }
+        logger DEBUG, new JsonBuilder(existingDeployment).toPrettyString()
         def deployment = buildDeploymentPayload(serviceDetails, existingDeployment, imagePullSecrets)
         logger DEBUG, "Deployment payload:\n $deployment"
 
@@ -656,7 +792,6 @@ public class KubernetesClient extends BaseClient {
                     /*failOnErrorCode*/ true,
                     deployment)
         }
-
     }
 
     def deleteReplicaSets(String clusterEndPoint, String namespace, def serviceDetails, String accessToken, String deploymentName = null){
@@ -907,7 +1042,7 @@ public class KubernetesClient extends BaseClient {
     }
 
     String getDeploymentStrategy(args) {
-        getServiceParameter(args, 'deploymentStrategy')
+        getServiceParameter(args, 'deploymentStrategy', '')
     }
 
     def validateUniquePorts(def args) {
@@ -924,6 +1059,118 @@ public class KubernetesClient extends BaseClient {
         }
     }
 
+    int getReplicaCount(def args) {
+        boolean isCanary = isCanaryDeployment(args)
+        if (isCanary) {
+            return getServiceParameter(args, 'numberOfCanaryReplicas', 1).toInteger()
+        }
+        else {
+            return args.defaultCapacity.toInteger()
+        }
+    }
+
+    int getMaxUnavailable(args) {
+        if (isCanaryDeployment(args)) {
+            return 1
+        }
+        String strategy = getDeploymentStrategy(args)
+        if (strategy) {
+            if (strategy == 'rollingDeployment') {
+                def minAvailabilityCount = getServiceParameter(args, 'minAvailabilityCount')
+                def minAvailabilityPercentage = getServiceParameter(args, 'minAvailabilityPercentage')
+
+                if (!(minAvailabilityPercentage as boolean ^ minAvailabilityCount as boolean)) {
+                    throw new PluginException("Either minAvailabilityCount or minAvailabilityPercentage must be set")
+                }
+                def maxUnavailableValue
+                if (minAvailabilityCount) {
+                    maxUnavailableValue = args.defaultCapacity.toInteger() - minAvailabilityCount.toInteger()
+                }
+                else {
+                    maxUnavailableValue = "${100 - minAvailabilityPercentage.toInteger()}%"
+                }
+                return maxUnavailableValue
+            }
+            else {
+                // TODO
+            }
+
+        }
+
+        // Default
+        def maxUnavailable =  args.minCapacity ? (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
+        return maxUnavailable
+    }
+
+    int getMaxSurge(args) {
+        if (isCanaryDeployment(args)) {
+            return 1
+        }
+        String strategy = getDeploymentStrategy(args)
+        if (strategy) {
+            if (strategy == 'rollingDeployment') {
+                def maxRunningCount = getServiceParameter(args, 'maxRunningCount')
+                def maxRunningPercentage = getServiceParameter(args, 'maxRunningPercentage')
+
+                if (!(maxRunningPercentage as boolean ^ maxRunningCount as boolean)) {
+                    throw new PluginException("Either maxRunningCount or maxRunningPercentage must be set")
+                }
+
+                def maxSurgeValue = maxRunningCount ?
+                    maxRunningCount.toInteger() :
+                    "${maxRunningPercentage.toInteger() + 100}%"
+
+                return maxSurgeValue
+
+            }
+            else {
+                // TODO
+            }
+
+        }
+
+        // Default
+        def maxSurgeValue = args.maxCapacity ?
+            (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) :
+            1
+        return maxSurgeValue
+    }
+
+    def getDeploymentLabels(args, selectorLabel, isCanary) {
+        def retval = ['ec-svc': selectorLabel]
+        def deploymentFlag = isCanary ? 'canary' : 'stable'
+        retval['ec-track'] = deploymentFlag
+        String strategy = getDeploymentStrategy(args)
+        if (strategy && strategy == BLUE_GREEN_STRATEGY) {
+            retval[BLUE_GREEN_FLAG] = getBlueGreenFlag(args)
+        }
+        return retval
+    }
+
+    def getBlueGreenFlag(args) {
+        def deploy = getDeploymentForBlueGreenUpdate(args)
+        if (deploy) {
+            println new JsonBuilder(deploy).toPrettyString()
+            def flag = deploy.metadata.labels.get(BLUE_GREEN_FLAG, '')
+            if (!flag) {
+                throw new RuntimeException("No ${BLUE_GREEN_FLAG} found for deployment")
+            }
+            return flag
+        }
+        else {
+            def deployments = findBlueGreenDeployments(args)
+            if (deployments.items.size() == 1) {
+                return 'green'
+            }
+            else if (deployments.items.size() == 0) {
+                return 'blue'
+            }
+            else {
+                throw new PluginException("Wrong number of deployments found: ${deployments.items.size()}")
+            }
+        }
+    }
+
     String buildDeploymentPayload(def args, def existingDeployment, def imagePullSecretsList){
 
         if (!args.defaultCapacity) {
@@ -931,7 +1178,6 @@ public class KubernetesClient extends BaseClient {
         }
 
         def deploymentStrategy = getDeploymentStrategy(args)
-        println new JsonBuilder(args).toPrettyString()
 
         def json = new JsonBuilder()
         //Get the message calculation out of the way
@@ -939,44 +1185,6 @@ public class KubernetesClient extends BaseClient {
         def maxSurgeValue
         def maxUnavailableValue
         boolean isCanary = isCanaryDeployment(args)
-
-        if (isCanary) {
-            replicaCount = getServiceParameter(args, 'numberOfCanaryReplicas', 1).toInteger()
-            maxSurgeValue = 1
-            maxUnavailableValue = 1
-        } else {
-            if (deploymentStrategy && deploymentStrategy == 'rollingDeployment') {
-                def minAvailabilityCount = getServiceParameter(args, 'minAvailabilityCount')
-                def minAvailabilityPercentage = getServiceParameter(args, 'minAvailabilityPercentage')
-                def maxRunningCount = getServiceParameter(args, 'maxRunningCount')
-                def maxRunningPercentage = getServiceParameter(args, 'maxRunningPercentage')
-
-                if (!(minAvailabilityPercentage as boolean ^ minAvailabilityCount as boolean)) {
-                    throw new PluginException("Either minAvailabilityCount or minAvailabilityPercentage must be set")
-                }
-                if (!(maxRunningPercentage as boolean ^ maxRunningCount as boolean)) {
-                    throw new PluginException("Either maxRunningCount or maxRunningPercentage must be set")
-                }
-
-                replicaCount = args.defaultCapacity.toInteger()
-                maxSurgeValue = maxRunningCount ? maxRunningCount.toInteger() : "${maxRunningPercentage.toInteger() + 100}%"
-
-                if (minAvailabilityCount) {
-                    maxUnavailableValue = args.defaultCapacity.toInteger() - minAvailabilityCount.toInteger()
-                }
-                else {
-                    maxUnavailableValue = "${100 - minAvailabilityPercentage.toInteger()}%"
-                }
-            }
-            else {
-
-                replicaCount = args.defaultCapacity.toInteger()
-                maxSurgeValue = args.maxCapacity ? (args.maxCapacity.toInteger() - args.defaultCapacity.toInteger()) : 1
-                maxUnavailableValue =  args.minCapacity ?
-                    (args.defaultCapacity.toInteger() - args.minCapacity.toInteger()) : 1
-            }
-
-        }
 
         def volumeData = convertVolumes(args.volumes)
         def serviceName = getServiceNameToUseForDeployment(args)
@@ -995,12 +1203,12 @@ public class KubernetesClient extends BaseClient {
                 name deploymentName
             }
             spec {
-                replicas replicaCount
+                replicas this.getReplicaCount(args)
                 progressDeadlineSeconds deploymentTimeoutInSec
                 strategy {
                     rollingUpdate {
-                        maxUnavailable maxUnavailableValue
-                        maxSurge maxSurgeValue
+                        maxUnavailable this.getMaxUnavailable(args)
+                        maxSurge this.getMaxSurge(args)
                     }
                 }
                 selector {
@@ -1011,10 +1219,7 @@ public class KubernetesClient extends BaseClient {
                 template {
                     metadata {
                         name deploymentName
-                        labels {
-                            "ec-svc" selectorLabel
-                            "ec-track" deploymentFlag
-                        }
+                        labels this.getDeploymentLabels(args, selectorLabel, isCanary)
                     }
                     spec{
                         containers(args.container.collect { svcContainer ->
@@ -1172,6 +1377,17 @@ public class KubernetesClient extends BaseClient {
         value?.toString()?.tokenize(',')
     }
 
+    def addServiceSelectorLabels(def json, Map args) {
+        if (isBlueGreenDeployment(args)) {
+            def serviceName = getServiceNameToUseForDeployment(args)
+            def service = getService(this.clusterEndpoint, this.namespace, serviceName, this.accessToken)
+            def flag = getBlueGreenFlag(args)
+            if (!service) {
+                json[BLUE_GREEN_FLAG] = flag
+            }
+        }
+    }
+
 
     String buildServicePayload(Map args, def deployedService){
 
@@ -1215,6 +1431,7 @@ public class KubernetesClient extends BaseClient {
 
                 selector {
                     "ec-svc" selectorLabel
+                    this.addServiceSelectorLabels(delegate, args)
                 }
 
                 if (portMapping.size()==0){
@@ -1352,9 +1569,18 @@ public class KubernetesClient extends BaseClient {
     String getSelectorLabelForDeployment(def serviceDetails, String serviceName, boolean isCanary) {
         if (isCanary) {
             serviceName
-        } else {
+        }
+        else if (isBlueGreenDeployment(serviceDetails)) {
+            serviceName
+        }
+        else {
             getDeploymentName(serviceDetails)
         }
+    }
+
+    boolean isBlueGreenDeployment(Map serviceDetails) {
+        String strategy = getDeploymentStrategy(serviceDetails)
+        return strategy == BLUE_GREEN_STRATEGY
     }
 
     String getServiceNameToUseForDeployment (def serviceDetails) {
@@ -1364,7 +1590,11 @@ public class KubernetesClient extends BaseClient {
     String getDeploymentName(def serviceDetails) {
         if (isCanaryDeployment(serviceDetails)) {
             constructCanaryDeploymentName(serviceDetails)
-        } else {
+        }
+        else if(isBlueGreenDeployment(serviceDetails)) {
+            constructBlueGreenDeploymentName(serviceDetails)
+        }
+        else {
             def serviceName = getServiceNameToUseForDeployment(serviceDetails)
             makeNameDNS1035Compliant(getServiceParameter(serviceDetails, "deploymentNameOverride", serviceName))
         }
@@ -1373,6 +1603,18 @@ public class KubernetesClient extends BaseClient {
     String constructCanaryDeploymentName(def serviceDetails) {
         String name = getServiceNameToUseForDeployment (serviceDetails)
         "${name}-canary"
+    }
+
+    String constructBlueGreenDeploymentName(def serviceDetails) {
+        def deployments = findBlueGreenDeployments(serviceDetails)
+        def serviceName = getServiceNameToUseForDeployment(serviceDetails)
+//        If there is a deployment and it was deployed with rolling deploy strategy
+        def deployment = getDeploymentForBlueGreenUpdate(serviceDetails)
+        if (deployment) {
+            return deployment.metadata.name
+        }
+        def flag = getBlueGreenFlag(serviceDetails)
+        "${serviceName}-${flag}"
     }
 
     String makeNameDNS1035Compliant(String name){

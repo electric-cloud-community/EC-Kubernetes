@@ -3,6 +3,7 @@
  */
 public class EFClient extends BaseClient {
     static final String REST_VERSION = 'v1.0'
+    static final String JOB_STEP_ID = 'COMMANDER_JOBSTEPID'
 
     def getServerUrl() {
         def commanderServer = System.getenv('COMMANDER_SERVER')
@@ -162,7 +163,6 @@ public class EFClient extends BaseClient {
                 "projects/$serviceProjectName/applications/$applicationName/services/$serviceName" :
                 "projects/$serviceProjectName/services/$serviceName"
         def jobStepId = System.getenv('COMMANDER_JOBSTEPID')
-        // def jobStepId = '$[/myJobStep/jobStepId]'
         def queryArgs = [
                 request: 'getServiceDeploymentDetails',
                 clusterName: clusterName,
@@ -185,7 +185,7 @@ public class EFClient extends BaseClient {
     }
 
     def expandString(String str) {
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         def payload = [
                 value: str,
                 jobStepId: jobStepId
@@ -202,7 +202,7 @@ public class EFClient extends BaseClient {
     }
 
     def getActualParameters() {
-        def jobId = '$[/myJob/jobId]'
+        def jobId = System.getenv('COMMANDER_JOBID')
         def result = doHttpGet("/rest/v1.0/jobs/$jobId")
         (result.data.job.actualParameter?:[:]).collectEntries {
             [(it.actualParameterName): it.value]
@@ -210,7 +210,7 @@ public class EFClient extends BaseClient {
     }
 
     def getCredentials(def credentialName) {
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         // Use the new REST mapping for getFullCredential with 'credentialPaths'
         // which works around the restMapping matching issue with the credentialName being a path.
         def result = doHttpGet("/rest/v1.0/jobSteps/$jobStepId/credentialPaths/$credentialName")
@@ -234,7 +234,7 @@ public class EFClient extends BaseClient {
 
     def createProperty(String propertyName, String value, Map additionalArgs = [:]) {
         // Creating the property in the context of a job-step by default
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         def payload = [:]
         payload << additionalArgs
         payload << [
@@ -248,7 +248,7 @@ public class EFClient extends BaseClient {
 
     def createProperty2(String propertyName, String value, Map additionalArgs = [:]) {
         // Creating the property in the context of a job-step by default
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         def payload = [:]
         payload << additionalArgs
         payload << [
@@ -277,7 +277,7 @@ public class EFClient extends BaseClient {
 
     def setEFProperty(String propertyName, String value, Map additionalArgs = [:]) {
         // Creating the property in the context of a job-step by default
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         def payload = [:]
         payload << additionalArgs
         payload << [
@@ -291,7 +291,7 @@ public class EFClient extends BaseClient {
 
 
     def updateJobSummary(String message) {
-        def jobStepId = System.getenv('COMMANDER_JOBSTEPID')
+        def jobStepId = getJobStepId()
         def summary = getEFProperty('/myJob/summary', true)?.value
         def lines = []
         if (summary) {
@@ -303,7 +303,7 @@ public class EFClient extends BaseClient {
 
     def evalDsl(String dslStr) {
         // Run the dsl in the context of a job-step by default
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
         def payload = [:]
         payload << [
                 dsl: dslStr,
@@ -315,7 +315,7 @@ public class EFClient extends BaseClient {
 
     def getEFProperty(String propertyName, boolean ignoreError = false) {
         // Get the property in the context of a job-step by default
-        def jobStepId = '$[/myJobStep/jobStepId]'
+        def jobStepId = getJobStepId()
 
         doHttpGet("/rest/v1.0/properties/${propertyName}",
                 /* failOnErrorCode */ !ignoreError, [jobStepId: jobStepId])
@@ -457,6 +457,12 @@ public class EFClient extends BaseClient {
         ]
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/credentials", payload, false)
         result?.data?.credential
+    }
+
+    def getJobStepId() {
+        def jobStepId = System.getenv(JOB_STEP_ID)
+        assert jobStepId
+        return jobStepId
     }
 
 }

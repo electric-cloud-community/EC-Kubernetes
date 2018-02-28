@@ -83,6 +83,15 @@
         <value></value>
     </formElement>
     <formElement>
+        <type>checkbox</type>
+        <label>Teardown Older Deployment on Success:</label>
+        <required>0</required>
+        <property>teardownOlderDeployment</property>
+        <documentation>Whether to teardown the older deployment upon successfully switching over the service in Kubernetes to the new deployment. By default, the older deployment is left in place allowing a subsequent rollback in the future to leverage it to quickly switch back to the earlier version of the service.</documentation>
+        <checkedValue>true</checkedValue>
+        <uncheckedValue>false</uncheckedValue>
+    </formElement>
+    <formElement>
         <type>entry</type>
         <label>Deployment Name Override:</label>
         <property>deploymentNameOverride</property>
