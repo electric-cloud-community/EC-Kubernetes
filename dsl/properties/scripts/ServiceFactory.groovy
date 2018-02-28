@@ -313,7 +313,12 @@ public class ServiceFactory extends EFClient {
                 name = port.targetPort as String
             }
             else {
-                name = "${port.protocol}${port.port}"
+                if (port.protocol){
+                    name = "${port.protocol}${port.port}"
+                }
+                else{
+                    name = "port${port.port}"
+                }
             }
             [portName: name.toLowerCase(), listenerPort: port.port]
         }
@@ -469,7 +474,13 @@ public class ServiceFactory extends EFClient {
                     name = port.name
                 }
                 else {
-                    name = "${port.protocol}${port.containerPort}"
+
+                    if (port.protocol){
+                        name = "${port.protocol}${port.containerPort}"
+                    }
+                    else{
+                        name = "port${port.containerPort}"
+                    }
                 }
                 [portName: name.toLowerCase(), containerPort: port.containerPort]
             }
@@ -523,7 +534,7 @@ public class ServiceFactory extends EFClient {
                 }
             }
         }
-        def resources = kubeContainer.resources
+        def resources = kubeContainer.resources //.toString()
         container.container.cpuCount = parseCPU(resources?.requests?.cpu)
         container.container.memorySize = parseMemory(resources?.requests?.memory)
         container.container.cpuLimit = parseCPU(resources?.limits?.cpu)
@@ -567,6 +578,9 @@ public class ServiceFactory extends EFClient {
         if (!memoryString) {
             return
         }
+        if (!(memoryString instanceof String)){
+            memoryString = memoryString.toString()
+        }
         // E, P, T, G, M, K
         def memoryNumber = memoryString.replaceAll(/\D+/, '')
         def suffix = memoryString.replaceAll(/\d+/, '')
@@ -579,7 +593,7 @@ public class ServiceFactory extends EFClient {
         }
         if (power) {
             def retval = memoryNumber.toInteger() * (1024 ** power)
-            return retval
+            return retval.toInteger()
         }
         else {
             return memoryNumber.toInteger()

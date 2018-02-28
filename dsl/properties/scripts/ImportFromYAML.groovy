@@ -18,8 +18,9 @@ public class ImportFromYAML extends ServiceFactory {
 
 	def importFromYAML(namespace, fileYAML){
 
+		// File mFile = fileYAML as File //lalalaalalalallalalalallalal
 		def efServices = []
-		String fileContents = fileYAML.text
+		String fileContents = fileYAML
 		def configList = fileContents.split(DELIMITER)
 		def parsedConfigList = []
 
@@ -28,13 +29,26 @@ public class ImportFromYAML extends ServiceFactory {
 			parsedConfigList.push(parsedConfig)
 		}
 
-		def services = getServices(parsedConfigList)
-		def deployments = getDeployments(parsedConfigList)
+		def services = getParsedServices(parsedConfigList)
+		def deployments = getParsedDeployments(parsedConfigList)
+
+		// services.each { service ->
+ 	// 		println("SERVICES")
+ 	// 		println(service.getClass())
+ 	// 		prettyPrint(service)
+ 	// 	}
+ 	// 	deployments.each { deployment ->
+ 	// 		println("DEPLOYMENTS")
+ 	// 		prettyPrint(deployment)
+ 	// 	}
+ 	// 	println(deployments.getClass())
 
 		services.each { kubeService ->
             if (!isSystemService(kubeService)) {
                 def allQueryDeployments = []
+                def i = 0
                 kubeService.spec.selector.each{ k, v ->
+                	i = i + 1
                 	def queryDeployments = getDeploymentsBySelector(deployments, k, v)
                     if (queryDeployments != null){
                     	queryDeployments.each{ deployment->
@@ -52,7 +66,7 @@ public class ImportFromYAML extends ServiceFactory {
 		efServices
 	}
 	
-	def getServices(parsedConfigList){
+	def getParsedServices(parsedConfigList){
 		def services = []
 		parsedConfigList.each { config ->
 			if (config.kind == "Service"){
@@ -62,7 +76,7 @@ public class ImportFromYAML extends ServiceFactory {
 		services
 	}
 
-	def getDeployments(parsedConfigList){
+	def getParsedDeployments(parsedConfigList){
 		def deployments = []
 		parsedConfigList.each { config ->
 			if (config.kind == "Deployment"){
@@ -74,8 +88,10 @@ public class ImportFromYAML extends ServiceFactory {
 
 	def getDeploymentsBySelector(deployments, key, value){
 		def queryDeployments = []
+		def i = 0
 		deployments.each { deployment -> 
-			deployment.spec.template.metadata.labels.each{ k, v ->
+			deployment.metadata.labels.each{ k, v ->
+				i = i + 1
 				if ((k == key) && (v == value)){
 					queryDeployments.push(deployment)
 				}
@@ -83,4 +99,13 @@ public class ImportFromYAML extends ServiceFactory {
 		}
 		queryDeployments
 	}
+
+	def readMap(map, stringPath, level = 0){
+		map.each{ k, v ->
+			if (v instanceof LinkedHashMap){
+				readMap(v, stringPath + k.toString() + ".", level + 1 )
+			}
+		}
+	}
+
 }

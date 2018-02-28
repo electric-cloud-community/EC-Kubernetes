@@ -1,16 +1,15 @@
 $[/myProject/scripts/preamble]
-$[/myProject/scripts/ServiceFactory]
 $[/myProject/scripts/ImportFromYAML]
 
 // Input parameters
-def kubeYAMLFile = '$[kubeYAMLFile]'
+def kubeYAMLFile = '''$[kubeYAMLFile]'''
 def projectName = '$[projName]'
 def envProjectName = '$[envProjectName]'
 def environmentName = '$[envName]'
 def clusterName = '$[clusterName]'
 // All the parameters are required
 // TBD add support not required parameters
-static final String NAMESPACE = "default" //where to get? not necessary??
+def NAMESPACE = "default" //where to get? not necessary??
 
 ////A sample is taken from ED-DOCKER Discovery
 //String dir = System.getenv('COMMANDER_WORKSPACE')
