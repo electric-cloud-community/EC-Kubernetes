@@ -2,6 +2,7 @@ import spock.lang.*
 import com.electriccloud.spec.*
 
 @Ignore
+// EF Image lacks EC-Docker installed
 class DiscoverValidation extends KubeHelper {
     static def projectName = 'EC-Kubernetes Validate Spec'
 
@@ -57,7 +58,7 @@ class DiscoverValidation extends KubeHelper {
             // And now it should appear anew
             logger.debug(result.logs)
             assert result.outcome == 'error'
-            assert result.logs =~ /Wrong cluster type: EC-Docker/
+            assert result.logs =~ /ElectricFlow cluster 'Docker' in environment 'Kube Cluster' is not backed by a Kubernetes-based cluster/
         cleanup:
             dsl """
                 deleteProject(projectName: '$projectName')

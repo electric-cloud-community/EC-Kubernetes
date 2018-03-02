@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 import spock.lang.*
 import com.electriccloud.spec.*
 
@@ -14,12 +15,12 @@ class Discover extends KubeHelper {
         createCluster(projectName, envName, clusterName, configName)
         dslFile 'dsl/Discover.dsl', [
             projectName: projectName,
-            params: [
-                envName: '',
+            params     : [
+                envName       : '',
                 envProjectName: '',
-                clusterName: '',
-                namespace: '',
-                projName: '',
+                clusterName   : '',
+                namespace     : '',
+                projName      : '',
             ]
         ]
 
@@ -35,11 +36,11 @@ class Discover extends KubeHelper {
     // TODO other fields
     def "discover sample"() {
         given:
-            def sampleName = 'nginx-spec'
-            cleanupService(sampleName)
-            deploySample(sampleName)
+        def sampleName = 'nginx-spec'
+        cleanupService(sampleName)
+        deploySample(sampleName)
         when:
-            def result = runProcedureDsl """
+        def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
                     procedureName: 'Discover',
@@ -53,34 +54,49 @@ class Discover extends KubeHelper {
                 )
             """
         then:
-            logger.debug(result.logs)
-            def service = getService(
-                projectName,
-                sampleName,
-                clusterName,
-                envName
-            )
-            assert result.outcome != 'error'
-            assert service.service
-            def containers = service.service.container
-            assert containers.size() == 1
-            assert containers[0].containerName == 'nginx'
-            assert containers[0].imageName == 'nginx'
-            assert containers[0].imageVersion == '1.10'
-            def port = containers[0].port[0]
-            assert port
-            assert service.service.defaultCapacity == '1'
-            assert port.containerPort == '80'
-            assert service.service.port[0].listenerPort == '80'
+        logger.debug(result.logs)
+        def service = getService(
+            projectName,
+            sampleName,
+            clusterName,
+            envName
+        )
+        logger.debug(objectToJson(service))
+        assert result.outcome != 'error'
+        assert service.service
+        def containers = service.service.container
+        assert containers.size() == 1
+        assert containers[0].containerName == 'nginx'
+        assert containers[0].imageName == 'nginx'
+        assert containers[0].imageVersion == '1.10'
+        def port = containers[0].port[0]
+        assert port
+        assert service.service.defaultCapacity == '1'
+        assert port.containerPort == '80'
+        assert service.service.port[0].listenerPort == '80'
+        def env = service.service.container[0].environmentVariable
+        assert env.size() == 1
+        assert env[0].value == 'TEST'
+        assert env[0].environmentVariableName == 'TEST_ENV'
+
+        def volumesJson = service.service.volumes
+        def volumes = new JsonSlurper().parseText(volumesJson)
+        assert volumes[0].name == 'my-volume'
+        assert volumes[0].hostPath
+
+        def volumeMountsJson = service.service.container[0].volumeMounts
+        def volumeMounts = new JsonSlurper().parseText(volumeMountsJson)
+        assert volumeMounts[0].name == 'my-volume'
+        assert volumeMounts[0].mountPath
     }
 
     def "Liveness/readiness probe"() {
         given:
-            def serviceName = 'kube-spec-liveness'
-            cleanupService(serviceName)
-            deployLiveness(serviceName)
+        def serviceName = 'kube-spec-liveness'
+        cleanupService(serviceName)
+        deployLiveness(serviceName)
         when:
-            def result = runProcedureDsl """
+        def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
                     procedureName: 'Discover',
@@ -94,36 +110,36 @@ class Discover extends KubeHelper {
                 )
             """
         then:
-            logger.debug(result.logs)
-            def service = getService(
-                projectName,
-                serviceName,
-                clusterName,
-                envName
-            )
-            logger.debug(objectToJson(service))
+        logger.debug(result.logs)
+        def service = getService(
+            projectName,
+            serviceName,
+            clusterName,
+            envName
+        )
+        logger.debug(objectToJson(service))
 
-            def container = service.service.container.first()
-            assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderName')
-            assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderValue')
-            assert getParameterDetail(container, 'livenessHttpProbePath')
-            assert getParameterDetail(container, 'livenessHttpProbePort')
-            assert getParameterDetail(container, 'livenessInitialDelay')
-            assert getParameterDetail(container, 'livenessPeriod')
-            assert getParameterDetail(container, 'readinessInitialDelay')
-            assert getParameterDetail(container, 'readinessPeriod')
-            assert getParameterDetail(container, 'readinessCommand')
-            assert container.command
+        def container = service.service.container.first()
+        assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderName')
+        assert getParameterDetail(container, 'livenessHttpProbeHttpHeaderValue')
+        assert getParameterDetail(container, 'livenessHttpProbePath')
+        assert getParameterDetail(container, 'livenessHttpProbePort')
+        assert getParameterDetail(container, 'livenessInitialDelay')
+        assert getParameterDetail(container, 'livenessPeriod')
+        assert getParameterDetail(container, 'readinessInitialDelay')
+        assert getParameterDetail(container, 'readinessPeriod')
+        assert getParameterDetail(container, 'readinessCommand')
+        assert container.command
         cleanup:
-            cleanupService(serviceName)
+        cleanupService(serviceName)
     }
 
     def "Discover secrets"() {
         given:
-            cleanupService(serviceName)
-            secretName = deployWithSecret(serviceName)
+        cleanupService(serviceName)
+        secretName = deployWithSecret(serviceName)
         when:
-            def result = runProcedureDsl """
+        def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
                     procedureName: 'Discover',
@@ -137,28 +153,28 @@ class Discover extends KubeHelper {
                 )
             """
         then:
-            logger.debug(result.logs)
-            def service = getService(
-                projectName,
-                serviceName,
-                clusterName, envName
-            )
-            logger.debug(objectToJson(service))
-            assert service.service.container.size() == 1
-            assert service.service.container[0].imageName == 'imagostorm/hello-world'
-            assert service.service.container[0].credentialName
+        logger.debug(result.logs)
+        def service = getService(
+            projectName,
+            serviceName,
+            clusterName, envName
+        )
+        logger.debug(objectToJson(service))
+        assert service.service.container.size() == 1
+        assert service.service.container[0].imageName == 'imagostorm/hello-world'
+        assert service.service.container[0].credentialName
         cleanup:
-            cleanupService(serviceName)
-            deleteSecret(secretName)
+        cleanupService(serviceName)
+        deleteSecret(secretName)
     }
 
     def "Percentage in surge/maxUnavailable"() {
         given:
-            def serviceName = 'kube-spec-service-percentage'
-            cleanupService(serviceName)
-            deployWithPercentage(serviceName)
+        def serviceName = 'kube-spec-service-percentage'
+        cleanupService(serviceName)
+        deployWithPercentage(serviceName)
         when:
-            def result = runProcedureDsl """
+        def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
                     procedureName: 'Discover',
@@ -172,57 +188,106 @@ class Discover extends KubeHelper {
                 )
             """
         then:
-            logger.debug(result.logs)
-            def service = getService(
-                projectName,
-                serviceName,
-                clusterName,
-                envName
-            )
-            logger.debug(objectToJson(service))
-            assert getParameterDetail(service.service, 'deploymentStrategy').parameterValue == 'rollingDeployment'
-            assert getParameterDetail(service.service, 'maxRunningPercentage').parameterValue == '125'
-            assert getParameterDetail(service.service, 'minAvailabilityPercentage').parameterValue == '75'
+        logger.debug(result.logs)
+        def service = getService(
+            projectName,
+            serviceName,
+            clusterName,
+            envName
+        )
+        logger.debug(objectToJson(service))
+        assert getParameterDetail(service.service, 'deploymentStrategy').parameterValue == 'rollingDeployment'
+        assert getParameterDetail(service.service, 'maxRunningPercentage').parameterValue == '125'
+        assert getParameterDetail(service.service, 'minAvailabilityPercentage').parameterValue == '75'
         cleanup:
-            cleanupService(serviceName)
+        cleanupService(serviceName)
 
+    }
 
+    def "Two containers"() {
+        given:
+        def serviceName = 'two-containers-kube-discover-spec'
+        cleanupService(serviceName)
+        deployTwoContainers(serviceName)
+        when:
+        def result = runProcedureDsl """
+                runProcedure(
+                    projectName: '$projectName',
+                    procedureName: 'Discover',
+                    actualParameter: [
+                        clusterName: '$clusterName',
+                        namespace: 'default',
+                        envProjectName: '$projectName',
+                        envName: '$envName',
+                        projName: '$projectName'
+                    ]
+                )
+            """
+        then:
+        logger.debug(result.logs)
+        def service = getService(
+            projectName,
+            serviceName,
+            clusterName,
+            envName
+        )
+        logger.debug(objectToJson(service))
+
+        def containers = service.service.container
+        assert containers.size() == 2
+        def first = containers.find {
+            it.imageVersion == '1.0'
+        }
+        def second = containers.find {
+            it.imageVersion == '2.0'
+        }
+        assert first
+        assert second
+        assert first.port[0].containerPort == '8080'
+        assert second.port[0].containerPort == '8080'
+        assert service.service.port.size() == 2
+        def firstPort = service.service.port.find { it.subcontainer == 'hello' }
+        def secondPort = service.service.port.find { it.subcontainer == 'hello-2' }
+        assert firstPort.listenerPort == '80'
+        assert secondPort.listenerPort == '81'
+        cleanup:
+        cleanupService(serviceName)
     }
 
     def deployWithPercentage(serviceName) {
         def deployment = [
-          kind: 'Deployment',
-          metadata: [
-            name: serviceName,
-          ],
-          spec: [
-            replicas: 3,
-            strategy: [
-                rollingUpdate: [
-                    maxSurge: '25%',
-                    maxUnavailable: '25%'
-                ]
+            kind    : 'Deployment',
+            metadata: [
+                name: serviceName,
             ],
-            template: [
-              spec: [
-                containers: [
-                  [name: 'nginx', image: 'nginx:1.10', ports: [
-                    [containerPort: 80]
-                  ]]
+            spec    : [
+                replicas: 3,
+                strategy: [
+                    rollingUpdate: [
+                        maxSurge      : '25%',
+                        maxUnavailable: '25%'
+                    ]
                 ],
-              ],
-              metadata: [labels: [app: 'nginx_test_spec']]
+                template: [
+                    spec    : [
+                        containers: [
+                            [name: 'nginx', image: 'nginx:1.10', ports: [
+                                [containerPort: 80]
+                            ]]
+                        ],
+                    ],
+                    metadata: [labels: [app: 'nginx_test_spec']]
+                ]
             ]
-          ]
         ]
 
         def service = [
-            kind: 'Service',
+            kind      : 'Service',
             apiVersion: 'v1',
-            metadata: [name: serviceName],
-            spec: [
+            metadata  : [name: serviceName],
+            spec      : [
                 selector: [app: 'nginx_test_spec'],
-                ports: [[protocol: 'TCP', port: 80, targetPort: 80]]
+                ports   : [[protocol: 'TCP', port: 80, targetPort: 80]]
             ]
         ]
         deploy(service, deployment)
@@ -231,32 +296,44 @@ class Discover extends KubeHelper {
 
     def deploySample(serviceName) {
         def deployment = [
-          kind: 'Deployment',
-          metadata: [
-            name: serviceName,
-          ],
-          spec: [
-            replicas: 1,
-            template: [
-              spec: [
-                containers: [
-                  [name: 'nginx', image: 'nginx:1.10', ports: [
-                    [containerPort: 80]
-                  ]]
-                ],
-              ],
-              metadata: [labels: [app: 'nginx_test_spec']]
+            kind    : 'Deployment',
+            metadata: [
+                name: serviceName,
+            ],
+            spec    : [
+                replicas: 1,
+                template: [
+                    spec    : [
+                        containers: [
+                            [
+                                name: 'nginx',
+                                image: 'nginx:1.10',
+                                ports: [[containerPort: 80]],
+                                env: [
+                                    [name: "TEST_ENV", "value": "TEST"]
+                                ],
+                                volumeMounts: [
+                                    [name: 'my-volume', mountPath: '/tmp/path_in_container']
+                                ]
+                            ]
+                        ],
+                        volumes: [
+                            [hostPath: [path: '/tmp/path'], name: 'my-volume']
+                        ]
+                    ],
+                    metadata: [labels: [app: 'nginx_test_spec']],
+
+                ]
             ]
-          ]
         ]
 
         def service = [
-            kind: 'Service',
+            kind      : 'Service',
             apiVersion: 'v1',
-            metadata: [name: serviceName],
-            spec: [
+            metadata  : [name: serviceName],
+            spec      : [
                 selector: [app: 'nginx_test_spec'],
-                ports: [[protocol: 'TCP', port: 80, targetPort: 80]]
+                ports   : [[protocol: 'TCP', port: 80, targetPort: 80]]
             ]
         ]
         deploy(service, deployment)
@@ -267,39 +344,39 @@ class Discover extends KubeHelper {
         secretName = secretName.replaceAll('_', '-')
         createSecret(secretName, 'registry.hub.docker.com', 'ecplugintest', 'qweqweqwe')
         def deployment = [
-          kind: 'Deployment',
-          metadata: [
-            name: serviceName,
-          ],
-          spec: [
-            replicas: 1,
-            template: [
-              spec: [
-                containers: [
-                  [name: 'hello', image: 'registry.hub.docker.com/imagostorm/hello-world:1.0', ports: [
-                    [containerPort: 80]
-                  ]]
-                ],
-                imagePullSecrets: [
-                    [name: secretName]
+            kind    : 'Deployment',
+            metadata: [
+                name: serviceName,
+            ],
+            spec    : [
+                replicas: 1,
+                template: [
+                    spec    : [
+                        containers      : [
+                            [name: 'hello', image: 'registry.hub.docker.com/imagostorm/hello-world:1.0', ports: [
+                                [containerPort: 80]
+                            ]]
+                        ],
+                        imagePullSecrets: [
+                            [name: secretName]
+                        ]
+                    ],
+                    metadata: [
+                        labels: [
+                            app: 'nginx_test_spec'
+                        ]
+                    ]
                 ]
-              ],
-              metadata: [
-                labels: [
-                  app: 'nginx_test_spec'
-                ]
-              ]
             ]
-          ]
         ]
 
         def service = [
-            kind: 'Service',
+            kind      : 'Service',
             apiVersion: 'v1',
-            metadata: [name: serviceName],
-            spec: [
+            metadata  : [name: serviceName],
+            spec      : [
                 selector: [app: 'nginx_test_spec'],
-                ports: [[protocol: 'TCP', port: 80, targetPort: 80] ]
+                ports   : [[protocol: 'TCP', port: 80, targetPort: 80]]
             ]
         ]
         deploy(service, deployment)
@@ -308,65 +385,110 @@ class Discover extends KubeHelper {
 
     def deployLiveness(serviceName) {
         def container = [
-            args: ['/server'],
-            image: 'k8s.gcr.io/liveness',
-            livenessProbe: [
-                httpGet: [
-                    path: '/healthz',
-                    port: 8080,
+            args          : ['/server'],
+            image         : 'k8s.gcr.io/liveness',
+            livenessProbe : [
+                httpGet            : [
+                    path       : '/healthz',
+                    port       : 8080,
                     httpHeaders: [
                         [name: 'X-Custom-Header', value: 'Awesome']
                     ]
                 ],
                 initialDelaySeconds: 15,
-                timeoutSeconds: 1
+                timeoutSeconds     : 1
             ],
             readinessProbe: [
-                exec: [
+                exec               : [
                     command: [
                         'cat',
                         '/tmp/healthy'
                     ]
                 ],
                 initialDelaySeconds: 5,
-                periodSeconds: 5,
+                periodSeconds      : 5,
             ],
-            name: 'liveness-readiness'
+            name          : 'liveness-readiness'
         ]
         def deployment = [
-          kind: 'Deployment',
-          metadata: [
-            name: serviceName,
-          ],
-          spec: [
-            replicas: 1,
-            template: [
-              spec: [
-                containers: [
-                    container
-                ],
-              ],
-              metadata: [
-                labels: [
-                  app: 'liveness-probe'
+            kind    : 'Deployment',
+            metadata: [
+                name: serviceName,
+            ],
+            spec    : [
+                replicas: 1,
+                template: [
+                    spec    : [
+                        containers: [
+                            container
+                        ],
+                    ],
+                    metadata: [
+                        labels: [
+                            app: 'liveness-probe'
+                        ]
+                    ]
                 ]
-              ]
             ]
-          ]
         ]
 
         def service = [
-            kind: 'Service',
+            kind      : 'Service',
             apiVersion: 'v1',
-            metadata: [name: serviceName],
-            spec: [
+            metadata  : [name: serviceName],
+            spec      : [
                 selector: [app: 'liveness-probe'],
-                ports: [[protocol: 'TCP', port: 80, targetPort: 8080] ]
+                ports   : [[protocol: 'TCP', port: 80, targetPort: 8080]]
             ]
         ]
 
         deploy(service, deployment)
 
+    }
+
+
+    def deployTwoContainers(serviceName) {
+        def deployment = [
+            kind    : 'Deployment',
+            metadata: [
+                name: serviceName,
+            ],
+            spec    : [
+                replicas: 2,
+                template: [
+                    spec    : [
+                        containers: [
+                            [name: 'hello', image: 'imagostorm/hello-world:1.0', ports: [
+                                [containerPort: 8080, name: 'first']
+                            ]],
+                            [name: 'hello-2', 'image': 'imagostorm/hello-world:2.0', ports: [
+                                [containerPort: 8080, name: 'second']
+                            ]]
+                        ]
+                    ],
+                    metadata: [
+                        labels: [
+                            app: 'hello-app'
+                        ]
+                    ]
+                ]
+            ]
+        ]
+        def service = [
+            kind      : 'Service',
+            apiVersion: 'v1',
+            metadata  : [name: serviceName],
+            spec      : [
+                type    : 'LoadBalancer',
+                selector: [app: 'hello-app'],
+                ports   : [
+                    [protocol: 'TCP', port: 80, targetPort: 'first', name: 'first'],
+                    [protocol: 'TCP', port: 81, targetPort: 'second', name: 'second']
+                ]
+            ]
+        ]
+
+        deploy(service, deployment)
     }
 
     def getParameterDetail(struct, name) {

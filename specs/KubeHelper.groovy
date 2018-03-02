@@ -41,9 +41,9 @@ class KubeHelper extends ContainerHelper {
         assert endpoint
         def pluginConfig = [
             kubernetesVersion: '1.7',
-            clusterEndpoint: endpoint,
-            testConnection: 'false',
-            logLevel: '2'
+            clusterEndpoint  : endpoint,
+            testConnection   : 'false',
+            logLevel         : '2'
         ]
         def props = [:]
         if (System.getenv('RECREATE_CONFIG')) {
@@ -60,7 +60,7 @@ class KubeHelper extends ContainerHelper {
     }
 
     def cleanupCluster(configName) {
-      assert configName
+        assert configName
         def procName = 'Cleanup Cluster - Experimental'
         def result = dsl """
             runProcedure(
@@ -77,7 +77,7 @@ class KubeHelper extends ContainerHelper {
         def time = 0
         def timeout = 300
         def delay = 50
-        while(jobStatus(result.jobId).status != 'completed' && time < timeout) {
+        while (jobStatus(result.jobId).status != 'completed' && time < timeout) {
             sleep(delay * 1000)
             time += delay
         }
@@ -92,21 +92,21 @@ class KubeHelper extends ContainerHelper {
     }
 
     static def cleanupService(name) {
-      try {
-        deleteDeployment(name)
-        deleteService(name)
-      } catch (Throwable e) {
-        logger.debug(e.getMessage())
-      }
+        try {
+            deleteDeployment(name)
+            deleteService(name)
+        } catch (Throwable e) {
+            logger.debug(e.getMessage())
+        }
     }
 
     static def createDeployment(endpoint, token, payload) {
         def namespace = 'default'
         def uri = "/apis/extensions/v1beta1/namespaces/${namespace}/deployments"
         request(getEndpoint(),
-          uri, POST, null,
-          ["Authorization": "Bearer ${getToken()}"],
-          new JsonBuilder(payload).toString()
+            uri, POST, null,
+            ["Authorization": "Bearer ${getToken()}"],
+            new JsonBuilder(payload).toString()
         )
     }
 
@@ -118,107 +118,152 @@ class KubeHelper extends ContainerHelper {
 
 
     static def getService(name) {
-      def uri = "/api/v1/namespaces/default/services/${name}"
-      request(
-        getEndpoint(), uri, GET,
-        null, ["Authorization": "Bearer ${getToken()}"], null).data
+        def uri = "/api/v1/namespaces/default/services/${name}"
+        request(
+            getEndpoint(), uri, GET,
+            null, ["Authorization": "Bearer ${getToken()}"], null).data
     }
 
     static def getDeployment(name) {
-      def uri = "/apis/apps/v1beta1/namespaces/default/deployments/${name}"
-      request(
-        getEndpoint(), uri, GET,
-        null, ["Authorization": "Bearer ${getToken()}"], null).data
+        def uri = "/apis/apps/v1beta1/namespaces/default/deployments/${name}"
+        request(
+            getEndpoint(), uri, GET,
+            null, ["Authorization": "Bearer ${getToken()}"], null).data
     }
 
     static def createSecret(name, url, username, password) {
-        def encodedCreds = (username+":"+password).bytes.encodeBase64().toString()
+        def encodedCreds = (username + ":" + password).bytes.encodeBase64().toString()
 
 
-        def dockerCfgData = ["${url}": [ username: username,
-                                            password: password,
-                                            email: "none",
-                                            auth: encodedCreds]
-                        ]
+        def dockerCfgData = ["${url}": [username: username,
+                                        password: password,
+                                        email   : "none",
+                                        auth    : encodedCreds]
+        ]
         def dockerCfgJson = new JsonBuilder(dockerCfgData)
         def dockerCfgEnoded = dockerCfgJson.toString().bytes.encodeBase64().toString()
-        def secret = [ apiVersion: "v1",
-                       kind: "Secret",
-                       metadata: [name: name],
-                       data: [".dockercfg": dockerCfgEnoded],
-                       type: "kubernetes.io/dockercfg"]
+        def secret = [apiVersion: "v1",
+                      kind      : "Secret",
+                      metadata  : [name: name],
+                      data      : [".dockercfg": dockerCfgEnoded],
+                      type      : "kubernetes.io/dockercfg"]
 
-      def uri = "/api/v1/namespaces/default/secrets"
-      request(getEndpoint(),
-        uri, POST, null,
-        ["Authorization": "Bearer ${getToken()}"],
-        new JsonBuilder(secret).toString()
-      )
+        def uri = "/api/v1/namespaces/default/secrets"
+        request(getEndpoint(),
+            uri, POST, null,
+            ["Authorization": "Bearer ${getToken()}"],
+            new JsonBuilder(secret).toString()
+        )
     }
 
     static def deleteSecret(name) {
-      def uri = "/api/v1/namespaces/default/secrets/$name"
-      request(getEndpoint(),
-        uri,
-        DELETE,
-        null,
-        ["Authorization": "Bearer ${getToken()}"],
-        null
-      )
+        def uri = "/api/v1/namespaces/default/secrets/$name"
+        request(getEndpoint(),
+            uri,
+            DELETE,
+            null,
+            ["Authorization": "Bearer ${getToken()}"],
+            null
+        )
     }
 
     static def request(requestUrl, requestUri, method, queryArgs, requestHeaders, requestBody) {
-      def http = new RESTClient(requestUrl)
-      http.ignoreSSLIssues()
-      logger.debug(requestBody)
+        def http = new RESTClient(requestUrl)
+        http.ignoreSSLIssues()
+        logger.debug(requestBody)
 
-      http.request(method, JSON) {
-          if (requestUri) {
-              uri.path = requestUri
-          }
-          logger.debug( uri.path )
-          logger.debug(method.toString())
-          if (queryArgs) {
-              uri.query = queryArgs
-          }
-          headers = requestHeaders
-          body = requestBody
+        http.request(method, JSON) {
+            if (requestUri) {
+                uri.path = requestUri
+            }
+            logger.debug(uri.path)
+            logger.debug(method.toString())
+            if (queryArgs) {
+                uri.query = queryArgs
+            }
+            headers = requestHeaders
+            body = requestBody
 
-          response.success = { resp, json ->
-              [statusLine: resp.statusLine,
-               status: resp.status,
-               data  : json]
-          }
+            response.success = { resp, json ->
+                [statusLine: resp.statusLine,
+                 status    : resp.status,
+                 data      : json]
+            }
 
-          response.failure = { resp, reader ->
-            println resp
-            println reader
-            throw new RuntimeException("Request failed")
-          }
+            response.failure = { resp, reader ->
+                println resp
+                println reader
+                throw new RuntimeException("Request failed")
+            }
 
-      }
+        }
     }
 
     static def deleteService(serviceName) {
-      def uri = "/api/v1/namespaces/default/services/$serviceName"
-      request(getEndpoint(), uri, DELETE, null, ["Authorization": "Bearer ${getToken()}"], null)
+        def uri = "/api/v1/namespaces/default/services/$serviceName"
+        request(getEndpoint(), uri, DELETE, null, ["Authorization": "Bearer ${getToken()}"], null)
     }
 
     static def deleteDeployment(serviceName) {
-      def namespace = 'default'
-      def uri = "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/$serviceName"
-      request(getEndpoint(), uri, DELETE, null, ["Authorization": "Bearer ${getToken()}"], null)
+        def namespace = 'default'
+        def headers = ["Authorization": "Bearer ${getToken()}"]
+        def uri = "/apis/extensions/v1beta1/namespaces/${namespace}/deployments/$serviceName"
+        request(getEndpoint(), uri, DELETE, null,  headers, null)
+
+//        RS
+
+
+        def res = request(getEndpoint(),
+            "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets",
+            GET, null, headers, null)
+
+        res.data.items.each {rs ->
+            def matcher = rs.metadata.name =~ /(.*)-([^-]+)$/
+            try {
+                def rsName = matcher[0][1]
+                if (rsName == serviceName) {
+                    logger.debug("Deleting RS $rsName")
+                    request(getEndpoint(), "/apis/extensions/v1beta1/namespaces/${namespace}/replicasets/${rs.metadata.name}", DELETE, null, headers, null)
+                }
+            } catch (IndexOutOfBoundsException e) {
+
+            }
+        }
+
+
+
+        res = request(getEndpoint(), 
+            "/api/v1/namespaces/${namespace}/pods",
+            GET,
+            null, headers, null)
+
+        res.data.items.each { pod ->
+            def matcher = pod.metadata.name =~ /(.*)-([^-]+)-([^-]+)$/
+            try {
+                def podName = matcher[0][1]
+                if (podName == serviceName) {
+                    request(getEndpoint(),
+                        "/api/v1/namespaces/${namespace}/pods/${pod.metadata.name}",
+                        DELETE, null, headers, null
+                    )
+                }
+            } catch (IndexOutOfBoundsException e) {
+
+            }
+        }
+
+
     }
 
     static def getToken() {
-      def token =  System.getenv('KUBE_TOKEN')
-      assert token
-      token
+        def token = System.getenv('KUBE_TOKEN')
+        assert token
+        token
     }
 
     static def getEndpoint() {
-      def endpoint = System.getenv('KUBE_ENDPOINT')
-      assert endpoint
-      endpoint
+        def endpoint = System.getenv('KUBE_ENDPOINT')
+        assert endpoint
+        endpoint
     }
 }

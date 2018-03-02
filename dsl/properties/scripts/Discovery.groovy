@@ -213,10 +213,20 @@ public class Discovery extends EFClient {
         existingMap
     }
 
+    def isBoundPort(containerPort, servicePort) {
+        if (containerPort.portName == servicePort.portName) {
+            return true
+        }
+        if (servicePort.targetPort =~ /^\d+$/ && servicePort.targetPort == containerPort.containerPort) {
+            return true
+        }
+        return false
+    }
+
     def mapContainerPorts(projectName, serviceName, container, service) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
-                if (containerPort.portName == servicePort.portName || servicePort.targetPort == containerPort.name) {
+                if (isBoundPort(containerPort, servicePort)) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
                         portName: generatedPortName,
@@ -254,6 +264,7 @@ public class Discovery extends EFClient {
             logger INFO, pretty(container.container)
             result = createContainer(projectName, serviceName, container.container)
             logger INFO, "Container ${serviceName}/${containerName} has been created"
+            discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
             discoveredSummary[serviceName][containerName] = [:]
         }
 
@@ -385,7 +396,7 @@ public class Discovery extends EFClient {
             else {
                 name = "${port.protocol}${port.port}"
             }
-            [portName: name.toLowerCase(), listenerPort: port.port]
+            [portName: name.toLowerCase(), listenerPort: port.port, targetPort: port.targetPort]
         }
 
         // Containers
