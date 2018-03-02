@@ -1,3 +1,4 @@
+import groovy.json.JsonSlurper
 import spock.lang.*
 import com.electriccloud.spec.*
 
@@ -77,6 +78,16 @@ class Discover extends KubeHelper {
         assert env.size() == 1
         assert env[0].value == 'TEST'
         assert env[0].environmentVariableName == 'TEST_ENV'
+
+        def volumesJson = service.service.volumes
+        def volumes = new JsonSlurper().parseText(volumesJson)
+        assert volumes[0].name == 'my-volume'
+        assert volumes[0].hostPath
+
+        def volumeMountsJson = service.service.container[0].volumeMounts
+        def volumeMounts = new JsonSlurper().parseText(volumeMountsJson)
+        assert volumeMounts[0].name == 'my-volume'
+        assert volumeMounts[0].mountPath
     }
 
     def "Liveness/readiness probe"() {
@@ -192,6 +203,7 @@ class Discover extends KubeHelper {
         cleanupService(serviceName)
 
     }
+
     def "Two containers"() {
         given:
         def serviceName = 'two-containers-kube-discover-spec'
@@ -299,11 +311,18 @@ class Discover extends KubeHelper {
                                 ports: [[containerPort: 80]],
                                 env: [
                                     [name: "TEST_ENV", "value": "TEST"]
+                                ],
+                                volumeMounts: [
+                                    [name: 'my-volume', mountPath: '/tmp/path_in_container']
                                 ]
                             ]
                         ],
+                        volumes: [
+                            [hostPath: [path: '/tmp/path'], name: 'my-volume']
+                        ]
                     ],
-                    metadata: [labels: [app: 'nginx_test_spec']]
+                    metadata: [labels: [app: 'nginx_test_spec']],
+
                 ]
             ]
         ]
