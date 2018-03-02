@@ -21,7 +21,6 @@
         <label>Kubernetes YAML file</label>
         <property>kubeYAMLFile</property>
         <required>1</required>
-        <fileUploadRequired>1</fileUploadRequired>
         <documentation>Kubernetes YAML file containing related services and deployments definitions.</documentation>
     </formElement>
         <formElement>
@@ -43,13 +42,13 @@
         <label>Environment Name:</label>
         <property>envName</property>
         <required>1</required>
-        <documentation>The name of the environment containing the Kubernetes-backed cluster whose deployed services are to be discovered.</documentation>
+        <documentation>The name of the ElectricFlow environment containing the Kubernetes-based cluster where the newly created microservice(s) will be deployed.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>1</required>
-        <documentation>The name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered.</documentation>
+        <documentation>The name of the ElectricFlow cluster representing a Kubernetes cluster where the newly created microservice(s) will be deployed.</documentation>
     </formElement>
 </editor>

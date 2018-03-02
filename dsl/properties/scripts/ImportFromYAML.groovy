@@ -9,8 +9,8 @@ public class ImportFromYAML extends ServiceFactory {
 	def importFromYAML(namespace, fileYAML){
 
 		def efServices = []
-		String fileContents = fileYAML
-		def configList = fileContents.split(DELIMITER)
+//		String fileContents = fileYAML
+		def configList = fileYAML.split(DELIMITER)
 		def parsedConfigList = []
 
 		configList.each { config ->
@@ -22,7 +22,7 @@ public class ImportFromYAML extends ServiceFactory {
 			services = getParsedServices(parsedConfigList)
 		}
 		catch(Exception e) {
-			println "None of the service was found"
+			println "Failed to find any services in the YAML file. Cause: ${e.message}"
 			System.exit(-1)
 		}
 
@@ -31,7 +31,7 @@ public class ImportFromYAML extends ServiceFactory {
 			deployments = getParsedDeployments(parsedConfigList)
 		}
 		catch(Exception e) {
-			println "None of the deployment was found"
+			println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
 			System.exit(-1)
 		}
 

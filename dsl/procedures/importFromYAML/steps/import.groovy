@@ -19,7 +19,7 @@ def cluster = clusters.find {
     it.clusterName == clusterName
 }
 if (!cluster) {
-    println "Cluster ${clusterName} does not exist in the environment ${environmentName}"
+    println "ElectricFlow cluster '${clusterName}' in environment '${envName}' is not backed by a Kubernetes-based cluster"
     System.exit(-1)
 }
 if (cluster.pluginKey != 'EC-Kubernetes') {
