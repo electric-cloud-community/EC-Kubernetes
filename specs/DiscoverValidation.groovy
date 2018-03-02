@@ -1,6 +1,8 @@
 import spock.lang.*
 import com.electriccloud.spec.*
 
+@Ignore
+// EF Image lacks EC-Docker installed
 class DiscoverValidation extends KubeHelper {
     static def projectName = 'EC-Kubernetes Validate Spec'
 
