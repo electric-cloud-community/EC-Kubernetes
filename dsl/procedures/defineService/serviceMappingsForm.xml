@@ -98,7 +98,6 @@
         <required>0</required>
         <documentation>Name for the deployment in Kubernetes. If no value is specified here, then the name of the Kubernetes service being created or updated will be used to name the deployment in Kubernetes.</documentation>
     </formElement>
-
     <formElement>
         <label>Perform Canary Deployment:</label>
         <property>canaryDeployment</property>

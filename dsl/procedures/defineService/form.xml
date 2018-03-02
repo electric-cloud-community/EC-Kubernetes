@@ -91,56 +91,6 @@
         <documentation>Minimum percentage of microservice instances that must be running during the execution of the rolling deployment strategy. One and only one of minAvailabilityCount or minAvailabilityPercentage must be set.</documentation>
         <value></value>
     </formElement>
-
-    <formElement>
-        <type>entry</type>
-        <label>Maximum Running Instances:</label>
-        <required>0</required>
-        <property>maxRunningCount</property>
-        <documentation>Maximum number of microservice instances that can be running during the execution of the rolling deployment strategy. This value can be set higher than the desired number of intances expected to be running in steady state. One and only one of maxRunningCount or maxRunningPercentage must be set.</documentation>
-        <value></value>
-    </formElement>
-
-    <formElement>
-        <type>entry</type>
-        <label>Maximum Running Percentage:</label>
-        <required>0</required>
-        <property>maxRunningPercentage</property>
-        <documentation>Maximum percentage of microservice instances that can be running during the execution of the rolling deployment strategy. If set higher than 100%, then the number of running instances during deployment can exceed the desired number of intances expected to be running in steady state. One and only one of maxRunningCount or maxRunningPercentage must be set. </documentation>
-        <value></value>
-    </formElement>
-
-    <formElement>
-        <type>select</type>
-        <option>
-            <name>Rolling Deployment</name>
-            <value>rollingDeployment</value>
-        </option>
-        <option>
-            <value>blueGreenDeployment</value>
-            <name>Blue/Green Deployment</name>
-        </option>
-        <label>Deployment Strategy:</label>
-        <required>0</required>
-        <property>deploymentStrategy</property>
-        <documentation>Deployment strategy to use for deploying the microservice to the cluster.</documentation>
-    </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>Minimum Available Instances:</label>
-        <required>0</required>
-        <property>minAvailabilityCount</property>
-        <documentation>Minimum number of microservice instances that must be running during the execution of the rolling deployment strategy. One and only one of minAvailabilityCount or minAvailabilityPercentage must be set.</documentation>
-        <value></value>
-    </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>Minimum Available Percentage:</label>
-        <required>0</required>
-        <property>minAvailabilityPercentage</property>
-        <documentation>Minimum percentage of microservice instances that must be running during the execution of the rolling deployment strategy. One and only one of minAvailabilityCount or minAvailabilityPercentage must be set.</documentation>
-        <value></value>
-    </formElement>
     <formElement>
         <type>entry</type>
         <label>Maximum Running Instances:</label>
