@@ -129,18 +129,32 @@ public class KubernetesClient extends BaseClient {
     }
 
     def deleteExtraBlueGreenDeployment(Map serviceDetails) {
+        if (!isBlueGreenDeployment(serviceDetails)) {
+            return
+        }
         def teardown = getServiceParameter(serviceDetails, 'teardownOlderDeployment', '').toBoolean()
         if (!teardown) {
-            logger INFO, "The old deployment wil NOT be torn down"
+            logger INFO, "The old deployment will NOT be torn down"
             return
         }
-        def deployments = findBlueGreenDeployments(serviceDetails)
-        def deploymentToUpdate = getDeploymentForBlueGreenUpdate(serviceDetails)
+        else {
+            logger INFO, "The old deployment will be torn down"
+        }
+        String serviceName = getServiceNameToUseForDeployment(serviceDetails)
+        String selectorLabel = getSelectorLabelForDeployment(serviceDetails, serviceName, isCanaryDeployment(serviceDetails))
+        def deployments = getDeployments(this.clusterEndpoint, this.namespace,
+            this.accessToken, [labelSelector: "ec-svc=${selectorLabel},ec-track=stable"]
+        )
+        def flag = getBlueGreenFlag(serviceDetails)
         if (deployments.items.size() != 2) {
+            logger WARNING, "Unexpected number of deployment found: ${deployments.items.size()}, please refine them manually"
+            deployments.items.each { deploy ->
+                logger WARNING, "Deployment name: ${deploy.metadata.name}"
+            }
             return
         }
-        def oldDeployment = deployments.items.find {
-            it.metadata.name != deploymentToUpdate.metadata.name
+        def oldDeployment = deployments.items.find { deploy ->
+            deploy.metadata.labels[BLUE_GREEN_FLAG] != flag
         }
         if (oldDeployment) {
             String deploymentName = oldDeployment.metadata.name
@@ -155,6 +169,7 @@ public class KubernetesClient extends BaseClient {
                 serviceDetails, this.accessToken, deploymentName
             )
         }
+
     }
 
 
@@ -1160,7 +1175,8 @@ public class KubernetesClient extends BaseClient {
         else {
             def deployments = findBlueGreenDeployments(args)
             if (deployments.items.size() == 1) {
-                return 'green'
+                def flag = deployments.items[0].metadata.labels[BLUE_GREEN_FLAG]
+                return flag == 'blue' ? 'green' : 'blue'
             }
             else if (deployments.items.size() == 0) {
                 return 'blue'
@@ -1383,7 +1399,7 @@ public class KubernetesClient extends BaseClient {
             def service = getService(this.clusterEndpoint, this.namespace, serviceName, this.accessToken)
             def flag = getBlueGreenFlag(args)
             if (!service) {
-                json[BLUE_GREEN_FLAG] = flag
+                json."${BLUE_GREEN_FLAG}" flag
             }
         }
     }
