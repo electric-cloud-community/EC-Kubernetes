@@ -13,10 +13,6 @@ def NAMESPACE = "default"
 
 EFClient efClient = new EFClient()
 
-println envProjectName
-println environmentName
-println clusterName
-
 def clusters = efClient.getClusters(envProjectName, environmentName)
 def cluster = clusters.find {
     it.clusterName == clusterName
