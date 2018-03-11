@@ -10,18 +10,19 @@ public class ImportFromYAML extends EFClient {
 	def importFromYAML(namespace, fileYAML){
 
 		def efServices = []
-//		String fileContents = fileYAML
 		def configList = fileYAML.split(DELIMITER)
 		def parsedConfigList = []
 
 		configList.each { config ->
 			def parsedConfig = parser.load(config)
 			parsedConfigList.push(parsedConfig)
+
 		}
 
 		def services
 		try {
 			services = getParsedServices(parsedConfigList)
+
 		}
 		catch(Exception e) {
 			println "Failed to find any services in the YAML file. Cause: ${e.message}"
@@ -33,6 +34,10 @@ public class ImportFromYAML extends EFClient {
 			deployments = getParsedDeployments(parsedConfigList)
 		}
 		catch(Exception e) {
+			println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
+			System.exit(-1)
+		}
+		if (deployments.size() < 1){
 			println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
 			System.exit(-1)
 		}
@@ -49,8 +54,9 @@ public class ImportFromYAML extends EFClient {
                     		allQueryDeployments.push(deployment)
                     	}
                     }
+
                 }
-                allQueryDeployments.each { deploy ->
+                allQueryDeployments.eachWithIndex { deploy, indexDeploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
                     efServices.push(efService)
                 }
@@ -60,6 +66,39 @@ public class ImportFromYAML extends EFClient {
 		efServices
 	}
 	
+	def flattenMap(keyPrefix, input, LinkedHashMap flatten ) {
+        input.each { k, v ->
+            def key = "${keyPrefix}/${k}".trim()
+            if (v instanceof LinkedHashMap) {
+                flattenMap(key, v, flatten)
+            }
+            else if (v instanceof ArrayList){
+            	flatten = flattenArrayList(key, v, flatten)
+            }
+            else {
+                flatten[key] = v
+            }
+        }
+
+        flatten
+    }
+
+    def flattenArrayList(keyPrefix, value, flatten ){
+    	value.eachWithIndex{ v, i ->
+    		def key = "${keyPrefix}[${i}]".trim()
+            if (v instanceof LinkedHashMap) {
+                flattenMap(key, v, flatten)
+            }
+            else if (v instanceof ArrayList){
+            	flattenArrayList(key, v, flatten)
+            }
+        	else{
+        		flatten[key] = v
+        	}
+    	}
+    	flatten
+    }
+
 	def getParsedServices(parsedConfigList){
 		def services = []
 		parsedConfigList.each { config ->
@@ -368,9 +407,26 @@ public class ImportFromYAML extends EFClient {
         retval
     }
 
-    def buildServiceDefinition(kubeService, deployment, namespace) {
+    def buildServiceDefinition(kubeService, deployment, namespace){
+
+    	def logService = []
+    	def logDeployment = []
         def serviceName = kubeService.metadata.name
         def deployName = deployment.metadata.name
+
+        logService.push("/kind".trim())
+        logService.push("/apiVersion".trim())
+        logService.push("/metadata/name".trim())
+        kubeService.spec.selector.each{key, value->
+        	logService.push("/spec/selector/${key}".trim())
+        }
+
+        logDeployment.push("/apiVersion".trim())
+        logDeployment.push("/kind".trim())
+        logDeployment.push("/metadata/name".trim())
+        deployment.metadata.labels.each{key, value ->
+        	logDeployment.push("/metadata/labels/${key}".trim())
+        }
 
         def efServiceName
         if (serviceName =~ /(?i)${deployName}/) {
@@ -386,28 +442,17 @@ public class ImportFromYAML extends EFClient {
             serviceMapping: [:]
         ]
 
-//         kind: Service
-// apiVersion: v1
-// metadata:
-//   name: <service_name>
-// spec:
-//   selector:
-//     <name-value-pairs to identify deployment pods>
-//   ports:
-//   - protocol: TCP
-//     port: <port>
-//     targetPort: <target_port>
-//   type:<LoadBalance|ClusterIP|NodePort>
-//   loadBalancerIP:<LB_IP>
-//   loadBalancerSourceRanges:<ranges>
-//   sessionAffinity:<value>
-
         // Service Fields
         def defaultCapacity = deployment.spec?.replicas ?: 1
+        logDeployment.push("/spec/replicas")
         efService.service.defaultCapacity = defaultCapacity
+
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
+            
+			logDeployment.push("/spec/strategy/rollingUpdate/maxSurge")
             if (rollingUpdate.maxSurge =~ /%/) {
+
                 efService.serviceMapping.with {
                     deploymentStrategy = 'rollingDeployment'
                     maxRunningPercentage = getMaxRunningPercentage(rollingUpdate.maxSurge)
@@ -417,6 +462,7 @@ public class ImportFromYAML extends EFClient {
                 efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
             }
 
+			logDeployment.push("/spec/strategy/rollingUpdate/maxUnavailable")
             if (rollingUpdate.maxUnavailable =~ /%/) {
                 efService.serviceMapping.with {
                     minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
@@ -428,15 +474,21 @@ public class ImportFromYAML extends EFClient {
             }
 
         }
+        logService.push("/spec/clusterIP")
+        logService.push("/spec/type")
+        logService.push("/spec/sessionAffinity")
+        logService.push("/spec/loadBalancerSourceRanges")
         efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
         efService.serviceMapping.serviceType = kubeService.spec?.type
         efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
         def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')
+
         efService.serviceMapping.loadBalancerSourceRanges = sourceRanges
         if (namespace != 'default') {
             efService.serviceMapping.namespace = namespace
         }
         // Ports
+        def portInd = 0
         efService.ports = kubeService.spec?.ports?.collect { port ->
             def name
             if (port.targetPort) {
@@ -445,16 +497,49 @@ public class ImportFromYAML extends EFClient {
             else {
                 name = "${port.protocol}${port.port}"
             }
+            logService.push("/spec/ports[${portInd}]/protocol")
+            logService.push("/spec/ports[${portInd}]/port")
+            logService.push("/spec/ports[${portInd}]/targetPort")	
+            portInd += 1
             [portName: name.toLowerCase(), listenerPort: port.port, targetPort: port.targetPort]
         }
 
         // Containers
         def containers = deployment.spec.template.spec.containers
+        containers.eachWithIndex{ kubeContainer, index ->
+    		logDeployment.push("/spec/template/spec/containers[${index}]/name")
+    		logDeployment.push("/spec/template/spec/containers[${index}]/image")
+    		kubeContainer?.command.eachWithIndex{ singleCommand, ind ->
+    			logDeployment.push("/spec/template/spec/containers[${index}]/command[${ind}]")
+    		}
+    		kubeContainer?.args.eachWithIndex{ arg, ind ->
+    			logDeployment.push("/spec/template/spec/containers[${index}]/args[${ind}]")
+    		}
+    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/memory")
+    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/cpu")
+    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/memory")
+    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/cpu")
+    		kubeContainer?.ports.eachWithIndex{ port, ind ->
+    			logDeployment.push("/spec/template/spec/containers[${index}]/ports[${ind}]/containerPort")
+    		}
+    		kubeContainer?.volumeMounts.eachWithIndex{ volume, ind ->
+    			logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/name")
+    			logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/mountPath")
+    		}
+    		kubeContainer?.env.eachWithIndex{ singleEnv, ind ->
+    			logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/name")
+    			logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/value")
+
+        	}
+
+        }
         efService.containers = containers.collect { kubeContainer ->
-            def container = buildContainerDefinition(kubeContainer)
+            def container = buildContainerDefinition(kubeContainer)//, logDeployment)
             container
         }
 
+
+        //Logging volumes in several lines above
         // Volumes
         if (deployment.spec.template.spec.volumes) {
             def volumes = deployment.spec.template.spec.volumes.collect { volume ->
@@ -467,8 +552,35 @@ public class ImportFromYAML extends EFClient {
             efService.service.volume = new JsonBuilder(volumes).toString()
         }
 
+		def flatService = flattenMap('', kubeService, [:])
+		def flatDeployment = flattenMap('', deployment, [:])
+
+		flatService.each{ key, value ->
+			if (!listContains(logService, key)){
+				logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
+				// println ("Ignored items ${key} = ${value} !")
+			}
+
+		}
+		flatDeployment.each{ key, value ->
+			if (!listContains(logDeployment, key)){
+				// println ("Ignored items ${key} = ${value} !")
+				logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
+			}
+		}
+ 
         efService
     }
+
+	def listContains (list, key){
+		def bool = false
+		list.each{item->
+			if (item.compareTo(key) == 0){
+				bool = true
+			}
+		}
+		bool
+	}
 
     def updateEFService(efService, kubeService) {
         def payload = kubeService.service
@@ -577,7 +689,7 @@ public class ImportFromYAML extends EFClient {
         parseImage(image).registry
     }
 
-    def buildContainerDefinition(kubeContainer) {
+    def buildContainerDefinition(kubeContainer){//, logDeployment, index) {
         def container = [
             container: [
                 containerName: kubeContainer.name,
@@ -586,7 +698,7 @@ public class ImportFromYAML extends EFClient {
                 registryUri: getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
-
+        
         container.env = kubeContainer.env?.collect {
             [environmentVariableName: it.name, value: it.value]
         }
