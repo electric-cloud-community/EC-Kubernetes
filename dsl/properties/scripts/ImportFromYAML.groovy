@@ -65,7 +65,7 @@ public class ImportFromYAML extends EFClient {
 
 		efServices
 	}
-	
+
 	def flattenMap(keyPrefix, input, LinkedHashMap flatten ) {
         input.each { k, v ->
             def key = "${keyPrefix}/${k}".trim()
@@ -122,7 +122,7 @@ public class ImportFromYAML extends EFClient {
 	def getDeploymentsBySelector(deployments, key, value){
 		def queryDeployments = []
 		def i = 0
-		deployments.each { deployment -> 
+		deployments.each { deployment ->
 			deployment.metadata.labels.each{ k, v ->
 				i = i + 1
 				if ((k == key) && (v == value)){
@@ -449,7 +449,7 @@ public class ImportFromYAML extends EFClient {
 
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
-            
+
 			logDeployment.push("/spec/strategy/rollingUpdate/maxSurge")
             if (rollingUpdate.maxSurge =~ /%/) {
 
@@ -478,7 +478,7 @@ public class ImportFromYAML extends EFClient {
         logService.push("/spec/type")
         logService.push("/spec/sessionAffinity")
         logService.push("/spec/loadBalancerSourceRanges")
-        efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
+        efService.serviceMapping.loadBalancerIP = kubeService.spec?.loadBalancerIP
         efService.serviceMapping.serviceType = kubeService.spec?.type
         efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
         def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')
@@ -499,7 +499,7 @@ public class ImportFromYAML extends EFClient {
             }
             logService.push("/spec/ports[${portInd}]/protocol")
             logService.push("/spec/ports[${portInd}]/port")
-            logService.push("/spec/ports[${portInd}]/targetPort")	
+            logService.push("/spec/ports[${portInd}]/targetPort")
             portInd += 1
             [portName: name.toLowerCase(), listenerPort: port.port, targetPort: port.targetPort]
         }
@@ -568,7 +568,7 @@ public class ImportFromYAML extends EFClient {
 				logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
 			}
 		}
- 
+
         efService
     }
 
@@ -698,7 +698,7 @@ public class ImportFromYAML extends EFClient {
                 registryUri: getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
-        
+
         container.env = kubeContainer.env?.collect {
             [environmentVariableName: it.name, value: it.value]
         }
