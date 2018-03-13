@@ -25,23 +25,23 @@ if(efClient.toBoolean(applicationScoped)) {
     applicationName = null
 }
 
-// If any of the environment parameters are specified then *all* of them must be specified.
-if (!(!envProjectName && !environmentName && !clusterName) && !(envProjectName && environmentName && clusterName)) {
+if (envProjectName && environmentName && clusterName) {
+    def clusters = efClient.getClusters(envProjectName, environmentName)
+    def cluster = clusters.find {
+        it.clusterName == clusterName
+    }
+    if (!cluster) {
+        println "Cluster '${clusterName}' does not exist in '${envName}' environment."
+        System.exit(-1)
+    }
+    if (cluster.pluginKey != 'EC-Kubernetes') {
+        println "Wrong cluster type: ${cluster.pluginKey}"
+        println "ElectricFlow cluster '${clusterName}' in '${envName}' environment is not backed by a Kubernetes-based cluster."
+        System.exit(-1)
+    }
+} else if (envProjectName || environmentName || clusterName) {
+    // If any of the environment parameters are specified then *all* of them must be specified.
     println "Either specify all the parameters required to identify the Kubernetes-backed ElectricFlow cluster (environment project name, environment name, and cluster name) where the newly created microservice(s) will be deployed. Or do not specify any of the cluster related parameters in which case the service mapping to a cluster will not be created for the microservice(s)."
-    System.exit(-1)
-}
-
-
-def clusters = efClient.getClusters(envProjectName, environmentName)
-def cluster = clusters.find {
-    it.clusterName == clusterName
-}
-if (!cluster) {
-    println "ElectricFlow cluster '${clusterName}' in environment '${envName}' is not backed by a Kubernetes-based cluster"
-    System.exit(-1)
-}
-if (cluster.pluginKey != 'EC-Kubernetes') {
-    println "Wrong cluster type: ${cluster.pluginKey}"
     System.exit(-1)
 }
 
