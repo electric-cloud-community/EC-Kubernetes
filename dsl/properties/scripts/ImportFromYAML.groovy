@@ -133,21 +133,26 @@ public class ImportFromYAML extends EFClient {
 		queryDeployments
 	}
 
-	 def saveToEF(services, projectName, envProjectName, envName, clusterName) {
-        def efServices = getServices(projectName)
+	 def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
+         //TODO: Check for and create application if it does not exist
+        def efServices = getServices(projectName, applicationName)
         services.each { service ->
-            createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
+            createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
         }
 
         def lines = ["Discovered services: ${discoveredSummary.size()}"]
         discoveredSummary.each { serviceName, containers ->
             def containerNames = containers.collect { k -> k }
-            lines.add("${serviceName}: ${containerNames.join(', ')}")
+            if (applicationName) {
+                lines.add("${applicationName}: ${serviceName}: ${containerNames.join(', ')}")
+            } else {
+                lines.add("${serviceName}: ${containerNames.join(', ')}")
+            }
         }
         updateJobSummary(lines.join("\n"))
     }
 
-    def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service) {
+    def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, String applicationName = null) {
         def existingService = efServices.find { s ->
             equalNames(s.serviceName, service.service.serviceName)
         }
@@ -160,12 +165,14 @@ public class ImportFromYAML extends EFClient {
         if (existingService) {
             serviceName = existingService.serviceName
             logger WARNING, "Service ${existingService.serviceName} already exists, skipping"
+            return
             // Future
             // result = updateEFService(existingService, service)
             // logger INFO, "Service ${existingService.serviceName} has been updated"
         }
         else {
             serviceName = service.service.serviceName
+            //TODO: add application name
             result = createEFService(projectName, service)
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
@@ -173,8 +180,6 @@ public class ImportFromYAML extends EFClient {
         assert serviceName
 
         // Containers
-        def efContainers = getContainers(projectName, serviceName)
-
         service.secrets?.each { cred ->
             def credName = getCredName(cred)
             createCredential(projectName, credName, cred.userName, cred.password)
@@ -187,15 +192,19 @@ public class ImportFromYAML extends EFClient {
                     container.container.credentialName = getCredName(secret)
                 }
             }
-            createOrUpdateContainer(projectName, serviceName, container, efContainers)
+            //TODO: add application name
+            createOrUpdateContainer(projectName, serviceName, container)
+            //TODO: add application name
             mapContainerPorts(projectName, serviceName, container, service)
         }
 
-        if (service.serviceMapping) {
+        if (service.serviceMapping && envProjectName && envName && clusterName) {
+            //TODO: add application name
             createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service)
         }
 
         // Add deploy process
+        //TODO: add application name
         createDeployProcess(projectName, serviceName)
     }
 
@@ -213,6 +222,10 @@ public class ImportFromYAML extends EFClient {
 
 
     def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
+        assert envProjectName
+        assert envName
+        assert clusterName
+
         def mapping = service.serviceMapping
 
         def envMaps = getEnvMaps(projName, serviceName)
@@ -329,35 +342,19 @@ public class ImportFromYAML extends EFClient {
         }
     }
 
-    def createOrUpdateContainer(projectName, serviceName, container, efContainers) {
-        def existingContainer = efContainers.find {
-            equalNames(it.containerName, container.container.containerName)
-        }
-        def containerName
-        def result
+    def createOrUpdateContainer(projectName, serviceName, container) {
         logger DEBUG, "Container payload:"
         logger DEBUG, new JsonBuilder(container).toPrettyString()
-        if (existingContainer) {
-            containerName = existingContainer.containerName
-            logger WARNING, "Container ${containerName} already exists, skipping"
-            // // Future
-            // logger INFO, "Going to update container ${serviceName}/${containerName}"
-            // logger INFO, pretty(container.container)
-            // result = updateContainer(projectName, existingContainer.serviceName, containerName, container.container)
-            // logger INFO, "Container ${serviceName}/${containerName} has been updated"
-        }
-        else {
-            containerName = container.container.containerName
-            logger INFO, "Going to create container ${serviceName}/${containerName}"
-            logger INFO, pretty(container.container)
-            result = createContainer(projectName, serviceName, container.container)
-            logger INFO, "Container ${serviceName}/${containerName} has been created"
-            discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
-            discoveredSummary[serviceName][containerName] = [:]
-        }
 
+        def containerName = container.container.containerName
         assert containerName
-        def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
+        logger INFO, "Going to create container ${serviceName}/${containerName}"
+        logger INFO, pretty(container.container)
+        createContainer(projectName, serviceName, container.container)
+        logger INFO, "Container ${serviceName}/${containerName} has been created"
+        discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
+        discoveredSummary[serviceName][containerName] = [:]
+
         container.ports.each { port ->
             createPort(projectName, serviceName, port, containerName)
             logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
