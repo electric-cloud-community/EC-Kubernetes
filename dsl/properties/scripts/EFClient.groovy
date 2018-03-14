@@ -419,10 +419,6 @@ public class EFClient extends BaseClient {
         result?.data
     }
 
-    def getAppEnvMaps(projectName, serviceName) {
-        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projectName}/services/${serviceName}/environmentMaps")
-        result?.data
-    }
     def createEnvMap(projName, serviceName, payload) {
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/services/${serviceName}/environmentMaps", payload, true)
         result?.data
@@ -475,11 +471,39 @@ public class EFClient extends BaseClient {
         result?.data?.credential
     }
 
+    //rest application get
     def getApplications(projName){
         def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/applications")
+        result?.data?.application
+    }
+
+    //rest application post
+    def createApplication(projName, appName){
+        def payload = [
+                applicationName: appName
+        ]
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications", payload, false)
         result?.data
     }
 
+    //rest serviceClusterMapping get
+    def getAppEnvMaps(projName, appName, tierMapName) {
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${tierMapName}/serviceClusterMappings")
+        result?.data?.serviceClusterMapping
+    }
+
+    //rest serviceClusterMapping post
+    def createAppEnvMap(projName, appName, tierMapName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${tierMapName}/serviceClusterMappings", payload, true)
+        result?.data
+    }
+
+    //rest tierMap get
+    def getTierMaps(projName, appName){
+        def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps")
+        result?.data?.tierMap
+    }
+    //rest tierMap post
     def createTierMap(projName, appName, envName, envProjName){
         def tierMapName = "${appName}-${envName}"
         def payload = [
@@ -490,6 +514,7 @@ public class EFClient extends BaseClient {
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps", payload, false)
         result?.data
     }
+
 
 }
 
