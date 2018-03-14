@@ -2,18 +2,18 @@ $[/myProject/scripts/preamble]
 $[/myProject/scripts/ImportFromYAML]
 
 // Input parameters
-def kubeYAMLFile = '''$[kubeYAMLFile]'''
+def kubeYAMLFile = '''$[kubeYAMLFile]'''.trim()
 def projectName = '$[projName]'
 def envProjectName = '$[envProjectName]'
 def environmentName = '$[envName]'
 def clusterName = '$[clusterName]'
 def applicationScoped = '$[application_scoped]'
 def applicationName = '$[application_name]'
-
-// TBD add support not required parameters
 def NAMESPACE = "default"
 
+
 EFClient efClient = new EFClient()
+
 
 if(efClient.toBoolean(applicationScoped)) {
     if (!applicationName) {
@@ -46,5 +46,6 @@ if (envProjectName && environmentName && clusterName) {
 }
 
 def importFromYAML = new ImportFromYAML()
+
 def services = importFromYAML.importFromYAML(NAMESPACE, kubeYAMLFile)
 importFromYAML.saveToEF(services, projectName, envProjectName, environmentName, clusterName, applicationName)

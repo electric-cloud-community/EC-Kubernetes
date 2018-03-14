@@ -135,6 +135,9 @@ public class ImportFromYAML extends EFClient {
 
 	 def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
          //TODO: Check for and create application if it does not exist
+        if (applicationName){
+
+        }
         def efServices = getServices(projectName, applicationName)
         services.each { service ->
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
@@ -172,8 +175,8 @@ public class ImportFromYAML extends EFClient {
         }
         else {
             serviceName = service.service.serviceName
-            //TODO: add application name
-            result = createEFService(projectName, service)
+            //TODO: add application name DONE
+            result = createEFService(projectName, service, applicationName)
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
         }
@@ -182,7 +185,7 @@ public class ImportFromYAML extends EFClient {
         // Containers
         service.secrets?.each { cred ->
             def credName = getCredName(cred)
-            createCredential(projectName, credName, cred.userName, cred.password)
+            createCredential(projectName, credName, cred.userName, cred.passwordf)
             logger INFO, "Credential $credName has been created"
         }
 
@@ -192,44 +195,44 @@ public class ImportFromYAML extends EFClient {
                     container.container.credentialName = getCredName(secret)
                 }
             }
+            //TODO: add application name DONE
+            createOrUpdateContainer(projectName, serviceName, container, applicationName)
             //TODO: add application name
-            createOrUpdateContainer(projectName, serviceName, container)
-            //TODO: add application name
-            mapContainerPorts(projectName, serviceName, container, service)
+            mapContainerPorts(projectName, serviceName, container, service, applicationName)
         }
 
         if (service.serviceMapping && envProjectName && envName && clusterName) {
-            //TODO: add application name
-            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service)
+            //TODO: add application name DONE
+            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
         }
 
         // Add deploy process
-        //TODO: add application name
-        createDeployProcess(projectName, serviceName)
+        //TODO: add application name DONE
+        createDeployProcess(projectName, serviceName, applicationName)
     }
 
-    def createDeployProcess(projectName, serviceName) {
+    def createDeployProcess(projectName, serviceName, applicationName = null) {
         def processName = 'Deploy'
-        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'])
+        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'], applicationName)
         logger INFO, "Process ${processName} has been created for ${serviceName}"
         def processStepName = 'deployService'
         def processStep = createProcessStep(projectName, serviceName, processName, [
             processStepName: processStepName,
-            processStepType: 'service', subservice: serviceName
-        ])
+            processStepType: 'service', subservice: serviceName],
+            applicationName)
         logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
 
 
-    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
-        assert envProjectName
+    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service, applicationName = null) {
+        assert envProjName
         assert envName
         assert clusterName
 
         def mapping = service.serviceMapping
 
         def envMaps = getEnvMaps(projName, serviceName)
-        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName)
+        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName, applicationName)
 
         def envMapName
         if (existingMap) {
@@ -274,7 +277,8 @@ public class ImportFromYAML extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
+            //TODO: add applicationName DONE
+            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload, applicationName)
             logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
             serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
         }
@@ -296,18 +300,27 @@ public class ImportFromYAML extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
+            //TODO: add applicationName DONE
             createServiceMapDetails(
                 projName,
                 serviceName,
                 envMapName,
                 serviceClusterMappingName,
-                payload
+                payload,
+                applicationName
             )
         }
     }
 
-    def getExistingMapping(projectName, serviceName, envProjectName, envName) {
-        def envMaps = getEnvMaps(projectName, serviceName)
+    def getExistingMapping(projectName, serviceName, envProjectName, envName, applicationName = null) {
+        def envMaps
+        if (applicationName){
+            //TODO: create getAppEnvMaps
+        }
+        else{
+            envMaps = getEnvMaps(projectName, serviceName)
+        }
+
         def existingMap = envMaps.environmentMap?.find {
             it.environmentProjectName == envProjectName && it.projectName == projectName && it.serviceName == serviceName && it.environmentName == envName
         }
@@ -324,7 +337,7 @@ public class ImportFromYAML extends EFClient {
         return false
     }
 
-    def mapContainerPorts(projectName, serviceName, container, service) {
+    def mapContainerPorts(projectName, serviceName, container, service, applicationName = null) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
                 if (isBoundPort(containerPort, servicePort)) {
@@ -335,14 +348,15 @@ public class ImportFromYAML extends EFClient {
                         subcontainer: container.container.containerName,
                         subport: containerPort.portName
                     ]
-                    createPort(projectName, serviceName, generatedPort)
+                    //TODO: applicationName
+                    createPort(projectName, serviceName, generatedPort, null, false, applicationName)
                     logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                 }
             }
         }
     }
 
-    def createOrUpdateContainer(projectName, serviceName, container) {
+    def createOrUpdateContainer(projectName, serviceName, container, applicationName = null) {
         logger DEBUG, "Container payload:"
         logger DEBUG, new JsonBuilder(container).toPrettyString()
 
@@ -350,19 +364,23 @@ public class ImportFromYAML extends EFClient {
         assert containerName
         logger INFO, "Going to create container ${serviceName}/${containerName}"
         logger INFO, pretty(container.container)
-        createContainer(projectName, serviceName, container.container)
+
+        //TODO: applicationName
+        createContainer(projectName, serviceName, container.container, applicationName)
         logger INFO, "Container ${serviceName}/${containerName} has been created"
         discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
         discoveredSummary[serviceName][containerName] = [:]
 
         container.ports.each { port ->
-            createPort(projectName, serviceName, port, containerName)
+            //TODO: applicationName
+            createPort(projectName, serviceName, port, containerName, false, applicationName)
             logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
         }
 
         if (container.env) {
             container.env.each { env ->
-                createEnvironmentVariable(projectName, serviceName, containerName, env)
+                //TODO: applicationName
+                createEnvironmentVariable(projectName, serviceName, containerName, env, false, applicationName)
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
@@ -588,10 +606,10 @@ public class ImportFromYAML extends EFClient {
         result
     }
 
-    def createEFService(projectName, service) {
+    def createEFService(projectName, service, appName = null) {
         def payload = service.service
         payload.description = "Created by EF Discovery"
-        def result = createService(projectName, payload)
+        def result = createService(projectName, payload, appName)
         result
     }
 
