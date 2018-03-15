@@ -493,7 +493,7 @@ public class EFClient extends BaseClient {
     }
 
     //rest serviceClusterMapping post
-    def createAppEnvMap(projName, appName, tierMapName, payload) {
+    def createAppServiceClusterMapping(projName, appName, tierMapName, payload = null) {
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${tierMapName}/serviceClusterMappings", payload, true)
         result?.data
     }
@@ -504,13 +504,7 @@ public class EFClient extends BaseClient {
         result?.data?.tierMap
     }
     //rest tierMap post
-    def createTierMap(projName, appName, envName, envProjName){
-        def tierMapName = "${appName}-${envName}"
-        def payload = [
-            environmentName: envName,
-            environmentProjectName: envProjName,
-            tierMapName: tierMapName
-        ]
+    def createTierMap(projName, appName, payload){
         def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps", payload, false)
         result?.data
     }

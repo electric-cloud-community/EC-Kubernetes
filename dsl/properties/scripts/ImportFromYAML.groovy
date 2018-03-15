@@ -142,7 +142,6 @@ public class ImportFromYAML extends EFClient {
     }
 
 	 def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
-         //TODO: Check for and create application if it does not exist
         if (applicationName && !getExistingApp(applicationName, projectName)){
             logger INFO, "Application ${applicationName} has been created"
             createApplication(projectName, applicationName)
@@ -184,7 +183,6 @@ public class ImportFromYAML extends EFClient {
         }
         else {
             serviceName = service.service.serviceName
-            //TODO: add application name DONE
             result = createEFService(projectName, service, applicationName)
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
@@ -204,19 +202,13 @@ public class ImportFromYAML extends EFClient {
                     container.container.credentialName = getCredName(secret)
                 }
             }
-            //TODO: add application name DONE
             createOrUpdateContainer(projectName, serviceName, container, applicationName)
-            //TODO: add application name DONE
             mapContainerPorts(projectName, serviceName, container, service, applicationName)
         }
-
         if (service.serviceMapping && envProjectName && envName && clusterName) {
-            //TODO: add application name
             createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
         }
 
-        // Add deploy process
-        //TODO: add application name DONE
         createDeployProcess(projectName, serviceName, applicationName)
     }
 
@@ -240,13 +232,27 @@ public class ImportFromYAML extends EFClient {
 
         def mapping = service.serviceMapping
 
-//        def envMaps = getEnvMaps(projName, serviceName)
         def existingMap = getExistingMapping(projName, serviceName, envProjName, envName, applicationName)
 
         def envMapName
-        if (existingMap) {
+        if (existingMap && !applicationName) {
             logger INFO, "Environment map already exists for service ${serviceName} and cluster ${clusterName}"
             envMapName = existingMap.environmentMapName
+        }
+        else if(existingMap && applicationName){
+            logger INFO, "Environment map already exists for service ${serviceName} in application ${applicationName} and cluster ${clusterName}"
+            envMapName = existingMap.tierMapName
+        }
+        else if (applicationName){
+            def payload = [
+                    environmentProjectName: envProjName,
+                    environmentName: envName,
+                    tierMapName: "${applicationName}-${envName}",
+                    description: CREATED_DESCRIPTION,
+            ]
+
+            def result = createTierMap(projName, applicationName, payload)
+            envMapName = result.tierMap?.tierMapName
         }
         else {
             def payload = [
@@ -263,6 +269,7 @@ public class ImportFromYAML extends EFClient {
 
         def existingClusterMapping = existingMap?.serviceClusterMappings?.serviceClusterMapping?.find {
             it.clusterName == clusterName
+            it.serviceName == serviceName
         }
 
         def serviceClusterMappingName
@@ -270,16 +277,12 @@ public class ImportFromYAML extends EFClient {
             logger INFO, "Cluster mapping already exists"
             serviceClusterMappingName = existingClusterMapping.serviceClusterMappingName
         }
-        else if (applicationName){
-
-        }
         else {
             def payload = [
                 clusterName: clusterName,
                 environmentName: envName,
                 environmentProjectName: envProjName
             ]
-
             if (mapping) {
                 def actualParameters = []
                 mapping.each {k, v ->
@@ -289,14 +292,22 @@ public class ImportFromYAML extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            //TODO: add applicationName
-            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload, applicationName)
-            logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
-            serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            def result
+            if (applicationName){
+                payload.serviceName = "${serviceName}"
+                payload.serviceClusterMappingName = "${clusterName}-${serviceName}"
+                result = createAppServiceClusterMapping(projName, applicationName, envMapName, payload)
+                logger INFO, "Created Service Cluster Mapping for ${serviceName} in application ${applicationName} and ${clusterName}"
+                serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            }
+            else{
+                result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
+                logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
+                serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            }
         }
 
         assert serviceClusterMappingName
-
         service.containers?.each { container ->
             def payload = [
                 containerName: container.container.containerName
@@ -312,7 +323,6 @@ public class ImportFromYAML extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            //TODO: add applicationName
             createServiceMapDetails(
                 projName,
                 serviceName,
@@ -331,37 +341,25 @@ public class ImportFromYAML extends EFClient {
         }
         existingTierMap
     }
-    def getExistingAppServiceMapping(projectName, applicationName, tierMapName, serviceName){
-        def serviceMappings = getAppEnvMaps(projectName, applicationName, tierMapName)
-        def existingServiceMapping = serviceMappings?.find{
-            it.serviceName == serviceName
-        }
-        existingServiceMapping
-    }
 
-    def getExistingMapping(projectName, serviceName, envProjectName, envName, applicationName = null) {
+    def getExistingEnvMap(projectName, serviceName, envProjectName, envName){
         def envMaps
-        def existingTierMap
-        def existingServiceMappings
-        if (applicationName){
-            existingTierMap = getExistingTierMap(applicationName, envName, envProjectName, projectName)
-            if(existingTierMap){
-                getAppEnvMaps(projectName, applicationName, existingTierMap.tierMapName)
-                //TODO: resolve mapping question
-            }
-            else{
-
-            }
-        }
-        else{
-            envMaps = getEnvMaps(projectName, serviceName)
-        }
-
         envMaps = getEnvMaps(projectName, serviceName)
         def existingMap = envMaps.environmentMap?.find {
             it.environmentProjectName == envProjectName && it.projectName == projectName && it.serviceName == serviceName && it.environmentName == envName
         }
         existingMap
+    }
+
+    def getExistingMapping(projectName, serviceName, envProjectName, envName, applicationName = null) {
+        def existingServiceMapping
+        if (applicationName){
+            existingServiceMapping = getExistingTierMap(applicationName, envName, envProjectName, projectName)
+        }
+        else{
+            existingServiceMapping = getExistingEnvMap(projectName, serviceName, envProjectName, envName)
+        }
+        existingServiceMapping
     }
 
     def isBoundPort(containerPort, servicePort) {
@@ -385,7 +383,6 @@ public class ImportFromYAML extends EFClient {
                         subcontainer: container.container.containerName,
                         subport: containerPort.portName
                     ]
-                    //TODO: applicationName
                     createPort(projectName, serviceName, generatedPort, null, false, applicationName)
                     logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                 }
@@ -402,21 +399,18 @@ public class ImportFromYAML extends EFClient {
         logger INFO, "Going to create container ${serviceName}/${containerName}"
         logger INFO, pretty(container.container)
 
-        //TODO: applicationName DONE
         createContainer(projectName, serviceName, container.container, applicationName)
         logger INFO, "Container ${serviceName}/${containerName} has been created"
         discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
         discoveredSummary[serviceName][containerName] = [:]
 
         container.ports.each { port ->
-            //TODO: applicationName DONE
             createPort(projectName, serviceName, port, containerName, false, applicationName)
             logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
         }
 
         if (container.env) {
             container.env.each { env ->
-                //TODO: applicationName DONE
                 createEnvironmentVariable(projectName, serviceName, containerName, env, false, applicationName)
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
@@ -610,13 +604,11 @@ public class ImportFromYAML extends EFClient {
 		flatService.each{ key, value ->
 			if (!listContains(logService, key)){
 				logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
-				// println ("Ignored items ${key} = ${value} !")
 			}
 
 		}
 		flatDeployment.each{ key, value ->
 			if (!listContains(logDeployment, key)){
-				// println ("Ignored items ${key} = ${value} !")
 				logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
 			}
 		}
