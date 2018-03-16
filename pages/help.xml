@@ -628,11 +628,9 @@ definitions retrieved from there.</p>
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
     <ul>
-        
         <li>Added "Discover" procedure.</li>
-        
+        <li>Internal improvements for 8.3 release.</li>
     </ul>
-    
     <h3>@PLUGIN_KEY@ 1.0.6</h3>
     <ul>
         
