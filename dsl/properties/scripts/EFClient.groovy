@@ -487,7 +487,7 @@ public class EFClient extends BaseClient {
     }
 
     //rest serviceClusterMapping get
-    def getAppEnvMaps(projName, appName, tierMapName) {
+    def getAppServiceClusterMapping(projName, appName, tierMapName) {
         def result = doHttpGet("/rest/${REST_VERSION}/projects/${projName}/applications/${appName}/tierMaps/${tierMapName}/serviceClusterMappings")
         result?.data?.serviceClusterMapping
     }
