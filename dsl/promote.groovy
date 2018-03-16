@@ -125,6 +125,7 @@ project pluginName, {
 	}
 
 	//plugin configuration metadata
+    property 'ec_formXmlCompliant', value: 'true'
 	property 'ec_config', {
 		form = '$[' + "/projects/${pluginName}/procedures/CreateConfiguration/ec_parameterForm]"
 		property 'fields', {
