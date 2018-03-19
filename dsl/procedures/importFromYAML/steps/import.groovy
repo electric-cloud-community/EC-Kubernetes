@@ -2,18 +2,18 @@ $[/myProject/scripts/preamble]
 $[/myProject/scripts/ImportFromYAML]
 
 // Input parameters
-def kubeYAMLFile = '''$[kubeYAMLFile]'''
+def kubeYAMLFile = '''$[kubeYAMLFile]'''.trim()
 def projectName = '$[projName]'
 def envProjectName = '$[envProjectName]'
 def environmentName = '$[envName]'
 def clusterName = '$[clusterName]'
 def applicationScoped = '$[application_scoped]'
 def applicationName = '$[application_name]'
-
-// TBD add support not required parameters
 def NAMESPACE = "default"
 
+
 EFClient efClient = new EFClient()
+
 
 if(efClient.toBoolean(applicationScoped)) {
     if (!applicationName) {
@@ -31,7 +31,7 @@ if (envProjectName && environmentName && clusterName) {
         it.clusterName == clusterName
     }
     if (!cluster) {
-        println "Cluster '${clusterName}' does not exist in '${envName}' environment."
+        println "Cluster '${clusterName}' does not exist in '${envName}' environment!"
         System.exit(-1)
     }
     if (cluster.pluginKey != 'EC-Kubernetes') {
@@ -46,5 +46,13 @@ if (envProjectName && environmentName && clusterName) {
 }
 
 def importFromYAML = new ImportFromYAML()
+
+//println ("Applications:")
+//importFromYAML.prettyPrint(efClient.getApplications(projectName))
+//println ("tier map:")
+//importFromYAML.prettyPrint(efClient.getTierMaps(projectName, applicationName))
+//println ("AppEnvMap:")
+//importFromYAML.prettyPrint(efClient.getAppEnvMaps(projectName, applicationName, "2f9da54a-2769-11e8-9347-0050569666fe"))
+
 def services = importFromYAML.importFromYAML(NAMESPACE, kubeYAMLFile)
 importFromYAML.saveToEF(services, projectName, envProjectName, environmentName, clusterName, applicationName)
