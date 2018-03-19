@@ -66,7 +66,14 @@
         <initiallyChecked>1</initiallyChecked> 
         <value>true</value> 
         <required>0</required>
-    </formElement> 
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>URI for checking cluster connectivity:</label>
+        <property>uriToCheckCluster</property>
+        <required>0</required>
+        <documentation>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</documentation>
+    </formElement>
     <formElement>
         <type>select</type>
         <label>Log Level:</label>
