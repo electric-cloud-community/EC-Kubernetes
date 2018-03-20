@@ -3,17 +3,15 @@ $[/myProject/scripts/preamble]
 def pluginProjectName = '$[/myProject/projectName]'
 // Input parameters
 def configName = '$[config]'
-String uriToCheckCluster = '$[uriToCheckCluster]'.trim()
 
 EFClient efClient = new EFClient()
 def pluginConfig = efClient.getConfigValues('ec_plugin_cfgs', configName, pluginProjectName)
 
 String accessToken = 'Bearer ' + pluginConfig.credential.password
-//String healthCheckUrl = "$clusterEndpoint/api/v1"
-
-
+String uriToCheckCluster = pluginConfig.uriToCheckCluster
 String clusterEndpoint = pluginConfig.clusterEndpoint
 String healthCheckUrl = "$clusterEndpoint"
+
 if (uriToCheckCluster){
 	if(uriToCheckCluster[0] == '/'){
 		healthCheckUrl += uriToCheckCluster

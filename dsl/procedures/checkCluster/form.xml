@@ -24,11 +24,4 @@
         <propertyReference>/plugins/@PLUGIN_NAME@/project/ec_plugin_cfgs</propertyReference>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
     </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>URI for checking cluster connectivity:</label>
-        <property>uriToCheckCluster</property>
-        <required>0</required>
-        <documentation>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</documentation>
-    </formElement>
 </editor>
