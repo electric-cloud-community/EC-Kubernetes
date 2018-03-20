@@ -21,7 +21,7 @@
         <label>Kubernetes YAML file</label>
         <property>kubeYAMLFile</property>
         <required>1</required>
-        <documentation>Kubernetes YAML file contents containing related services and deployments definitions.</documentation>
+        <documentation>Kubernetes YAML file contents containing related services and deployments definitions. </documentation>
     </formElement>
         <formElement>
         <type>project</type>

@@ -49,6 +49,9 @@
 
         <li><a href="#CreateResource">Create Resource (DEPRECATED)</a></li>
         
+
+        <li><a href="#ImportMicroservices">Import Microservices</a></li>
+        
     </ul>
     
     <li><a href="#usecases">Use Cases</a></li>
@@ -535,6 +538,70 @@ definitions retrieved from there.</p>
     </div>
 
     
+    <div id="ImportMicroservices">
+        <h2>Import Microservices</h2>
+        <p>Creating microservice models using Kubernetes YAML file.</p>
+        
+            <p>Procedure looks for services and deployments in Kubernetes
+YAML file and transfers data into ElectricFlow. Services found
+in YAML file will be mapped to Services objects in ElectricFlow,
+then associated deployments will be found and containers
+definitions retrieved from there.</p>
+<p>If the configuration contains unsupported fields, these fields will be skipped and a warning message will be emitted to logs.
+If the object with the provided name already exists in the ElectricFlow, this object will be skipped and a warning message will be emitted to logs.</p>
+
+        
+        <h3>Import Microservices Parameters</h3>
+        <table class="grid">
+            <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            
+            <tr>
+                <td class="required">Kubernetes YAML file</td>
+                <td>Kubernetes YAML file contents containing related services and deployments definitions.</td>
+            </tr>
+            
+            <tr>
+                <td class="required">Project Name</td>
+                <td>The name of project in which the application or the microservices will be created.</td>
+            </tr>
+            
+            <tr>
+                <td >Create application-scoped microservices</td>
+                <td>Whether all the services defined in the Kubernetes YAML file should be created within one application in ElectricFlow. If checked, then the application name must be provided.</td>
+            </tr>
+            
+            <tr>
+                <td >Application Name</td>
+                <td>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</td>
+            </tr>
+            
+            <tr>
+                <td >Environment Project Name</td>
+                <td>The name of project that the environment belongs to.</td>
+            </tr>
+            
+            <tr>
+                <td >Environment Name</td>
+                <td>The name of the ElectricFlow environment containing the Kubernetes-based cluster where the newly created microservice(s) will be deployed.</td>
+            </tr>
+            
+            <tr>
+                <td >Cluster Name</td>
+                <td>The name of the ElectricFlow cluster representing a Kubernetes cluster where the newly created microservice(s) will be deployed.</td>
+            </tr>
+            
+            </tbody>
+        </table>
+        
+    </div>
+
+    
 
     
     <h1 id="usecases">Use Cases</h1>
@@ -630,6 +697,8 @@ definitions retrieved from there.</p>
     <ul>
         
         <li>Added "Discover" procedure.</li>
+        
+        <li>Added "Import Microservices" procedure.</li>
         
     </ul>
     

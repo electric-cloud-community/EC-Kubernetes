@@ -2,57 +2,56 @@
 import org.yaml.snakeyaml.Yaml
 
 public class ImportFromYAML extends EFClient {
-	static final String CREATED_DESCRIPTION = "Created by ImportFromYAML"
-	static final String DELIMITER = "---"
-	def discoveredSummary = [:]
-	Yaml parser = new Yaml()
+    static final String CREATED_DESCRIPTION = "Created by ImportFromYAML"
+    static final String DELIMITER = "---"
+    def discoveredSummary = [:]
+    Yaml parser = new Yaml()
 
-	def importFromYAML(namespace, fileYAML){
+    def importFromYAML(namespace, fileYAML){
+        def efServices = []
+        def configList = fileYAML.split(DELIMITER)
+        def parsedConfigList = []
 
-		def efServices = []
-		def configList = fileYAML.split(DELIMITER)
-		def parsedConfigList = []
+        configList.each { config ->
+            def parsedConfig = parser.load(config)
+            parsedConfigList.push(parsedConfig)
 
-		configList.each { config ->
-			def parsedConfig = parser.load(config)
-			parsedConfigList.push(parsedConfig)
+        }
 
-		}
+        def services
+        try {
+            services = getParsedServices(parsedConfigList)
 
-		def services
-		try {
-			services = getParsedServices(parsedConfigList)
+        }
+        catch(Exception e) {
+            println "Failed to find any services in the YAML file. Cause: ${e.message}"
+            System.exit(-1)
+        }
 
-		}
-		catch(Exception e) {
-			println "Failed to find any services in the YAML file. Cause: ${e.message}"
-			System.exit(-1)
-		}
+        def deployments
+        try {
+            deployments = getParsedDeployments(parsedConfigList)
+        }
+        catch(Exception e) {
+            println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
+            System.exit(-1)
+        }
+        if (deployments.size() < 1){
+            println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
+            System.exit(-1)
+        }
 
-		def deployments
-		try {
-			deployments = getParsedDeployments(parsedConfigList)
-		}
-		catch(Exception e) {
-			println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
-			System.exit(-1)
-		}
-		if (deployments.size() < 1){
-			println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
-			System.exit(-1)
-		}
-
-		services.each { kubeService ->
+        services.each { kubeService ->
             if (!isSystemService(kubeService)) {
                 def allQueryDeployments = []
                 def i = 0
                 kubeService.spec.selector.each{ k, v ->
-                	i = i + 1
-                	def queryDeployments = getDeploymentsBySelector(deployments, k, v)
+                    i = i + 1
+                    def queryDeployments = getDeploymentsBySelector(deployments, k, v)
                     if (queryDeployments != null){
-                    	queryDeployments.each{ deployment->
-                    		allQueryDeployments.push(deployment)
-                    	}
+                        queryDeployments.each{ deployment->
+                            allQueryDeployments.push(deployment)
+                        }
                     }
 
                 }
@@ -62,18 +61,17 @@ public class ImportFromYAML extends EFClient {
                 }
             }
         }
+        efServices
+    }
 
-		efServices
-	}
-
-	def flattenMap(keyPrefix, input, LinkedHashMap flatten ) {
+    def flattenMap(keyPrefix, input, LinkedHashMap flatten ) {
         input.each { k, v ->
             def key = "${keyPrefix}/${k}".trim()
             if (v instanceof LinkedHashMap) {
                 flattenMap(key, v, flatten)
             }
             else if (v instanceof ArrayList){
-            	flatten = flattenArrayList(key, v, flatten)
+                flatten = flattenArrayList(key, v, flatten)
             }
             else {
                 flatten[key] = v
@@ -84,57 +82,70 @@ public class ImportFromYAML extends EFClient {
     }
 
     def flattenArrayList(keyPrefix, value, flatten ){
-    	value.eachWithIndex{ v, i ->
-    		def key = "${keyPrefix}[${i}]".trim()
+        value.eachWithIndex{ v, i ->
+            def key = "${keyPrefix}[${i}]".trim()
             if (v instanceof LinkedHashMap) {
                 flattenMap(key, v, flatten)
             }
             else if (v instanceof ArrayList){
-            	flattenArrayList(key, v, flatten)
+
+                flattenArrayList(key, v, flatten)
             }
-        	else{
-        		flatten[key] = v
-        	}
-    	}
-    	flatten
+            else{
+                flatten[key] = v
+            }
+        }
+        flatten
     }
 
-	def getParsedServices(parsedConfigList){
-		def services = []
-		parsedConfigList.each { config ->
-			if (config.kind == "Service"){
-				services.push(config)
-			}
-		}
-		services
-	}
+    def getParsedServices(parsedConfigList){
+        def services = []
+        parsedConfigList.each { config ->
+            if (config.kind == "Service"){
+                services.push(config)
+            }
+        }
+        services
+    }
 
-	def getParsedDeployments(parsedConfigList){
-		def deployments = []
-		parsedConfigList.each { config ->
-			if (config.kind == "Deployment"){
-				deployments.push(config)
-			}
-		}
-	 	deployments
-	}
+    def getParsedDeployments(parsedConfigList){
+        def deployments = []
+        parsedConfigList.each { config ->
+            if (config.kind == "Deployment"){
+                deployments.push(config)
+            }
+        }
+        deployments
+    }
 
-	def getDeploymentsBySelector(deployments, key, value){
-		def queryDeployments = []
-		def i = 0
-		deployments.each { deployment ->
-			deployment.metadata.labels.each{ k, v ->
-				i = i + 1
-				if ((k == key) && (v == value)){
-					queryDeployments.push(deployment)
-				}
-			}
-		}
-		queryDeployments
-	}
+    def getDeploymentsBySelector(deployments, key, value){
+        def queryDeployments = []
+        def i = 0
+        deployments.each { deployment ->
+            deployment.metadata.labels.each{ k, v ->
+                i = i + 1
+                if ((k == key) && (v == value)){
+                    queryDeployments.push(deployment)
+                }
+            }
+        }
+        queryDeployments
+    }
 
-	 def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
-         //TODO: Check for and create application if it does not exist
+    def getExistingApp(applicationName, projectName){
+        def applications = getApplications(projectName)
+        def existingApplication = applications?.find {
+            it.applicationName == applicationName && it.projectName == projectName
+        }
+        existingApplication
+    }
+
+    def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
+        if (applicationName && !getExistingApp(applicationName, projectName)){
+            logger INFO, "Application ${applicationName} has been created"
+            createApplication(projectName, applicationName)
+        }
+      
         def efServices = getServices(projectName, applicationName)
         services.each { service ->
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
@@ -172,8 +183,7 @@ public class ImportFromYAML extends EFClient {
         }
         else {
             serviceName = service.service.serviceName
-            //TODO: add application name
-            result = createEFService(projectName, service)
+            result = createEFService(projectName, service, applicationName)
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
         }
@@ -192,49 +202,57 @@ public class ImportFromYAML extends EFClient {
                     container.container.credentialName = getCredName(secret)
                 }
             }
-            //TODO: add application name
-            createOrUpdateContainer(projectName, serviceName, container)
-            //TODO: add application name
-            mapContainerPorts(projectName, serviceName, container, service)
+            createOrUpdateContainer(projectName, serviceName, container, applicationName)
+            mapContainerPorts(projectName, serviceName, container, service, applicationName)
         }
-
         if (service.serviceMapping && envProjectName && envName && clusterName) {
-            //TODO: add application name
-            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service)
+            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
         }
 
-        // Add deploy process
-        //TODO: add application name
-        createDeployProcess(projectName, serviceName)
+        createDeployProcess(projectName, serviceName, applicationName)
     }
 
-    def createDeployProcess(projectName, serviceName) {
+    def createDeployProcess(projectName, serviceName, applicationName = null) {
         def processName = 'Deploy'
-        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'])
+        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'], applicationName)
         logger INFO, "Process ${processName} has been created for ${serviceName}"
         def processStepName = 'deployService'
         def processStep = createProcessStep(projectName, serviceName, processName, [
             processStepName: processStepName,
-            processStepType: 'service', subservice: serviceName
-        ])
+            processStepType: 'service', subservice: serviceName],
+            applicationName)
         logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
 
 
-    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
-        assert envProjectName
+    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service, applicationName = null) {
+        assert envProjName
         assert envName
         assert clusterName
 
         def mapping = service.serviceMapping
 
-        def envMaps = getEnvMaps(projName, serviceName)
-        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName)
+        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName, applicationName)
 
         def envMapName
-        if (existingMap) {
+        if (existingMap && !applicationName) {
             logger INFO, "Environment map already exists for service ${serviceName} and cluster ${clusterName}"
             envMapName = existingMap.environmentMapName
+        }
+        else if(existingMap && applicationName){
+            logger INFO, "Environment map already exists for service ${serviceName} in application ${applicationName} and cluster ${clusterName}"
+            envMapName = existingMap.tierMapName
+        }
+        else if (applicationName){
+            def payload = [
+                    environmentProjectName: envProjName,
+                    environmentName: envName,
+                    tierMapName: "${applicationName}-${envName}",
+                    description: CREATED_DESCRIPTION,
+            ]
+
+            def result = createTierMap(projName, applicationName, payload)
+            envMapName = result.tierMap?.tierMapName
         }
         else {
             def payload = [
@@ -251,6 +269,7 @@ public class ImportFromYAML extends EFClient {
 
         def existingClusterMapping = existingMap?.serviceClusterMappings?.serviceClusterMapping?.find {
             it.clusterName == clusterName
+            it.serviceName == serviceName
         }
 
         def serviceClusterMappingName
@@ -264,7 +283,6 @@ public class ImportFromYAML extends EFClient {
                 environmentName: envName,
                 environmentProjectName: envProjName
             ]
-
             if (mapping) {
                 def actualParameters = []
                 mapping.each {k, v ->
@@ -274,13 +292,22 @@ public class ImportFromYAML extends EFClient {
                 }
                 payload.actualParameter = actualParameters
             }
-            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
-            logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
-            serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            def result
+            if (applicationName){
+                payload.serviceName = "${serviceName}"
+                payload.serviceClusterMappingName = "${clusterName}-${serviceName}"
+                result = createAppServiceClusterMapping(projName, applicationName, envMapName, payload)
+                logger INFO, "Created Service Cluster Mapping for ${serviceName} in application ${applicationName} and ${clusterName}"
+                serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            }
+            else{
+                result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
+                logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
+                serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            }
         }
 
         assert serviceClusterMappingName
-
         service.containers?.each { container ->
             def payload = [
                 containerName: container.container.containerName
@@ -301,17 +328,38 @@ public class ImportFromYAML extends EFClient {
                 serviceName,
                 envMapName,
                 serviceClusterMappingName,
-                payload
+                payload,
+                applicationName
             )
         }
     }
 
-    def getExistingMapping(projectName, serviceName, envProjectName, envName) {
-        def envMaps = getEnvMaps(projectName, serviceName)
+    def getExistingTierMap(applicationName, envName, envProjectName, projectName){
+        def tierMaps = getTierMaps(projectName, applicationName)
+        def existingTierMap = tierMaps?.find {
+            it.applicationName == applicationName && it.environmentName == envName && it.environmentProjectName == envProjectName && it.projectName == projectName
+        }
+        existingTierMap
+    }
+
+    def getExistingEnvMap(projectName, serviceName, envProjectName, envName){
+        def envMaps
+        envMaps = getEnvMaps(projectName, serviceName)
         def existingMap = envMaps.environmentMap?.find {
             it.environmentProjectName == envProjectName && it.projectName == projectName && it.serviceName == serviceName && it.environmentName == envName
         }
         existingMap
+    }
+
+    def getExistingMapping(projectName, serviceName, envProjectName, envName, applicationName = null) {
+        def existingServiceMapping
+        if (applicationName){
+            existingServiceMapping = getExistingTierMap(applicationName, envName, envProjectName, projectName)
+        }
+        else{
+            existingServiceMapping = getExistingEnvMap(projectName, serviceName, envProjectName, envName)
+        }
+        existingServiceMapping
     }
 
     def isBoundPort(containerPort, servicePort) {
@@ -324,7 +372,7 @@ public class ImportFromYAML extends EFClient {
         return false
     }
 
-    def mapContainerPorts(projectName, serviceName, container, service) {
+    def mapContainerPorts(projectName, serviceName, container, service, applicationName = null) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
                 if (isBoundPort(containerPort, servicePort)) {
@@ -335,14 +383,14 @@ public class ImportFromYAML extends EFClient {
                         subcontainer: container.container.containerName,
                         subport: containerPort.portName
                     ]
-                    createPort(projectName, serviceName, generatedPort)
+                    createPort(projectName, serviceName, generatedPort, null, false, applicationName)
                     logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                 }
             }
         }
     }
 
-    def createOrUpdateContainer(projectName, serviceName, container) {
+    def createOrUpdateContainer(projectName, serviceName, container, applicationName = null) {
         logger DEBUG, "Container payload:"
         logger DEBUG, new JsonBuilder(container).toPrettyString()
 
@@ -350,19 +398,20 @@ public class ImportFromYAML extends EFClient {
         assert containerName
         logger INFO, "Going to create container ${serviceName}/${containerName}"
         logger INFO, pretty(container.container)
-        createContainer(projectName, serviceName, container.container)
+
+        createContainer(projectName, serviceName, container.container, applicationName)
         logger INFO, "Container ${serviceName}/${containerName} has been created"
         discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
         discoveredSummary[serviceName][containerName] = [:]
 
         container.ports.each { port ->
-            createPort(projectName, serviceName, port, containerName)
+            createPort(projectName, serviceName, port, containerName, false, applicationName)
             logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
         }
 
         if (container.env) {
             container.env.each { env ->
-                createEnvironmentVariable(projectName, serviceName, containerName, env)
+                createEnvironmentVariable(projectName, serviceName, containerName, env, false, applicationName)
                 logger INFO, "Environment variable ${env.environmentVariableName} has been created"
             }
         }
@@ -406,8 +455,8 @@ public class ImportFromYAML extends EFClient {
 
     def buildServiceDefinition(kubeService, deployment, namespace){
 
-    	def logService = []
-    	def logDeployment = []
+        def logService = []
+        def logDeployment = []
         def serviceName = kubeService.metadata.name
         def deployName = deployment.metadata.name
 
@@ -415,14 +464,14 @@ public class ImportFromYAML extends EFClient {
         logService.push("/apiVersion".trim())
         logService.push("/metadata/name".trim())
         kubeService.spec.selector.each{key, value->
-        	logService.push("/spec/selector/${key}".trim())
+            logService.push("/spec/selector/${key}".trim())
         }
 
         logDeployment.push("/apiVersion".trim())
         logDeployment.push("/kind".trim())
         logDeployment.push("/metadata/name".trim())
         deployment.metadata.labels.each{key, value ->
-        	logDeployment.push("/metadata/labels/${key}".trim())
+            logDeployment.push("/metadata/labels/${key}".trim())
         }
 
         def efServiceName
@@ -447,7 +496,8 @@ public class ImportFromYAML extends EFClient {
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
 
-			logDeployment.push("/spec/strategy/rollingUpdate/maxSurge")
+            logDeployment.push("/spec/strategy/rollingUpdate/maxSurge")
+
             if (rollingUpdate.maxSurge =~ /%/) {
 
                 efService.serviceMapping.with {
@@ -459,7 +509,7 @@ public class ImportFromYAML extends EFClient {
                 efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
             }
 
-			logDeployment.push("/spec/strategy/rollingUpdate/maxUnavailable")
+            logDeployment.push("/spec/strategy/rollingUpdate/maxUnavailable")
             if (rollingUpdate.maxUnavailable =~ /%/) {
                 efService.serviceMapping.with {
                     minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
@@ -504,30 +554,29 @@ public class ImportFromYAML extends EFClient {
         // Containers
         def containers = deployment.spec.template.spec.containers
         containers.eachWithIndex{ kubeContainer, index ->
-    		logDeployment.push("/spec/template/spec/containers[${index}]/name")
-    		logDeployment.push("/spec/template/spec/containers[${index}]/image")
-    		kubeContainer?.command.eachWithIndex{ singleCommand, ind ->
-    			logDeployment.push("/spec/template/spec/containers[${index}]/command[${ind}]")
-    		}
-    		kubeContainer?.args.eachWithIndex{ arg, ind ->
-    			logDeployment.push("/spec/template/spec/containers[${index}]/args[${ind}]")
-    		}
-    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/memory")
-    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/cpu")
-    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/memory")
-    		logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/cpu")
-    		kubeContainer?.ports.eachWithIndex{ port, ind ->
-    			logDeployment.push("/spec/template/spec/containers[${index}]/ports[${ind}]/containerPort")
-    		}
-    		kubeContainer?.volumeMounts.eachWithIndex{ volume, ind ->
-    			logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/name")
-    			logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/mountPath")
-    		}
-    		kubeContainer?.env.eachWithIndex{ singleEnv, ind ->
-    			logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/name")
-    			logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/value")
-
-        	}
+            logDeployment.push("/spec/template/spec/containers[${index}]/name")
+            logDeployment.push("/spec/template/spec/containers[${index}]/image")
+            kubeContainer?.command.eachWithIndex{ singleCommand, ind ->
+                logDeployment.push("/spec/template/spec/containers[${index}]/command[${ind}]")
+            }
+            kubeContainer?.args.eachWithIndex{ arg, ind ->
+                logDeployment.push("/spec/template/spec/containers[${index}]/args[${ind}]")
+            }
+            logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/memory")
+            logDeployment.push("/spec/template/spec/containers[${index}]/resources/limits/cpu")
+            logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/memory")
+            logDeployment.push("/spec/template/spec/containers[${index}]/resources/requests/cpu")
+            kubeContainer?.ports.eachWithIndex{ port, ind ->
+                logDeployment.push("/spec/template/spec/containers[${index}]/ports[${ind}]/containerPort")
+            }
+            kubeContainer?.volumeMounts.eachWithIndex{ volume, ind ->
+                logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/name")
+                logDeployment.push("/spec/template/spec/containers[${index}]/volumeMounts[${ind}]/mountPath")
+            }
+            kubeContainer?.env.eachWithIndex{ singleEnv, ind ->
+                logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/name")
+                logDeployment.push("/spec/template/spec/containers[${index}]/env[${ind}]/value")
+            }
 
         }
         efService.containers = containers.collect { kubeContainer ->
@@ -549,35 +598,33 @@ public class ImportFromYAML extends EFClient {
             efService.service.volume = new JsonBuilder(volumes).toString()
         }
 
-		def flatService = flattenMap('', kubeService, [:])
-		def flatDeployment = flattenMap('', deployment, [:])
+        def flatService = flattenMap('', kubeService, [:])
+        def flatDeployment = flattenMap('', deployment, [:])
 
-		flatService.each{ key, value ->
-			if (!listContains(logService, key)){
-				logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
-				// println ("Ignored items ${key} = ${value} !")
-			}
+        flatService.each{ key, value ->
+            if (!listContains(logService, key)){
+                logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
+            }
 
-		}
-		flatDeployment.each{ key, value ->
-			if (!listContains(logDeployment, key)){
-				// println ("Ignored items ${key} = ${value} !")
-				logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
-			}
-		}
+        }
+        flatDeployment.each{ key, value ->
+            if (!listContains(logDeployment, key)){
+                logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
+            }
+        }
 
         efService
     }
 
-	def listContains (list, key){
-		def bool = false
-		list.each{item->
-			if (item.compareTo(key) == 0){
-				bool = true
-			}
-		}
-		bool
-	}
+    def listContains (list, key){
+        def bool = false
+        list.each{item->
+            if (item.compareTo(key) == 0){
+                bool = true
+            }
+        }
+        bool
+    }
 
     def updateEFService(efService, kubeService) {
         def payload = kubeService.service
@@ -588,10 +635,10 @@ public class ImportFromYAML extends EFClient {
         result
     }
 
-    def createEFService(projectName, service) {
+    def createEFService(projectName, service, appName = null) {
         def payload = service.service
         payload.description = "Created by EF Discovery"
-        def result = createService(projectName, payload)
+        def result = createService(projectName, payload, appName)
         result
     }
 
