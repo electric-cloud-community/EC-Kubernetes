@@ -25,4 +25,5 @@
   - Added 'Wait For Kubernetes API' procedure.
 1.1.0:
   - Added "Discover" procedure.
-  - Internal improvements for 8.3 release.
+  - Configured the plugin to allow the ElectricFlow UI to render the plugin procedure parameters entirely using the configured form XMLs.
+  - Enabled the plugin for managing the plugin configurations in-line when defining an application process step or a pipeline stage task.
