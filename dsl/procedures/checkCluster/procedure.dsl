@@ -8,7 +8,7 @@ procedure 'Check Cluster',
       subprocedure: 'Setup',
       command: null,
       errorHandling: 'failProcedure',
-      exclusiveMode: 'none',
+      exclusiveMode: 'call',
       postProcessor: 'postp',
       releaseMode: 'none',
       timeLimitUnits: 'minutes', {

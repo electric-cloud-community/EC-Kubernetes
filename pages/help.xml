@@ -699,6 +699,8 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <li>Added "Discover" procedure.</li>
         
         <li>Added "Import Microservices" procedure.</li>
+
+        <li>Configured the 'setup' procedure step that retrieves groovy dependency jars to run all subsequent procedure steps on the same resource.</li>
         
     </ul>
     
