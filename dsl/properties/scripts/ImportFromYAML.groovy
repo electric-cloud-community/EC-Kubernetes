@@ -61,7 +61,6 @@ public class ImportFromYAML extends EFClient {
                 }
             }
         }
-
         efServices
     }
 
@@ -89,6 +88,7 @@ public class ImportFromYAML extends EFClient {
                 flattenMap(key, v, flatten)
             }
             else if (v instanceof ArrayList){
+
                 flattenArrayList(key, v, flatten)
             }
             else{
@@ -145,6 +145,7 @@ public class ImportFromYAML extends EFClient {
             logger INFO, "Application ${applicationName} has been created"
             createApplication(projectName, applicationName)
         }
+      
         def efServices = getServices(projectName, applicationName)
         services.each { service ->
             createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
@@ -496,6 +497,7 @@ public class ImportFromYAML extends EFClient {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
 
             logDeployment.push("/spec/strategy/rollingUpdate/maxSurge")
+
             if (rollingUpdate.maxSurge =~ /%/) {
 
                 efService.serviceMapping.with {
@@ -523,7 +525,7 @@ public class ImportFromYAML extends EFClient {
         logService.push("/spec/type")
         logService.push("/spec/sessionAffinity")
         logService.push("/spec/loadBalancerSourceRanges")
-        efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
+        efService.serviceMapping.loadBalancerIP = kubeService.spec?.loadBalancerIP
         efService.serviceMapping.serviceType = kubeService.spec?.type
         efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
         def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')

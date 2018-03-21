@@ -379,7 +379,7 @@ public class Discovery extends EFClient {
             }
 
         }
-        efService.serviceMapping.loadBalancerIP = kubeService.spec?.clusterIP
+        efService.serviceMapping.loadBalancerIP = kubeService.spec?.loadBalancerIP
         efService.serviceMapping.serviceType = kubeService.spec?.type
         efService.serviceMapping.sessionAffinity = kubeService.spec?.sessionAffinity
         def sourceRanges = kubeService.spec?.loadBalancerSourceRanges?.join(',')
