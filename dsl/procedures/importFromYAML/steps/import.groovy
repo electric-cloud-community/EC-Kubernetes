@@ -31,12 +31,12 @@ if (envProjectName && environmentName && clusterName) {
         it.clusterName == clusterName
     }
     if (!cluster) {
-        println "Cluster '${clusterName}' does not exist in '${envName}' environment!"
+        println "Cluster '${clusterName}' does not exist in '${environmentName}' environment!"
         System.exit(-1)
     }
     if (cluster.pluginKey != 'EC-Kubernetes') {
         println "Wrong cluster type: ${cluster.pluginKey}"
-        println "ElectricFlow cluster '${clusterName}' in '${envName}' environment is not backed by a Kubernetes-based cluster."
+        println "ElectricFlow cluster '${clusterName}' in '${environmentName}' environment is not backed by a Kubernetes-based cluster."
         System.exit(-1)
     }
 } else if (envProjectName || environmentName || clusterName) {
