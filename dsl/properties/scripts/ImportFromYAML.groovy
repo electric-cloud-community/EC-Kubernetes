@@ -585,14 +585,17 @@ public class ImportFromYAML extends EFClient {
         }
 
 
-        //Logging volumes in several lines above
         // Volumes
         if (deployment.spec.template.spec.volumes) {
+            def index = 0
             def volumes = deployment.spec.template.spec.volumes.collect { volume ->
                 def retval = [name: volume.name]
+                logDeployment.push("/spec/template/spec/volumes[${index}]/name")
                 if (volume.hostPath?.path) {
                     retval.hostPath = volume.hostPath.path
+                    logDeployment.push("/spec/template/spec/volumes[${index}]/hostPath/path")
                 }
+                index += 1
                 retval
             }
             efService.service.volume = new JsonBuilder(volumes).toString()
