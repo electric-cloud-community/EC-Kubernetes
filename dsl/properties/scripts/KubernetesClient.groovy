@@ -524,7 +524,7 @@ public class KubernetesClient extends BaseClient {
                             secret)
 
                 } else {
-                    logger INFO, "Creating deployment $secretName"
+                    logger INFO, "Creating Secret $secretName"
                     doHttpRequest(POST,
                             clusterEndPoint,
                             "/api/v1/namespaces/${namespace}/secrets",
@@ -868,7 +868,7 @@ public class KubernetesClient extends BaseClient {
         for (item in jsonData){
             def name = formatName(item.name)
             if(item.hostPath){
-                result << [name: name, hostPath: [item.hostPath]]
+                result << [name: name, hostPath: [path : item.hostPath, type: "Directory"]]
             } else {
                 result << [name: name, emptyDir: {}]
             }
@@ -1287,6 +1287,16 @@ public class KubernetesClient extends BaseClient {
                 failOnErrorCode)
     }
 
+    boolean isVersionGreaterThan17() {
+        try {
+            float version = Float.parseFloat(this.kubernetesVersion)
+            version >= 1.8
+        } catch (NumberFormatException ex) {
+            logger WARNING, "Invalid Kubernetes version '$kubernetesVersion'"
+            true
+        }
+    }
+
     boolean isVersionGreaterThan15() {
         try {
             float version = Float.parseFloat(this.kubernetesVersion)
@@ -1318,7 +1328,7 @@ public class KubernetesClient extends BaseClient {
     String versionSpecificAPIPath(String resource) {
         switch (resource) {
             case 'deployments':
-                return isVersionGreaterThan15() ? 'apps/v1beta1': 'extensions/v1beta1'
+                return isVersionGreaterThan15() ? ( isVersionGreaterThan17() ? 'apps/v1beta2' : 'apps/v1beta1'): 'extensions/v1beta1'
             default:
                 handleError("Unsupported resource '$resource' for determining version specific API path")
         }
