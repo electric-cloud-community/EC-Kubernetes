@@ -4,7 +4,6 @@ import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.GET
-import static groovyx.net.http.Method.POST
 
 class Client {
 
@@ -62,6 +61,14 @@ class Client {
         result?.items
     }
 
+    def getServices(String namespace) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services")
+        result?.items
+    }
+
+    def getPods() {
+
+    }
 
     def static getLogLevelStr(Integer level) {
         switch (level) {
