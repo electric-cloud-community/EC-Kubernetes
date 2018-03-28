@@ -1,3 +1,6 @@
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
+
 @Grab('com.jayway.jsonpath:json-path:2.0.0' )
 
 import static com.jayway.jsonpath.JsonPath.parse

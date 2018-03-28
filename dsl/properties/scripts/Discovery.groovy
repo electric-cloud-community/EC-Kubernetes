@@ -1,3 +1,5 @@
+import groovy.json.JsonBuilder
+import groovy.json.JsonSlurper
 
 public class Discovery extends EFClient {
     def kubeClient
