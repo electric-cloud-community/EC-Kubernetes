@@ -6,6 +6,12 @@ class ClusterView {
 
     Client kubeClient
 
+    private static final String RUNNING = 'Running'
+    private static final String FAILED = 'Failed'
+    private static final String SUCCEEDED = 'Succeeded'
+    private static final String PENDING = 'Pending'
+    private static final String CRUSH_LOOP = 'CrushLoopBackoff'
+
     def getRealtimeClusterTopology() {
         def namespaces = kubeClient.getNamespaces()
         def nodes = []
@@ -21,18 +27,18 @@ class ClusterView {
                 def link = [source: getClusterId(), target: getNamespaceId(namespace)]
                 links << link
                 services.findAll { !isSystemService(it) }.each { service ->
-                    links << [source: getNamespaceId(namespace), target: getServiceId(service)]
-                    nodes << buildServiceNode(service)
                     def pods = getServicePods(service)
-//                    pods.each { pod ->
-////                        links << [source: getServiceId(service), target: getPodId(service, pod)]
-////                        nodes << buildPodNode(service, pod)
-////                        def containers = pod.containers
-////                        containers.each { container ->
-////                            links << [source: getPodId(service, pod), target: getContainerId(service, pod, container)]
-////                            nodes << buildContainerNode(service, pod, container)
-////                        }
-//                    }
+                    links << [source: getNamespaceId(namespace), target: getServiceId(service)]
+                    nodes << buildServiceNode(service, pods)
+                    pods.each { pod ->
+                        links << [source: getServiceId(service), target: getPodId(service, pod)]
+                        nodes << buildPodNode(service, pod)
+                        def containers = pod.spec.containers
+                        containers.each { container ->
+                            links << [source: getPodId(service, pod), target: getContainerId(service, pod, container)]
+                            nodes << buildContainerNode(service, pod, container)
+                        }
+                    }
                 }
             }
         }
@@ -43,6 +49,37 @@ class ClusterView {
     def isSystemNamespace(namespace) {
         def name = getNamespaceName(namespace)
         name == 'kube-public' || name == 'kube-system'
+    }
+
+    def getPodsStatus(pods) {
+        def finalStatus
+        pods.each { pod ->
+            def status = pod.status
+            def phase = status.phase
+            if (phase != RUNNING) {
+                finalStatus = phase
+            }
+        }
+        if (!finalStatus) {
+            finalStatus = RUNNING
+        }
+        finalStatus
+    }
+
+    def getContainerStatus(pod, container) {
+        def name = container.name
+        if (!pod.status.containerStatuses) {
+            return FAILED
+        }
+        def containerStatus = pod.status.containerStatuses.find { it.name == name }
+        if (!containerStatus) {
+            throw new RuntimeException("No container status found for name ${name}")
+        }
+        def states = containerStatus?.state.keySet()
+        if (states.size() == 1) {
+            return states[0]
+        }
+        throw new RuntimeException("Container has more than one status: ${containerStatus}")
     }
 
     def isSystemService(service) {
@@ -102,9 +139,10 @@ class ClusterView {
         [type: 'pod', id: getPodId(service, pod), name: name, status: status]
     }
 
-    def buildServiceNode(Map service) {
+    def buildServiceNode(Map service, pods) {
         def name = service.metadata.name
-        [id: getServiceId(service), name: name, type: 'service', status: 'TBD']
+        def status = getPodsStatus(pods)
+        [id: getServiceId(service), name: name, type: 'service', status: status]
     }
 
     def buildContainerNode(service, pod, container) {
@@ -115,7 +153,7 @@ class ClusterView {
             type   : 'container',
             name   : container.name,
             id     : getContainerId(service, pod, container),
-            status : 'TBD',
+            status : getContainerStatus(pod, container),
             image  : image,
             version: version
         ]
