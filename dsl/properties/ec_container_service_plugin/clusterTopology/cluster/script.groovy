@@ -18,6 +18,8 @@ def password = credentials[0].password
 def endpoint = config.clusterEndpoint
 def token = password
 def version = config.kubernetesVersion
+assert endpoint
+assert version
 
 def cluster = getCluster(projectName: projectName, environmentName: environmentName, clusterName: clusterName)
 def clusterId = cluster.clusterId.toString()

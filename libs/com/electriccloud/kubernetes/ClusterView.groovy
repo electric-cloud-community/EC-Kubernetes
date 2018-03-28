@@ -24,15 +24,15 @@ class ClusterView {
                     links << [source: getNamespaceId(namespace), target: getServiceId(service)]
                     nodes << buildServiceNode(service)
                     def pods = getServicePods(service)
-                    pods.each { pod ->
-                        links << [source: getServiceId(service), target: getPodId(service, pod)]
-                        nodes << buildPodNode(service, pod)
-                        def containers = pod.containers
-                        containers.each { container ->
-                            links << [source: getPodId(service, pod), target: getContainerId(service, pod, container)]
-                            nodes << buildContainerNode(service, pod, container)
-                        }
-                    }
+//                    pods.each { pod ->
+////                        links << [source: getServiceId(service), target: getPodId(service, pod)]
+////                        nodes << buildPodNode(service, pod)
+////                        def containers = pod.containers
+////                        containers.each { container ->
+////                            links << [source: getPodId(service, pod), target: getContainerId(service, pod, container)]
+////                            nodes << buildContainerNode(service, pod, container)
+////                        }
+//                    }
                 }
             }
         }
@@ -59,7 +59,8 @@ class ClusterView {
         def deployments = kubeClient.getDeployments(namespace, selectorString)
         def pods = []
         deployments.each { deployment ->
-            def labels = deployment.spec.template.metadata.labels
+            def labels = deployment?.spec?.template?.metadata?.labels
+
             def podSelectorString = labels.collect { k, v ->
                 "${k}=${v}"
             }.join(',')
