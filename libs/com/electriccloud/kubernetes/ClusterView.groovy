@@ -117,7 +117,7 @@ class ClusterView {
 
 
     def getNamespaceId(namespace) {
-        getNamespaceName(namespace)
+        "${this.clusterName}::${getNamespaceName(namespace)}"
     }
 
     def getClusterId() {
