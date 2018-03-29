@@ -4,6 +4,7 @@ import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.GET
+import static groovyx.net.http.Method.PATCH
 
 class Client {
 
@@ -55,9 +56,18 @@ class Client {
         }
     }
 
+    def getClusterDetails(String clusterName){
+        def result = doHttpRequest(GET, "/apis/apiregistration.k8s.io/v1beta1/apiservices/${clusterName}")
+        result?.items
+    }
 
     def getNamespaces() {
         def result = doHttpRequest(GET, "/api/v1/namespaces")
+        result?.items
+    }
+
+    def getNamespace(String namespace) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}")
         result?.items
     }
 
@@ -66,9 +76,16 @@ class Client {
         result?.items
     }
 
+    def getService(String namespace, String clusterName){
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services/${clusterName}")
+        resul?.items
+    }
+
     def getPods() {
 
     }
+
+
 
     def static getLogLevelStr(Integer level) {
         switch (level) {
