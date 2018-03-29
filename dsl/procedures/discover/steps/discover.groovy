@@ -1,5 +1,8 @@
+import com.electriccloud.client.groovy.ElectricFlow
+
 $[/myProject/scripts/preamble]
 $[/myProject/scripts/Discovery]
+$[/myProject/scripts/DiscoveryClusterHandler]
 
 // Input parameters
 def envProjectName = '$[envProjectName]'
@@ -7,16 +10,37 @@ def environmentName = '$[envName]'
 def clusterName = '$[clusterName]'
 def namespace = '$[namespace]'
 def projectName = '$[projName]'
-
-
+def endpoint = '$[ecp_kubernetes_apiEndpoint]'
+def token = '$[ecp_kubernetes_apiToken]'
 // All the parameters are required
+
 EFClient efClient = new EFClient()
+ElectricFlow ef = new ElectricFlow()
 
 
-def clusters = efClient.getClusters(envProjectName, environmentName)
-def cluster = clusters.find {
-    it.clusterName == clusterName
+def cluster
+try {
+    cluster = ef.getCluster(projectName: envProjectName, environmentName: environmentName, clusterName: clusterName)?.cluster
+} catch (RuntimeException e) {
+    if (e.message =~ /NoSuchCluster|NoSuchEnvironment|NoSuchProject/) {
+        if (!endpoint) {
+            efClient.handleProcedureError("Endpoint parameter should be provided")
+        }
+        if (!token) {
+            efClient.handleProcedureError("Token must be provided")
+        }
+
+        def discoveryClusterHandler = new DiscoveryClusterHandler()
+        def configName = discoveryClusterHandler.ensureConfiguration(endpoint, token)
+        def project = discoveryClusterHandler.ensureProject(envProjectName)
+        def environment = discoveryClusterHandler.ensureEnvironment(envProjectName, environmentName)
+        cluster = discoveryClusterHandler.ensureCluster(envProjectName, environmentName, clusterName, configName)
+    }
+    else {
+        throw e
+    }
 }
+
 try {
     if (!cluster) {
         throw new PluginException("Cluster ${clusterName} does not exist in the environment ${environmentName}")

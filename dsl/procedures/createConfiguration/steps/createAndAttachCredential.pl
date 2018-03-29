@@ -42,6 +42,7 @@ $ec->deleteCredential($projName, $credName);
 $xpath = $ec->createCredential($projName, $credName, $clientID, $clientSecret);
 $errors .= $ec->checkAllErrors($xpath);
 
+
 # Give config the credential's real name
 my $configPath = "/projects/$projName/ec_plugin_cfgs/$credName";
 $xpath = $ec->setProperty($configPath . "/credential", $credName);
@@ -57,6 +58,7 @@ $xpath = $ec->createAclEntry("user", $user,
      executePrivilege => allow,
      changePermissionsPrivilege => allow});
 $errors .= $ec->checkAllErrors($xpath);
+
 
 # Attach credential to steps that will need it
 $xpath = $ec->attachCredential($projName, $credName,
@@ -91,7 +93,7 @@ $errors .= $ec->checkAllErrors($xpath);
 
 
 
-if ("$errors" ne "") {
+if ("$errors" ne "" && $errors !~ /DuplicateAclEntry/) {
     # Cleanup the partially created configuration we just created
     $ec->deleteProperty($configPath);
     $ec->deleteCredential($projName, $credName);
