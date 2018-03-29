@@ -1,9 +1,12 @@
 package com.electriccloud.kubernetes
 
+import com.electriccloud.errors.EcException
+import com.electriccloud.errors.ErrorCodes
+
+
 class ClusterView {
     String clusterName
     String clusterId
-
     Client kubeClient
 
     private static final String RUNNING = 'Running'
@@ -73,13 +76,17 @@ class ClusterView {
         }
         def containerStatus = pod.status.containerStatuses.find { it.name == name }
         if (!containerStatus) {
-            throw new RuntimeException("No container status found for name ${name}")
+            throw EcException.code(ErrorCodes.UnknownError).message("No container status found for name ${name}").build()
         }
         def states = containerStatus?.state.keySet()
         if (states.size() == 1) {
             return states[0]
         }
-        throw new RuntimeException("Container has more than one status: ${containerStatus}")
+        throw EcException
+            .code(ErrorCodes.UnknownError)
+            .message("Container has more than one status: ${containerStatus}")
+            .location(this.class.canonicalName)
+            .build()
     }
 
     def isSystemService(service) {
@@ -110,7 +117,7 @@ class ClusterView {
 
 
     def getNamespaceId(namespace) {
-        "${this.clusterName}::${getNamespaceName(namespace)}"
+        getNamespaceName(namespace)
     }
 
     def getClusterId() {
