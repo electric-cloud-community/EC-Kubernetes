@@ -1,21 +1,44 @@
+import com.electriccloud.client.groovy.ElectricFlow
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+import groovy.transform.builder.Builder
+import groovy.transform.builder.ExternalStrategy
+import static Logger.*
+
+@Builder(builderStrategy = ExternalStrategy, forClass = Discovery, excludes = 'kubeClient, accessToken, clusterEndpoint, discoveredSummary')
+public class DiscoveryBuilder {}
 
 public class Discovery extends EFClient {
-    def kubeClient
+    @Lazy
+    KubernetesClient kubeClient = { new KubernetesClient() }()
+
     def pluginConfig
-    def accessToken
-    def clusterEndpoint
+    @Lazy
+    def accessToken = { kubeClient.retrieveAccessToken(pluginConfig) }()
+
+    @Lazy
+    def clusterEndpoint = { pluginConfig.clusterEndpoint }()
+
     def discoveredSummary = [:]
+
+    @Lazy(soft = true)
+    ElectricFlow ef = { new ElectricFlow() }()
+
+//    Target
+    def projectName
+    def applicationName
+    def environmentProjectName
+    def environmentName
+    def clusterName
 
     static final String CREATED_DESCRIPTION = "Created by Container Discovery"
 
-    def Discovery(params) {
-        kubeClient = params.kubeClient
-        pluginConfig = params.pluginConfig
-        accessToken = kubeClient.retrieveAccessToken(pluginConfig)
-        clusterEndpoint = pluginConfig.clusterEndpoint
-    }
+//    def Discovery(params) {
+//        kubeClient = params.kubeClient
+//        pluginConfig = params.pluginConfig
+//        accessToken = kubeClient.retrieveAccessToken(pluginConfig)
+//        clusterEndpoint = pluginConfig.clusterEndpoint
+//    }
 
     def discover(namespace) {
         def kubeServices = kubeClient.getServices(clusterEndpoint, namespace, accessToken)
@@ -35,7 +58,6 @@ public class Discovery extends EFClient {
                 deployments.items.each { deploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
 
-
                     if (deploy.spec.template.spec.imagePullSecrets) {
                         def secrets = buildSecretsDefinition(namespace, deploy.spec.template.spec.imagePullSecrets)
                         efService.secrets = secrets
@@ -47,10 +69,23 @@ public class Discovery extends EFClient {
         efServices
     }
 
-    def saveToEF(services, projectName, envProjectName, envName, clusterName) {
-        def efServices = getServices(projectName)
+    def ensureApplication() {
+        def application
+        try {
+            application = ef.getApplication(projectName: projectName, applicationName: applicationName)?.application
+        } catch (Throwable e) {
+            application = ef.createApplication(projectName: projectName, applicationName: applicationName)?.application
+        }
+        application
+    }
+
+    def saveToEF(services) {
+        if (applicationName) {
+            ensureApplication()
+        }
+        def efServices = ef.getServices(projectName: projectName, applicationName: applicationName)?.service as List
         services.each { service ->
-            createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service)
+            createOrUpdateService(efServices, service)
         }
 
         def lines = ["Discovered services: ${discoveredSummary.size()}"]
@@ -61,7 +96,7 @@ public class Discovery extends EFClient {
         updateJobSummary(lines.join("\n"))
     }
 
-    def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service) {
+    def createOrUpdateService(efServices, service) {
         def existingService = efServices.find { s ->
             equalNames(s.serviceName, service.service.serviceName)
         }
@@ -77,21 +112,22 @@ public class Discovery extends EFClient {
             // Future
             // result = updateEFService(existingService, service)
             // logger INFO, "Service ${existingService.serviceName} has been updated"
-        }
-        else {
+        } else {
             serviceName = service.service.serviceName
-            result = createEFService(projectName, service)
+            result = createEFService(service)
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
         }
         assert serviceName
 
         // Containers
-        def efContainers = getContainers(projectName, serviceName)
+        def efContainers = ef.getContainers(projectName: projectName, serviceName: serviceName, applicationName: applicationName)?.container
 
         service.secrets?.each { cred ->
             def credName = getCredName(cred)
-            createCredential(projectName, credName, cred.userName, cred.password)
+            ef.createCredential(
+                projectName: projectName, credentialName: credName,
+                userName: cred.userName, password: cred.password)
             logger INFO, "Credential $credName has been created"
         }
 
@@ -101,16 +137,13 @@ public class Discovery extends EFClient {
                     container.container.credentialName = getCredName(secret)
                 }
             }
-            createOrUpdateContainer(projectName, serviceName, container, efContainers)
-            mapContainerPorts(projectName, serviceName, container, service)
+            createOrUpdateContainer(serviceName, container, efContainers)
+            mapContainerPorts(container, service, serviceName)
         }
 
         if (service.serviceMapping) {
-            createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service)
+            createOrUpdateMapping(serviceName, service)
         }
-
-        // Add deploy process
-        createDeployProcess(projectName, serviceName)
     }
 
     def createDeployProcess(projectName, serviceName) {
@@ -125,85 +158,132 @@ public class Discovery extends EFClient {
         logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
 
+    def ensureServiceClusterMapping(serviceName, mapping, tierMap, environmentMap) {
+        def serviceClusterMapping
 
-    def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service) {
-        def mapping = service.serviceMapping
-
-        def envMaps = getEnvMaps(projName, serviceName)
-        def existingMap = getExistingMapping(projName, serviceName, envProjName, envName)
-
-        def envMapName
-        if (existingMap) {
-            logger INFO, "Environment map already exists for service ${serviceName} and cluster ${clusterName}"
-            envMapName = existingMap.environmentMapName
+        if (tierMap) {
+            serviceClusterMapping = tierMap.serviceClusterMappings?.serviceClusterMapping?.find { it.serviceName == serviceName }
         }
-        else {
+        if (environmentMap) {
+            serviceClusterMapping = environmentMap.serviceClusterMappings?.serviceClusterMapping?.find {
+                it.clusterName == clusterName
+            }
+        }
+        if (!serviceClusterMapping) {
             def payload = [
-                environmentProjectName: envProjName,
-                environmentName: envName,
-                description: CREATED_DESCRIPTION,
-            ]
-
-            def result = createEnvMap(projName, serviceName, payload)
-            envMapName = result.environmentMap?.environmentMapName
-        }
-
-        assert envMapName
-
-        def existingClusterMapping = existingMap?.serviceClusterMappings?.serviceClusterMapping?.find {
-            it.clusterName == clusterName
-        }
-
-        def serviceClusterMappingName
-        if (existingClusterMapping) {
-            logger INFO, "Cluster mapping already exists"
-            serviceClusterMappingName = existingClusterMapping.serviceClusterMappingName
-        }
-        else {
-            def payload = [
-                clusterName: clusterName,
-                environmentName: envName,
-                environmentProjectName: envProjName
+                clusterName           : clusterName,
+                environmentName       : environmentName,
+                environmentProjectName: environmentProjectName,
+                projectName           : projectName,
+                applicationName       : applicationName,
+                serviceName           : serviceName,
             ]
 
             if (mapping) {
                 def actualParameters = []
-                mapping.each {k, v ->
+                mapping.each { k, v ->
                     if (v) {
                         actualParameters.add([actualParameterName: k, value: v])
                     }
                 }
-                payload.actualParameter = actualParameters
+                payload.actualParameters = actualParameters
             }
-            def result = createServiceClusterMapping(projName, serviceName, envMapName, payload)
-            logger INFO, "Created Service Cluster Mapping for ${serviceName} and ${clusterName}"
-            serviceClusterMappingName = result.serviceClusterMapping.serviceClusterMappingName
+            if (tierMap) {
+                payload.tierMapName = tierMap.tierMapName.toString()
+            }
+            else {
+                payload.environmentMapName = environmentMap.environmentMapName.toString()
+            }
+            serviceClusterMapping = ef.createServiceClusterMapping(payload)?.serviceClusterMapping
+        }
+        serviceClusterMapping
+    }
+
+    def ensureEnvironmentMap(serviceName) {
+        def  environmentMap = ef.getEnvironmentMaps(
+                projectName: projectName,
+                serviceName: serviceName,
+                environmentProjectName: environmentProjectName,
+                environmentName: environmentName,
+            )?.environmentMap?.getAt(0)
+
+        if (!environmentMap) {
+            environmentMap = ef.createEnvironmentMap(
+                projectName: projectName,
+                serviceName: serviceName,
+                environmentProjectName: environmentProjectName,
+                environmentName: environmentName
+            )?.environmentMap
+        }
+        environmentMap
+    }
+
+    def ensureTierMap() {
+        def tierMap = ef.getTierMaps(
+                projectName: projectName,
+                applicationName: applicationName,
+                environmentProjectName: environmentProjectName,
+                environmentName: environmentName
+            )?.tierMap?.getAt(0)
+        if (!tierMap) {
+            tierMap = ef.createTierMap(
+                projectName: projectName,
+                applicationName: applicationName,
+                environmentProjectName: environmentProjectName,
+                environmentName: environmentName
+            )?.tierMap
+        }
+        tierMap
+    }
+
+    def createOrUpdateMapping(serviceName, service) {
+        def mapping = service.serviceMapping
+
+        def tierMap
+        def environmentMap
+        if (applicationName) {
+            tierMap = ensureTierMap()
+        }
+        else {
+            environmentMap = ensureEnvironmentMap(serviceName)
         }
 
-        assert serviceClusterMappingName
+        def serviceClusterMapping = ensureServiceClusterMapping(serviceName, mapping, tierMap, environmentMap)
 
         service.containers?.each { container ->
             def payload = [
-                containerName: container.container.containerName
+                containerName            : container.container.containerName,
+                projectName              : projectName,
+                environmentName          : environmentName,
+                environmentProjectName   : environmentProjectName,
+                applicationName          : applicationName,
+                serviceName              : serviceName,
+                serviceClusterMappingName: serviceClusterMapping.serviceClusterMappingName
             ]
             if (container.mapping) {
                 def actualParameters = []
-                container.mapping.each {k, v ->
+                container.mapping.each { k, v ->
                     if (v) {
                         actualParameters.add(
                             [actualParameterName: k, value: v]
                         )
                     }
                 }
-                payload.actualParameter = actualParameters
+                payload.actualParameters = actualParameters
+
             }
-            createServiceMapDetails(
-                projName,
-                serviceName,
-                envMapName,
-                serviceClusterMappingName,
-                payload
-            )
+            if (tierMap) {
+                payload.tierMapName = tierMap.tierMapName.toString()
+            }
+            else {
+                payload.environmentMapName = environmentMap.environmentMapName.toString()
+            }
+            try {
+                ef.createServiceMapDetail(payload)
+            } catch (Throwable e) {
+                logger DEBUG, "${e.message}"
+            }
+
         }
     }
 
@@ -225,25 +305,41 @@ public class Discovery extends EFClient {
         return false
     }
 
-    def mapContainerPorts(projectName, serviceName, container, service) {
+    def mapContainerPorts(container, service, serviceName) {
         container.ports?.each { containerPort ->
             service.ports?.each { servicePort ->
                 if (isBoundPort(containerPort, servicePort)) {
                     def generatedPortName = "servicehttp${serviceName}${container.container.containerName}${containerPort.containerPort}"
                     def generatedPort = [
-                        portName: generatedPortName,
-                        listenerPort: servicePort.listenerPort,
-                        subcontainer: container.container.containerName,
-                        subport: containerPort.portName
+                        portName       : generatedPortName,
+                        listenerPort   : servicePort.listenerPort,
+                        subcontainer   : container.container.containerName,
+                        subport        : containerPort.portName,
+                        projectName    : projectName,
+                        applicationName: applicationName,
+                        serviceName    : serviceName
                     ]
-                    createPort(projectName, serviceName, generatedPort)
-                    logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
+                    try {
+                        ef.createPort(generatedPort)
+                        logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
+                    } catch (Throwable e) {
+                        logger INFO, "Port already exists for service ${serviceName}, listener port ${generatedPort.listenerPort} "
+                    }
                 }
             }
         }
     }
 
-    def createOrUpdateContainer(projectName, serviceName, container, efContainers) {
+    def valuesToString(payload) {
+        payload.keySet().each { k ->
+            if (payload[k]) {
+                payload[k] = payload[k].toString()
+            }
+        }
+        payload
+    }
+
+    def createOrUpdateContainer(serviceName, container, efContainers) {
         def existingContainer = efContainers.find {
             equalNames(it.containerName, container.container.containerName)
         }
@@ -259,28 +355,51 @@ public class Discovery extends EFClient {
             // logger INFO, pretty(container.container)
             // result = updateContainer(projectName, existingContainer.serviceName, containerName, container.container)
             // logger INFO, "Container ${serviceName}/${containerName} has been updated"
-        }
-        else {
+        } else {
             containerName = container.container.containerName
             logger INFO, "Going to create container ${serviceName}/${containerName}"
             logger INFO, pretty(container.container)
-            result = createContainer(projectName, serviceName, container.container)
+            def payload = container.container
+            payload.projectName = projectName
+            payload.applicationName = applicationName
+            payload.serviceName = serviceName
+            result = ef.createContainer(valuesToString(payload))?.container
             logger INFO, "Container ${serviceName}/${containerName} has been created"
             discoveredSummary[serviceName] = discoveredSummary[serviceName] ?: [:]
             discoveredSummary[serviceName][containerName] = [:]
         }
 
         assert containerName
-        def efPorts = getPorts(projectName, serviceName, /* appName */ null, containerName)
+
         container.ports.each { port ->
-            createPort(projectName, serviceName, port, containerName)
-            logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
+            port.projectName = projectName
+            port.containerName = containerName
+            port.serviceName = serviceName
+            port.applicationName = applicationName
+
+            try {
+                ef.createPort(port)
+                logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
+            } catch (Throwable e) {
+                logger INFO, "Port ${port.portName} already exists for container ${containerName}"
+            }
         }
 
         if (container.env) {
             container.env.each { env ->
-                createEnvironmentVariable(projectName, serviceName, containerName, env)
-                logger INFO, "Environment variable ${env.environmentVariableName} has been created"
+                env.with {
+                    projectName = this.projectName
+                    applicationName = this.applicationName
+                }
+                env.containerName = containerName
+                env.serviceName = serviceName
+                try {
+                    ef.createEnvironmentVariable(env)
+                    logger INFO, "Environment variable ${env.environmentVariableName} has been created for container ${containerName}"
+                }
+                catch (Throwable e) {
+                    logger INFO, "Environment variable ${env.environmentVariableName} already exists for container ${containerName}"
+                }
             }
         }
 
@@ -306,13 +425,12 @@ public class Discovery extends EFClient {
 
                     if (password) {
                         def cred = [
-                            repoUrl: repoUrl,
+                            repoUrl : repoUrl,
                             userName: username,
                             password: password
                         ]
                         retval.add(cred)
-                    }
-                    else {
+                    } else {
                         logger WARNING, "Cannot retrieve password from secret for $repoUrl, please create a credential manually"
                     }
                 }
@@ -328,12 +446,11 @@ public class Discovery extends EFClient {
         def efServiceName
         if (serviceName =~ /(?i)${deployName}/) {
             efServiceName = serviceName
-        }
-        else {
+        } else {
             efServiceName = "${serviceName}-${deployName}"
         }
         def efService = [
-            service: [
+            service       : [
                 serviceName: efServiceName
             ],
             serviceMapping: [:]
@@ -365,8 +482,7 @@ public class Discovery extends EFClient {
                     deploymentStrategy = 'rollingDeployment'
                     maxRunningPercentage = getMaxRunningPercentage(rollingUpdate.maxSurge)
                 }
-            }
-            else {
+            } else {
                 efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
             }
 
@@ -375,8 +491,7 @@ public class Discovery extends EFClient {
                     minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
                     deploymentStrategy = 'rollingDeployment'
                 }
-            }
-            else {
+            } else {
                 efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
             }
 
@@ -394,8 +509,7 @@ public class Discovery extends EFClient {
             def name
             if (port.targetPort) {
                 name = port.targetPort as String
-            }
-            else {
+            } else {
                 name = "${port.protocol}${port.port}"
             }
             [portName: name.toLowerCase(), listenerPort: port.port, targetPort: port.targetPort]
@@ -432,10 +546,19 @@ public class Discovery extends EFClient {
         result
     }
 
-    def createEFService(projectName, service) {
+    def createEFService(service) {
         def payload = service.service
         payload.description = "Created by EF Discovery"
-        def result = createService(projectName, payload)
+        payload.projectName = projectName
+        payload.applicationName = applicationName
+        payload.keySet().each { k ->
+            def value = payload[k]
+            if (value) {
+                payload[k] = value.toString()
+            }
+        }
+        payload.addDeployProcess = true
+        def result = ef.createService(payload)
         result
     }
 
@@ -453,8 +576,7 @@ public class Discovery extends EFClient {
         assert defaultCapacity
         if (maxSurge > 1) {
             return defaultCapacity + maxSurge
-        }
-        else {
+        } else {
             return null
         }
     }
@@ -463,8 +585,7 @@ public class Discovery extends EFClient {
         assert defaultCapacity
         if (maxUnavailable > 1) {
             return defaultCapacity - maxUnavailable
-        }
-        else {
+        } else {
             return null
         }
     }
@@ -506,8 +627,7 @@ public class Discovery extends EFClient {
         def version
         if (versioned.size() > 1) {
             version = versioned.last()
-        }
-        else {
+        } else {
             version = 'latest'
         }
         imageName = versioned.first()
@@ -534,9 +654,9 @@ public class Discovery extends EFClient {
         def container = [
             container: [
                 containerName: kubeContainer.name,
-                imageName: getImageName(kubeContainer.image),
-                imageVersion: getImageVersion(kubeContainer.image),
-                registryUri: getRegistryUri(kubeContainer.image) ?: null
+                imageName    : getImageName(kubeContainer.image),
+                imageVersion : getImageVersion(kubeContainer.image),
+                registryUri  : getRegistryUri(kubeContainer.image) ?: null
             ]
         ]
 
@@ -559,8 +679,7 @@ public class Discovery extends EFClient {
 
                 if (port.name) {
                     name = port.name
-                }
-                else {
+                } else {
                     name = "${port.protocol}${port.containerPort}"
                 }
                 [portName: name.toLowerCase(), containerPort: port.containerPort]
@@ -649,8 +768,7 @@ public class Discovery extends EFClient {
             def miliCpu = cpuString.replace('m', '') as int
             def cpu = miliCpu.toFloat() / 1000
             return cpu
-        }
-        else {
+        } else {
             return cpuString.toFloat()
         }
     }
@@ -670,10 +788,9 @@ public class Discovery extends EFClient {
             }
         }
         if (power) {
-            def retval = memoryNumber.toInteger() * (1024 ** power)
+            def retval = memoryNumber.toInteger() * (1024**power)
             return retval
-        }
-        else {
+        } else {
             return memoryNumber.toInteger()
         }
     }

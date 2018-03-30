@@ -12,10 +12,18 @@ def namespace = '$[namespace]'
 def projectName = '$[projName]'
 def endpoint = '$[ecp_kubernetes_apiEndpoint]'
 def token = '$[ecp_kubernetes_apiToken]'
-// All the parameters are required
+def applicationScoped = '$[ecp_kubernetes_applicationScoped]'
+def applicationName = '$[ecp_kubernetes_applicationName]'
 
 EFClient efClient = new EFClient()
 ElectricFlow ef = new ElectricFlow()
+
+
+if (applicationScoped == 'true') {
+    if (!applicationName) {
+        efClient.handleProcedureError("Application name must be provided")
+    }
+}
 
 
 def cluster
@@ -51,10 +59,17 @@ try {
     KubernetesClient client = new KubernetesClient()
 
     def pluginConfig = client.getPluginConfig(efClient, clusterName, envProjectName, environmentName)
-    def discovery = new Discovery(kubeClient: client, pluginConfig: pluginConfig)
+    def discovery = new DiscoveryBuilder()
+        .projectName(projectName)
+        .applicationName(applicationName)
+        .environmentProjectName(envProjectName)
+        .environmentName(environmentName)
+        .clusterName(clusterName)
+        .pluginConfig(pluginConfig)
+        .build()
 
     def services = discovery.discover(namespace)
-    discovery.saveToEF(services, projectName, envProjectName, environmentName, clusterName)
+    discovery.saveToEF(services)
 } catch (PluginException e) {
     efClient.handleProcedureError(e.getMessage())
 }

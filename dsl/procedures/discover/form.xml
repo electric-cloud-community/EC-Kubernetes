@@ -39,6 +39,22 @@
         <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </documentation>
     </formElement>
     <formElement>
+        <type>checkbox</type>
+        <label>Create Application-Scoped Microservices?:</label>
+        <checkedValue>true</checkedValue>
+        <uncheckedValue>false</uncheckedValue>
+        <required>0</required>
+        <property>ecp_kubernetes_applicationScoped</property>
+        <documentation>Whether all the services defined in the Kubernetes YAML file should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Name:</label>
+        <required>0</required>
+        <property>ecp_kubernetes_applicationName</property>
+        <documentation>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</documentation>
+    </formElement>
+    <formElement>
         <type>project</type>
         <label>Project Name:</label>
         <property>projName</property>
