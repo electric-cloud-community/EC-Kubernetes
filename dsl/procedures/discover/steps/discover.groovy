@@ -24,6 +24,9 @@ if (applicationScoped == 'true') {
         efClient.handleProcedureError("Application name must be provided")
     }
 }
+else {
+    applicationName = null
+}
 
 
 def cluster

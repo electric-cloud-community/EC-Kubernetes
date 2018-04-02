@@ -28,7 +28,7 @@ class DiscoveryClusterHandler {
             println "Environment ${environmentName} has been found in the project ${projectName}"
         } catch (Throwable e) {
             environment = ef.createEnvironment(projectName: projectName, environmentName: environmentName).environment
-            println "Environemnt ${environmentName} has been created in the project ${projectName}"
+            println "Environment ${environmentName} has been created in the project ${projectName}"
         }
         environment
     }

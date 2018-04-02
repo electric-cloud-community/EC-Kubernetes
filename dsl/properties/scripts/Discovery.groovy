@@ -31,14 +31,7 @@ public class Discovery extends EFClient {
     def environmentName
     def clusterName
 
-    static final String CREATED_DESCRIPTION = "Created by Container Discovery"
-
-//    def Discovery(params) {
-//        kubeClient = params.kubeClient
-//        pluginConfig = params.pluginConfig
-//        accessToken = kubeClient.retrieveAccessToken(pluginConfig)
-//        clusterEndpoint = pluginConfig.clusterEndpoint
-//    }
+    static final String CREATED_DESCRIPTION = "Created by EF Discovery"
 
     def discover(namespace) {
         def kubeServices = kubeClient.getServices(clusterEndpoint, namespace, accessToken)
@@ -73,13 +66,20 @@ public class Discovery extends EFClient {
         def application
         try {
             application = ef.getApplication(projectName: projectName, applicationName: applicationName)?.application
+            logger INFO, "Application ${applicationName} already exists in project ${projectName}"
         } catch (Throwable e) {
-            application = ef.createApplication(projectName: projectName, applicationName: applicationName)?.application
+            application = ef.createApplication(
+                projectName: projectName,
+                applicationName: applicationName,
+                description: CREATED_DESCRIPTION,
+            )?.application
+            logger INFO, "Application ${applicationName} has been created for project  ${projectName}"
         }
         application
     }
 
     def saveToEF(services) {
+        pritnln services
         if (applicationName) {
             ensureApplication()
         }
@@ -138,6 +138,7 @@ public class Discovery extends EFClient {
                 }
             }
             createOrUpdateContainer(serviceName, container, efContainers)
+            println "Before map"
             mapContainerPorts(container, service, serviceName)
         }
 
@@ -146,17 +147,6 @@ public class Discovery extends EFClient {
         }
     }
 
-    def createDeployProcess(projectName, serviceName) {
-        def processName = 'Deploy'
-        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'])
-        logger INFO, "Process ${processName} has been created for ${serviceName}"
-        def processStepName = 'deployService'
-        def processStep = createProcessStep(projectName, serviceName, processName, [
-            processStepName: processStepName,
-            processStepType: 'service', subservice: serviceName
-        ])
-        logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
-    }
 
     def ensureServiceClusterMapping(serviceName, mapping, tierMap, environmentMap) {
         def serviceClusterMapping
@@ -287,19 +277,12 @@ public class Discovery extends EFClient {
         }
     }
 
-    def getExistingMapping(projectName, serviceName, envProjectName, envName) {
-        def envMaps = getEnvMaps(projectName, serviceName)
-        def existingMap = envMaps.environmentMap?.find {
-            it.environmentProjectName == envProjectName && it.projectName == projectName && it.serviceName == serviceName && it.environmentName == envName
-        }
-        existingMap
-    }
-
     def isBoundPort(containerPort, servicePort) {
         if (containerPort.portName == servicePort.portName) {
             return true
         }
-        if (servicePort.targetPort =~ /^\d+$/ && servicePort.targetPort == containerPort.containerPort) {
+        if (servicePort.targetPort =~ /^\d+$/ && containerPort.containerPort =~ /^\d+$/ &&
+            servicePort.targetPort.toInteger() == containerPort.containerPort.toInteger()) {
             return true
         }
         return false
@@ -319,10 +302,12 @@ public class Discovery extends EFClient {
                         applicationName: applicationName,
                         serviceName    : serviceName
                     ]
+
                     try {
-                        ef.createPort(generatedPort)
+                        ef.createPort(valuesToString(generatedPort))
                         logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                     } catch (Throwable e) {
+                        println e.getMessage()
                         logger INFO, "Port already exists for service ${serviceName}, listener port ${generatedPort.listenerPort} "
                     }
                 }
@@ -378,7 +363,7 @@ public class Discovery extends EFClient {
             port.applicationName = applicationName
 
             try {
-                ef.createPort(port)
+                ef.createPort(valuesToString(port))
                 logger INFO, "Port ${port.portName} has been created for container ${containerName}, container port: ${port.containerPort}"
             } catch (Throwable e) {
                 logger INFO, "Port ${port.portName} already exists for container ${containerName}"
@@ -394,7 +379,7 @@ public class Discovery extends EFClient {
                 env.containerName = containerName
                 env.serviceName = serviceName
                 try {
-                    ef.createEnvironmentVariable(env)
+                    ef.createEnvironmentVariable(valuesToString(env))
                     logger INFO, "Environment variable ${env.environmentVariableName} has been created for container ${containerName}"
                 }
                 catch (Throwable e) {
@@ -537,26 +522,12 @@ public class Discovery extends EFClient {
         efService
     }
 
-    def updateEFService(efService, kubeService) {
-        def payload = kubeService.service
-        def projName = efService.projectName
-        def serviceName = efService.serviceName
-        payload.description = efService.description ?: "Updated by EF Discovery"
-        def result = updateService(projName, serviceName, payload)
-        result
-    }
-
     def createEFService(service) {
         def payload = service.service
-        payload.description = "Created by EF Discovery"
+        payload.description = CREATED_DESCRIPTION
         payload.projectName = projectName
         payload.applicationName = applicationName
-        payload.keySet().each { k ->
-            def value = payload[k]
-            if (value) {
-                payload[k] = value.toString()
-            }
-        }
+        payload = valuesToString(payload)
         payload.addDeployProcess = true
         def result = ef.createService(payload)
         result
