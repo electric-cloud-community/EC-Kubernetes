@@ -1,15 +1,9 @@
 def projectName = args.projectName
 def environmentName = args.environmentName
 def clusterName = args.clusterName
-def configParameters = args.configurationParameter
-def config = [:]
-configParameters.each {
-    def name = it.configurationParameterName
-    def value = it.value
-    config[name] = value
-}
+def config = args.configurationParameters
 
-def credentials = args.credentials
+def credentials = args.credential
 assert credentials.size() == 1
 def userName = credentials[0].userName
 def password = credentials[0].password
