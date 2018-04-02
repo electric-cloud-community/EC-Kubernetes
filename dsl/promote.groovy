@@ -122,7 +122,12 @@ project pluginName, {
 				property 'ui_formRefs', propertyType: 'sheet'
 			}
 		}
+
+		property 'clusterTopology', credentialProtected: true, {
+
+		}
 	}
+	property 'ec_dsl_libraries_path', value: 'libs'
 
 	//plugin configuration metadata
     property 'ec_formXmlCompliant', value: 'true'
