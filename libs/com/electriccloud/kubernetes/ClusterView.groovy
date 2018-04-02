@@ -31,15 +31,14 @@ class ClusterView {
         ClusterTopology topology = new ClusterTopologyImpl()
         topology.addNode(new ClusterTopologyImpl.NodeImpl(getEFClusterId(), TYPE_EF_CLUSTER, getEFClusterName()))
         topology.addLink(new ClusterTopologyImpl.LinkImpl(getEFClusterId(), getClusterId()))
-
         topology.addNode(buildClusterNode())
 
         namespaces.findAll { !isSystemNamespace(it) }.each { namespace ->
             if (!isSystemNamespace(namespace)) {
                 topology.addNode(buildNamespaceNode(namespace))
-                def services = kubeClient.getServices(getNamespaceName(namespace))
-
                 topology.addLink(new ClusterTopologyImpl.LinkImpl(getClusterId(), getNamespaceId(namespace)))
+
+                def services = kubeClient.getServices(getNamespaceName(namespace))
                 services.findAll { !isSystemService(it) }.each { service ->
                     def pods = getServicePods(service)
                     topology.addLink(new ClusterTopologyImpl.LinkImpl(getNamespaceId(namespace), getServiceId(service)))
@@ -161,7 +160,7 @@ class ClusterView {
     }
 
     def buildClusterNode() {
-        Topology.Node node = new ClusterTopologyImpl.NodeImpl(clusterName, TYPE_CLUSTER, clusterName)
+        Topology.Node node = new ClusterTopologyImpl.NodeImpl(getClusterId(), TYPE_CLUSTER, getClusterName())
         node
     }
 
