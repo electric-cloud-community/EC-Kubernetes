@@ -1,5 +1,8 @@
 package com.electriccloud.kubernetes
 
+import com.electriccloud.domain.ClusterTopology
+import com.electriccloud.domain.ClusterTopologyImpl
+import com.electriccloud.domain.Topology
 import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
 
@@ -15,38 +18,46 @@ class ClusterView {
     private static final String PENDING = 'Pending'
     private static final String CRUSH_LOOP = 'CrushLoopBackoff'
 
-    def getRealtimeClusterTopology() {
-        def namespaces = kubeClient.getNamespaces()
-        def nodes = []
-        def links = []
+    private static final String TYPE_CLUSTER = 'ecp-cluster'
+    private static final String TYPE_NAMESPACE = 'ecp-namespace'
+    private static final String TYPE_SERVICE = 'ecp-service'
+    private static final String TYPE_POD = 'ecp-pod'
+    private static final String TYPE_CONTAINER = 'ecp-container'
+    private static final String TYPE_EF_CLUSTER = 'cluster'
 
-        def clusterNode = buildClusterNode()
-        nodes << clusterNode
+    ClusterTopology getRealtimeClusterTopology() {
+        def namespaces = kubeClient.getNamespaces()
+
+        ClusterTopology topology = new ClusterTopologyImpl()
+        topology.addNode(new ClusterTopologyImpl.NodeImpl(getEFClusterId(), TYPE_EF_CLUSTER, getEFClusterName()))
+        topology.addLink(new ClusterTopologyImpl.LinkImpl(getEFClusterId(), getClusterId()))
+        topology.addNode(buildClusterNode())
 
         namespaces.findAll { !isSystemNamespace(it) }.each { namespace ->
             if (!isSystemNamespace(namespace)) {
-                nodes << buildNamespaceNode(namespace)
+                topology.addNode(buildNamespaceNode(namespace))
+                topology.addLink(new ClusterTopologyImpl.LinkImpl(getClusterId(), getNamespaceId(namespace)))
+
                 def services = kubeClient.getServices(getNamespaceName(namespace))
-                def link = [source: getClusterId(), target: getNamespaceId(namespace)]
-                links << link
                 services.findAll { !isSystemService(it) }.each { service ->
                     def pods = getServicePods(service)
-                    links << [source: getNamespaceId(namespace), target: getServiceId(service)]
-                    nodes << buildServiceNode(service, pods)
+                    topology.addLink(new ClusterTopologyImpl.LinkImpl(getNamespaceId(namespace), getServiceId(service)))
+                    topology.addNode(buildServiceNode(service, pods))
+
                     pods.each { pod ->
-                        links << [source: getServiceId(service), target: getPodId(service, pod)]
-                        nodes << buildPodNode(service, pod)
+                        topology.addLink(new ClusterTopologyImpl.LinkImpl(getServiceId(service), getPodId(service, pod)))
+                        topology.addNode(buildPodNode(service, pod))
+
                         def containers = pod.spec.containers
                         containers.each { container ->
-                            links << [source: getPodId(service, pod), target: getContainerId(service, pod, container)]
-                            nodes << buildContainerNode(service, pod, container)
+                            topology.addLink(new ClusterTopologyImpl.LinkImpl(getPodId(service, pod), getContainerId(service, pod, container)))
+                            topology.addNode(buildContainerNode(service, pod, container))
                         }
                     }
                 }
             }
         }
-
-        [nodes: nodes, links: links]
+        topology
     }
 
     def isSystemNamespace(namespace) {
@@ -116,64 +127,87 @@ class ClusterView {
     }
 
 
-    def getNamespaceId(namespace) {
+    String getNamespaceId(namespace) {
         "${this.clusterName}::${getNamespaceName(namespace)}"
     }
 
-    def getClusterId() {
+    String getClusterId() {
         this.clusterName
     }
 
-    def getServiceId(service) {
+    String getEFClusterName() {
+        this.clusterName
+    }
+
+    String getEFClusterId() {
+        this.clusterId
+    }
+
+    String getClusterName() {
+        kubeClient.endpoint
+    }
+
+    String getServiceId(service) {
         "${getNamespaceId(service)}::${service.metadata.name}"
     }
 
-    def getPodId(service, pod) {
+    String getPodId(service, pod) {
         "${getServiceId(service)}::${pod.metadata.name}"
     }
 
-    def getContainerId(service, pod, container) {
+    String getContainerId(service, pod, container) {
         "${getPodId(service, pod)}::${container.name}"
     }
 
     def buildClusterNode() {
-        [id: clusterName, efId: clusterId, displayName: clusterName]
+        Topology.Node node = new ClusterTopologyImpl.NodeImpl(getClusterId(), TYPE_CLUSTER, getClusterName())
+        node
     }
 
     def buildPodNode(service, pod) {
         def name = pod.metadata.name
         def status = pod.status.phase
-        [type: 'pod', id: getPodId(service, pod), name: name, status: status]
+        Topology.Node node = new ClusterTopologyImpl.NodeImpl(getPodId(service, pod), TYPE_POD, name)
+        node.setStatus(status)
+        node
     }
 
     def buildServiceNode(Map service, pods) {
         def name = service.metadata.name
         def status = getPodsStatus(pods)
-        [id: getServiceId(service), name: name, type: 'service', status: status]
+        Topology.Node node = new ClusterTopologyImpl.NodeImpl(getServiceId(service), TYPE_SERVICE, name)
+        node.setStatus(status)
+        node
     }
 
     def buildContainerNode(service, pod, container) {
-        def imageAndVersion = container.image.split(':')
-        def image = imageAndVersion[0]
-        def version = imageAndVersion.size() > 1 ? imageAndVersion[1] : 'latest'
-        [
-            type   : 'container',
-            name   : container.name,
-            id     : getContainerId(service, pod, container),
-            status : getContainerStatus(pod, container),
-            image  : image,
-            version: version
-        ]
+        def node = new ClusterTopologyImpl.NodeImpl(getContainerId(service, pod, container), TYPE_CONTAINER, container.name)
+        node.setStatus(getContainerStatus(pod, container))
+        return node
+//
+//        def imageAndVersion = container.image.split(':')
+//        def image = imageAndVersion[0]
+//        def version = imageAndVersion.size() > 1 ? imageAndVersion[1] : 'latest'
+//        [
+//            type   : 'container',
+//            name   : container.name,
+//            id     : getContainerId(service, pod, container),
+//            status : getContainerStatus(pod, container),
+//            image  : image,
+//            version: version
+//        ]
     }
 
 
     def buildNamespaceNode(namespace) {
         def name = getNamespaceName(namespace)
-        [id: getNamespaceId(namespace), displayName: name, type: 'namespace']
+        new ClusterTopologyImpl.NodeImpl(getNamespaceId(namespace), TYPE_NAMESPACE, name)
     }
 
     def getNamespaceName(namespace) {
-        namespace.metadata.name
+        def name = namespace?.metadata?.name
+        assert name
+        name
     }
 
 
