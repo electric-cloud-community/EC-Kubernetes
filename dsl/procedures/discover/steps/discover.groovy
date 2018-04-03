@@ -15,6 +15,22 @@ def token = '$[ecp_kubernetes_apiToken]'
 def applicationScoped = '$[ecp_kubernetes_applicationScoped]'
 def applicationName = '$[ecp_kubernetes_applicationName]'
 
+
+println "Using plugin @PLUGIN_NAME@"
+println "Environment Project Name: $envProjectName"
+println "Environment Name: $environmentName"
+println "Cluster Name: $clusterName"
+println "Namespace: $namespace"
+println "Project Name: $projectName"
+println "Endpoint: $endpoint"
+
+if (token) {
+    println "Token: ****"
+}
+if (applicationScoped) {
+    println "Application Name: $applicationName"
+}
+
 EFClient efClient = new EFClient()
 ElectricFlow ef = new ElectricFlow()
 

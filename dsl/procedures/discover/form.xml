@@ -28,7 +28,7 @@
         <label>Service Account API Token:</label>
         <required>0</required>
         <property>ecp_kubernetes_apiToken</property>
-        <documentation>The bearer token related to a serviceAccount which has access to create resources in the Kubernetes cluster.</documentation>
+        <documentation>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -40,12 +40,12 @@
     </formElement>
     <formElement>
         <type>checkbox</type>
-        <label>Create Application-Scoped Microservices?:</label>
+        <label>Create application-scoped microservices:</label>
         <checkedValue>true</checkedValue>
         <uncheckedValue>false</uncheckedValue>
         <required>0</required>
         <property>ecp_kubernetes_applicationScoped</property>
-        <documentation>Whether all the services defined in the Kubernetes YAML file should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
+        <documentation>Whether all the services discovered in the Kubernetes namespace should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>

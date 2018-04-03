@@ -79,13 +79,12 @@ public class Discovery extends EFClient {
     }
 
     def saveToEF(services) {
-        pritnln services
         if (applicationName) {
             ensureApplication()
         }
         def efServices = ef.getServices(projectName: projectName, applicationName: applicationName)?.service as List
         services.each { service ->
-            createOrUpdateService(efServices, service)
+            createOrUpdateService(service)
         }
 
         def lines = ["Discovered services: ${discoveredSummary.size()}"]
@@ -96,10 +95,16 @@ public class Discovery extends EFClient {
         updateJobSummary(lines.join("\n"))
     }
 
-    def createOrUpdateService(efServices, service) {
-        def existingService = efServices.find { s ->
-            equalNames(s.serviceName, service.service.serviceName)
+    def findService(service) {
+        def services = ef.getServices(projectName: projectName, applicationName: applicationName)?.service
+        def found = services.find {
+            equalNames(it.serviceName, service.service.serviceName)
         }
+        found
+    }
+
+    def createOrUpdateService(service) {
+        def existingService = findService(service)
         def result
         def serviceName
 
@@ -138,7 +143,6 @@ public class Discovery extends EFClient {
                 }
             }
             createOrUpdateContainer(serviceName, container, efContainers)
-            println "Before map"
             mapContainerPorts(container, service, serviceName)
         }
 
@@ -173,7 +177,7 @@ public class Discovery extends EFClient {
                 def actualParameters = []
                 mapping.each { k, v ->
                     if (v) {
-                        actualParameters.add([actualParameterName: k, value: v])
+                        actualParameters.add([actualParameterName: k, value: v.toString()])
                     }
                 }
                 payload.actualParameters = actualParameters
@@ -255,7 +259,7 @@ public class Discovery extends EFClient {
                 container.mapping.each { k, v ->
                     if (v) {
                         actualParameters.add(
-                            [actualParameterName: k, value: v]
+                            [actualParameterName: k, value: v.toString()]
                         )
                     }
                 }
@@ -307,7 +311,6 @@ public class Discovery extends EFClient {
                         ef.createPort(valuesToString(generatedPort))
                         logger INFO, "Port ${generatedPortName} has been created for service ${serviceName}, listener port: ${generatedPort.listenerPort}, container port: ${generatedPort.subport}"
                     } catch (Throwable e) {
-                        println e.getMessage()
                         logger INFO, "Port already exists for service ${serviceName}, listener port ${generatedPort.listenerPort} "
                     }
                 }
@@ -526,9 +529,12 @@ public class Discovery extends EFClient {
         def payload = service.service
         payload.description = CREATED_DESCRIPTION
         payload.projectName = projectName
-        payload.applicationName = applicationName
+        if (applicationName) {
+            payload.applicationName = applicationName
+        }
         payload = valuesToString(payload)
         payload.addDeployProcess = true
+
         def result = ef.createService(payload)
         result
     }
