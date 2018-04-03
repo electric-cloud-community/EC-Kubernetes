@@ -1,15 +1,18 @@
 package com.electriccloud.kubernetes
 
+import com.electriccloud.errors.EcException
+import com.electriccloud.errors.ErrorCodes
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import static groovyx.net.http.ContentType.JSON
 import static groovyx.net.http.Method.GET
-import static groovyx.net.http.Method.PATCH
 
 class Client {
 
     String endpoint
     String accessToken
+    String kubernetesVersion
+
 
     static final Integer DEBUG = 1
     static final Integer INFO = 2
@@ -18,8 +21,9 @@ class Client {
 
     static Integer logLevel = INFO
 
-    Client(String endpoint, String accessToken) {
+    Client(String endpoint, String accessToken, String version) {
         this.endpoint = endpoint
+        this.kubernetesVersion = version
         this.accessToken = accessToken
     }
 
@@ -30,7 +34,7 @@ class Client {
         def http = new HTTPBuilder(this.endpoint)
         http.ignoreSSLIssues()
         def requestHeaders = [
-            'Content-Type': 'application/json',
+            'Content-Type' : 'application/json',
             'Authorization': "Bearer ${this.accessToken}"
         ]
 
@@ -51,23 +55,18 @@ class Client {
 
             response.failure = { resp, reader ->
                 logger ERROR, "Response: $reader"
-                throw new RuntimeException("Request failed with $resp.statusLine")
+                throw EcException
+                    .code(ErrorCodes.UnknownError)
+                    .location(this.getClass().getCanonicalName())
+                    .message("Request failed with $resp.statusLine")
+                    .build()
             }
         }
     }
 
-    def getClusterDetails(String clusterName){
-        def result = doHttpRequest(GET, "/apis/apiregistration.k8s.io/v1beta1/apiservices/${clusterName}")
-        result?.items
-    }
 
     def getNamespaces() {
         def result = doHttpRequest(GET, "/api/v1/namespaces")
-        result?.items
-    }
-
-    def getNamespace(String namespace) {
-        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}")
         result?.items
     }
 
@@ -76,15 +75,23 @@ class Client {
         result?.items
     }
 
-    def getService(String namespace, String clusterName){
-        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services/${clusterName}")
-        resul?.items
+    def getDeployments(String namespace, String labelSelector = null) {
+        def query = [:]
+        if (labelSelector) {
+            query.labelSelector = labelSelector
+        }
+        def result = doHttpRequest(GET, "/apis/${versionSpecificAPIPath("deployments")}/namespaces/${namespace}/deployments", null, query)
+        result?.items
     }
 
-    def getPods() {
-
+    def getPods(String namespace, String labelSelector = null) {
+        def query = [:]
+        if (labelSelector) {
+            query.labelSelector = labelSelector
+        }
+        def result= doHttpRequest(GET, "/api/v1/namespaces/${namespace}/pods")
+        result?.items
     }
-
 
 
     def static getLogLevelStr(Integer level) {
@@ -101,8 +108,44 @@ class Client {
         }
     }
 
+
+    boolean isVersionGreaterThan17() {
+        try {
+            float version = Float.parseFloat(this.kubernetesVersion)
+            version >= 1.8
+        } catch (NumberFormatException ex) {
+            logger WARNING, "Invalid Kubernetes version '$kubernetesVersion'"
+            true
+        }
+    }
+
+    boolean isVersionGreaterThan15() {
+        try {
+            float version = Float.parseFloat(this.kubernetesVersion)
+            version >= 1.6
+        } catch (NumberFormatException ex) {
+            logger WARNING, "Invalid Kubernetes version '$kubernetesVersion'"
+            // default to considering this > 1.5 version
+            true
+        }
+    }
+
+
+    String versionSpecificAPIPath(String resource) {
+        switch (resource) {
+            case 'deployments':
+                return isVersionGreaterThan15() ? (isVersionGreaterThan17() ? 'apps/v1beta2' : 'apps/v1beta1') : 'extensions/v1beta1'
+            default:
+                throw EcException
+                    .code(ErrorCodes.UnknownError)
+                    .location(this.class.getCanonicalName())
+                    .message("Unsupported resource '$resource' for determining version specific API path")
+                    .build()
+        }
+    }
+
     static def logger(Integer level, def message) {
-        if ( level >= logLevel ) {
+        if (level >= logLevel) {
             println getLogLevelStr(level) + message
         }
     }
