@@ -14,6 +14,8 @@ import static groovyx.net.http.Method.PATCH
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.Method.PUT
 
+import static Logger.*
+
 /**
  * Groovy client with common utility functions used in a plugin procedure
  * step such as for making HTTP requests, error handling, etc.

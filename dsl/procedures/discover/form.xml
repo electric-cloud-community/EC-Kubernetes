@@ -17,6 +17,51 @@
 -->
 <editor>
     <formElement>
+        <type>entry</type>
+        <property>ecp_kubernetes_apiEndpoint</property>
+        <label>Kubernetes API Endpoint:</label>
+        <required>0</required>
+        <documentation>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</documentation>
+    </formElement>
+    <formElement>
+        <type>textarea</type>
+        <label>Service Account API Token:</label>
+        <required>0</required>
+        <property>ecp_kubernetes_apiToken</property>
+        <documentation>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Kubernetes Namespace:</label>
+        <property>namespace</property>
+        <required>1</required>
+        <value>default</value>
+        <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </documentation>
+    </formElement>
+    <formElement>
+        <type>checkbox</type>
+        <label>Create application-scoped microservices:</label>
+        <checkedValue>true</checkedValue>
+        <uncheckedValue>false</uncheckedValue>
+        <required>0</required>
+        <property>ecp_kubernetes_applicationScoped</property>
+        <documentation>Whether all the services discovered in the Kubernetes namespace should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Application Name:</label>
+        <required>0</required>
+        <property>ecp_kubernetes_applicationName</property>
+        <documentation>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</documentation>
+    </formElement>
+    <formElement>
+        <type>project</type>
+        <label>Project Name:</label>
+        <property>projName</property>
+        <required>1</required>
+        <documentation>The name of project in which the discovered microservices will be created.</documentation>
+    </formElement>
+    <formElement>
         <type>project</type>
         <label>Environment Project Name:</label>
         <property>envProjectName</property>
@@ -36,20 +81,5 @@
         <property>clusterName</property>
         <required>1</required>
         <documentation>The name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered.</documentation>
-    </formElement>
-    <formElement>
-        <type>entry</type>
-        <label>Kubernetes Namespace:</label>
-        <property>namespace</property>
-        <required>1</required>
-        <value>default</value>
-        <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </documentation>
-    </formElement>
-    <formElement>
-        <type>project</type>
-        <label>Project Name:</label>
-        <property>projName</property>
-        <required>1</required>
-        <documentation>The name of project in which the discovered microservices will be created.</documentation>
     </formElement>
 </editor>

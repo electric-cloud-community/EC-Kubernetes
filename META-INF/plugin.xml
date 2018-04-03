@@ -2,7 +2,7 @@
   <author>Electric Cloud</author>
   <authorUrl>http://www.electric-cloud.com/support</authorUrl>
   <category>Container Management</category>
-  <commander-version min="6.0" />
+  <commander-version min="8.3" />
   <description>Integrates with Kubernetes orchestration engine to deploy Docker containers.</description>
   <help>help.xml</help>
   <key>EC-Kubernetes</key>

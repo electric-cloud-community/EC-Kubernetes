@@ -66,10 +66,10 @@
             <name>Rolling Deployment</name>
             <value>rollingDeployment</value>
         </option>
-        <option>
-            <value>blueGreenDeployment</value>
-            <name>Blue/Green Deployment</name>
-        </option>
+        <!--<option>-->
+            <!--<value>blueGreenDeployment</value>-->
+            <!--<name>Blue/Green Deployment</name>-->
+        <!--</option>-->
         <label>Deployment Strategy:</label>
         <required>0</required>
         <property>deploymentStrategy</property>
