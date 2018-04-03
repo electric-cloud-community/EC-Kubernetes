@@ -70,9 +70,18 @@ class Client {
         result?.items
     }
 
+    def getNamespace(String namespace) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}")
+        result?.items
+    }
     def getServices(String namespace) {
         def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services")
         result?.items
+    }
+
+    def getService(String namespace, String serviceName){
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services/${serviceName}")
+        resul?.items
     }
 
     def getDeployments(String namespace, String labelSelector = null) {
