@@ -1179,12 +1179,17 @@ public class KubernetesClient extends BaseClient {
                     ]
                 }
 
+        def serviceId = args.serviceId
+
         def result = json {
             kind "Service"
             apiVersion "v1"
 
             metadata {
                 name serviceName
+                labels {
+                    "ec-svc-id" serviceId
+                }
             }
             //Kubernetes plugin injects this service selector
             //to link the service to the pod that this
