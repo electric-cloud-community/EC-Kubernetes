@@ -90,6 +90,7 @@ class DiscoveryClusterHandler {
             ]
         )
 
+        println "Launched configuration job: jobId: ${result.jobId}"
         def jobId = result.jobId
 
         def status = ''

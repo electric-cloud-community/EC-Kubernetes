@@ -42,7 +42,6 @@ $ec->deleteCredential($projName, $credName);
 $xpath = $ec->createCredential($projName, $credName, $clientID, $clientSecret);
 $errors .= $ec->checkAllErrors($xpath);
 
-
 # Give config the credential's real name
 my $configPath = "/projects/$projName/ec_plugin_cfgs/$credName";
 $xpath = $ec->setProperty($configPath . "/credential", $credName);
@@ -50,15 +49,18 @@ $errors .= $ec->checkAllErrors($xpath);
 
 # Give job launcher full permissions on the credential
 my $user = "$[/myJob/launchedByUser]";
-$xpath = $ec->createAclEntry("user", $user,
-    {projectName => $projName,
-     credentialName => $credName,
-     readPrivilege => allow,
-     modifyPrivilege => allow,
-     executePrivilege => allow,
-     changePermissionsPrivilege => allow});
-$errors .= $ec->checkAllErrors($xpath);
 
+$xpath = $ec->getAclEntry("user", $user, {projectName => $projName, credentialName => $credName});
+if (!$xpath->findvalue('//aclEntryId')) {
+    $xpath = $ec->createAclEntry("user", $user,
+        { projectName                  => $projName,
+            credentialName             => $credName,
+            readPrivilege              => allow,
+            modifyPrivilege            => allow,
+            executePrivilege           => allow,
+            changePermissionsPrivilege => allow });
+    $errors .= $ec->checkAllErrors($xpath);
+}
 
 # Attach credential to steps that will need it
 $xpath = $ec->attachCredential($projName, $credName,
@@ -93,7 +95,7 @@ $errors .= $ec->checkAllErrors($xpath);
 
 
 
-if ("$errors" ne "" && $errors !~ /DuplicateAclEntry/) {
+if ("$errors" ne "") {
     # Cleanup the partially created configuration we just created
     $ec->deleteProperty($configPath);
     $ec->deleteCredential($projName, $credName);
