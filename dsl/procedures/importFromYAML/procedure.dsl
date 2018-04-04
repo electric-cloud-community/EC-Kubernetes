@@ -9,7 +9,7 @@ procedure 'Import Microservices',
           subprocedure: 'Setup',
           command: null,
           errorHandling: 'failProcedure',
-          exclusiveMode: 'call',
+          exclusiveMode: 'none',
           postProcessor: 'postp',
           releaseMode: 'none',
           timeLimitUnits: 'minutes', {
