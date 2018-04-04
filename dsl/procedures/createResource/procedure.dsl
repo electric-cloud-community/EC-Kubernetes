@@ -25,6 +25,7 @@ procedure 'Create Resource',
 	  postProcessor: 'postp',
 	  releaseMode: 'none',
 	  shell: 'ec-groovy',
+	  resourceName: '$[grabbedResource]',
 	  timeLimitUnits: 'minutes'
 	  
 }

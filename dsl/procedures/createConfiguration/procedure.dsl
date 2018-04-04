@@ -20,6 +20,7 @@ procedure 'CreateConfiguration',
             condition: '$[testConnection]',
             exclusiveMode: 'none',
             releaseMode: 'none',
+            resourceName: '$[grabbedResource]',
             shell: 'ec-groovy',
             timeLimitUnits: 'minutes'
 
