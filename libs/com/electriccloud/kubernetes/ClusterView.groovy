@@ -177,9 +177,9 @@ class ClusterView {
         def status = getPodsStatus(pods)
         Topology.Node node = new ClusterTopologyImpl.NodeImpl(getServiceId(service), TYPE_SERVICE, name)
         node.setStatus(status)
-        def efId = service.metadata?.labels['ec-svc-id']
+        def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
         if (efId) {
-            node.setIdInElectricFlow(efId)
+            node.setElectricFlowIdentifier(efId)
         }
         node
     }
