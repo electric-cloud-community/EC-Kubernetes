@@ -1,6 +1,7 @@
 package com.electriccloud.commander.dsl.util
 
 import groovy.io.FileType
+import groovy.json.JsonOutput
 import groovy.util.XmlSlurper
 import java.io.File
 
@@ -26,7 +27,8 @@ abstract class BasePlugin extends DslDelegatingScript {
 				description: propDescription
 	}
 
-	def setupPluginMetadata(String pluginDir, String pluginKey, String pluginName, String pluginCategory) {
+	def setupPluginMetadata(String pluginDir, String pluginKey, String pluginName, List stepsWithAttachedCredentials) {
+	    String pluginCategory = determinePluginCategory(pluginDir)
 		getProcedures(pluginName).each { proc ->
 
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
@@ -36,9 +38,13 @@ abstract class BasePlugin extends DslDelegatingScript {
 				def description = proc.description
 				stepPicker (label, pluginKey, proc.procedureName, pluginCategory, description)
 			}
-
+			if (proc.procedureName == 'CreateConfiguration' && stepsWithAttachedCredentials) {
+				//Store the list of steps that require credentials to be attached as a procedure property
+				procedure proc.procedureName, {
+					property 'ec_stepsWithAttachedCredentials', value: JsonOutput.toJson(stepsWithAttachedCredentials)
 		}
-
+			}
+		}
 		// configure the plugin icon if is exists
 		setPluginIconIfIconExists(pluginDir, pluginName)
 	}
@@ -62,7 +68,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 		}
 	}
 
-	def cleanup(String pluginKey, String pluginName, String pluginCategory) {
+	def cleanup(String pluginKey, String pluginName) {
 		getProcedures(pluginName).each { proc ->
 
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
@@ -79,8 +85,14 @@ abstract class BasePlugin extends DslDelegatingScript {
 		}
 	}
 
+	def determinePluginCategory(String pluginDir) {
+		File pluginXml = new File("$pluginDir/META-INF", 'plugin.xml')
+		def pluginRoot = new XmlSlurper().parseText(pluginXml.text)
+		pluginRoot.category?: 'Utilities'
+	}
+
 	def shouldAddStepPicker(def pluginName, def procedureName) {
-		if (procedureName == 'CreateConfiguration' || procedureName == 'DeleteConfiguration') {
+		if (procedureName == 'CreateConfiguration' || procedureName == 'DeleteConfiguration' || procedureName == 'EditConfiguration') {
 			return false
 		}
 		def prop = getProperty("/projects/${pluginName}/procedures/${procedureName}/standardStepPicker", suppressNoSuchPropertyException: true)
@@ -121,7 +133,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 		}
 	}
 
-	def loadProcedures(String pluginDir, String pluginKey, String pluginName, String pluginCategory) {
+	def loadProcedures(String pluginDir, String pluginKey, String pluginName, List stepsWithAttachedCredentials) {
 
 		// Loop over the sub-directories in the procedures directory
 		// and evaluate procedures if a procedure.dsl file exists
@@ -146,7 +158,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 		}
 
 		// plugin boiler-plate
-		setupPluginMetadata(pluginDir, pluginKey, pluginName, pluginCategory)
+		setupPluginMetadata(pluginDir, pluginKey, pluginName, stepsWithAttachedCredentials)
 	}
 
 	def getProcedureDSLFile(File procedureDir) {
@@ -186,12 +198,16 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 			ec_parameterForm = formXml.text
 			formElements.formElement.each { formElement ->
+				def expansionDeferred = formElement.expansionDeferred == "true" ? "1" : "0"
+				println "expansionDeferred: ${formElement.property}: $expansionDeferred"
+
 				formalParameter "$formElement.property",
 						defaultValue: formElement.value,
 						required: formElement.required,
 						description: formElement.description,
 						type: formElement.type,
-						label: formElement.label
+						label: formElement.label,
+						expansionDeferred: expansionDeferred
 
 				if (formElement['attachedAsParameterToStep'] && formElement['attachedAsParameterToStep'] != '') {
 					formElement['attachedAsParameterToStep'].toString().split(',').each { attachToStep ->
@@ -238,10 +254,38 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 	def upgrade(String upgradeAction, String pluginName,
 				String otherPluginName, List steps,
-				String configName = 'ec_plugin_cfgs') {
+				String configName = 'ec_plugin_cfgs', List properties = []) {
 
 		migrationConfigurations(upgradeAction, pluginName, otherPluginName, steps, configName)
+
+		println "Properties size: " + properties.size()
+        properties.each { propertyName ->
+        	println "Going to migrate $propertyName"
+            migrationProperties(upgradeAction, pluginName, otherPluginName, propertyName)
+        }
+
 	}
+
+
+   def migrationProperties(String upgradeAction, String pluginName, String otherPluginName, String propertyName) {
+        if (upgradeAction == 'upgrade') {
+           def properties = getProperty("/plugins/$otherPluginName/project/$propertyName", suppressNoSuchPropertyException: true)
+           if (!properties) {
+           		println "No properties found for $otherPluginName: $propertyName"
+           		return
+           }
+
+           def existingProperties = getProperty("/plugins/$pluginName/project/$propertyName", suppressNoSuchPropertyException: true)
+           if (existingProperties) {
+           		println "Properties exist in plugin $pluginName: $propertyName"
+           		return
+           }
+
+           clone path: "/plugins/$otherPluginName/project/$propertyName", cloneName: "/plugins/$pluginName/project/$propertyName"
+           println "Cloned /plugins/$otherPluginName/project/$propertyName, /plugins/$pluginName/project/$propertyName"
+ 	   }
+    }
+
 
 	def migrationConfigurations(String upgradeAction, String pluginName,
 								String otherPluginName, List steps,

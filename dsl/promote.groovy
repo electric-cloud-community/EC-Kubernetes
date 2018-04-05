@@ -46,7 +46,7 @@ project pluginName, {
 	ec_visibility = 'pickListOnly'
 
 	loadPluginProperties(pluginDir, pluginName)
-	loadProcedures(pluginDir, pluginKey, pluginName, pluginCategory)
+	loadProcedures(pluginDir, pluginKey, pluginName, stepsWithAttachedCredentials)
 
 
 	//register container service plugin metadata
