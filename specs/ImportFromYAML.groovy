@@ -4,6 +4,8 @@ import com.electriccloud.spec.*
 class ImportFromYAML extends KubeHelper {
     static def kubeYAMLFile
     static def projectName = 'EC-Kubernetes Specs Import'
+    def applicationScoped = true
+    static def applicationName = 'Kube Spec App'
     static def envName = 'Kube Spec Env'
     static def serviceName = 'kube-spec-import-test'
     static def clusterName = 'Kube Spec Cluster'
@@ -15,11 +17,13 @@ class ImportFromYAML extends KubeHelper {
         dslFile 'dsl/ImportFromYAML.dsl', [
             projectName: projectName,
             params: [
-                kubeYAMLFile: '',
-                projName: '',
-                envProjectName: '',
-                envName: '',
-                clusterName: '',
+                kubeYAMLFile:       '',
+                projName:           '',
+                application_scoped: '',
+                application_name:   '',
+                envProjectName:     '',
+                envName:            '',
+                clusterName:        '',
             ]
         ]
 
@@ -80,7 +84,7 @@ spec:
             cpu: 0.25
         ports:
         - containerPort: 80
-'''
+'''.trim()
         when:
             def result = runProcedureDsl """
                 runProcedure(
@@ -256,7 +260,7 @@ spec:
         env:
          - name: DEMO
            value: "for DEMO"
-'''
+'''.trim()
         when:
             def result = runProcedureDsl """
                 runProcedure(
@@ -371,7 +375,7 @@ spec:
             cpu: 100m
         ports:
         - containerPort: 80
-'''
+'''.trim()
         when:
             def result = runProcedureDsl """
                 runProcedure(
@@ -520,7 +524,7 @@ spec:
             cpu: 5000m
         ports:
         - containerPort: 80
-'''
+'''.trim()
         when:
             def result = runProcedureDsl """
                 runProcedure(
