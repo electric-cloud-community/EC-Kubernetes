@@ -85,9 +85,9 @@ spec:
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'ImportFromYAML',
+                    procedureName: 'Import Microservices',
                     actualParameter: [
-                        kubeYAMLFile: '$kubeYAMLFile',
+                        kubeYAMLFile: '''$kubeYAMLFile''',
                         projName: '$projectName',
                         envProjectName: '$projectName',
                         envName: '$envName',
@@ -261,9 +261,9 @@ spec:
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'ImportFromYAML',
+                    procedureName: 'Import Microservices',
                     actualParameter: [
-                        kubeYAMLFile: '$kubeYAMLFile',
+                        kubeYAMLFile: '''$kubeYAMLFile''',
                         projName: '$projectName',
                         envProjectName: '$projectName',
                         envName: '$envName',
@@ -376,9 +376,9 @@ spec:
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'ImportFromYAML',
+                    procedureName: 'Import Microservices',
                     actualParameter: [
-                        kubeYAMLFile: '$kubeYAMLFile',
+                        kubeYAMLFile: '''$kubeYAMLFile''',
                         projName: '$projectName',
                         envProjectName: '$projectName',
                         envName: '$envName',
@@ -525,9 +525,9 @@ spec:
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'ImportFromYAML',
+                    procedureName: 'Import Microservices',
                     actualParameter: [
-                        kubeYAMLFile: '$kubeYAMLFile',
+                        kubeYAMLFile: '''$kubeYAMLFile''',
                         projName: '$projectName',
                         envProjectName: '$projectName',
                         envName: '$envName',
