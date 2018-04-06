@@ -9,7 +9,7 @@ procedure 'CreateConfiguration',
           command: null,
           errorHandling: 'failProcedure',
           condition: '$[testConnection]',
-          exclusiveMode: 'call',
+          exclusiveMode: 'none',
           postProcessor: 'postp',
           releaseMode: 'none',
           timeLimitUnits: 'minutes'
@@ -20,6 +20,7 @@ procedure 'CreateConfiguration',
             condition: '$[testConnection]',
             exclusiveMode: 'none',
             releaseMode: 'none',
+            resourceName: '$[grabbedResource]',
             shell: 'ec-groovy',
             timeLimitUnits: 'minutes'
 

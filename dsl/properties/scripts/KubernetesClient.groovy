@@ -1,6 +1,11 @@
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
-
+import static groovyx.net.http.ContentType.JSON
+import static groovyx.net.http.Method.DELETE
+import static groovyx.net.http.Method.GET
+import static groovyx.net.http.Method.PATCH
+import static groovyx.net.http.Method.POST
+import static groovyx.net.http.Method.PUT
 @Grab('com.jayway.jsonpath:json-path:2.0.0' )
 
 import static com.jayway.jsonpath.JsonPath.parse
@@ -372,6 +377,15 @@ public class KubernetesClient extends BaseClient {
 
         def str = response.data ? (new JsonBuilder(response.data)).toPrettyString(): response.data
         logger DEBUG, "Pods found: $str"
+        response.status == 200 ? response.data : null
+    }
+
+    def getNodes(String clusterEndPoint, String accessToken) {
+        if (OFFLINE) {
+            return null
+        }
+        def response = doHttpGet(clusterEndPoint, "/api/v1/nodes", accessToken, true, null, null)
+        def str = response.data ? (new JsonBuilder(response.data)).toPrettyString() : response.data
         response.status == 200 ? response.data : null
     }
 
@@ -1179,12 +1193,17 @@ public class KubernetesClient extends BaseClient {
                     ]
                 }
 
+        def serviceId = args.serviceId
+
         def result = json {
             kind "Service"
             apiVersion "v1"
 
             metadata {
                 name serviceName
+                labels {
+                    "ec-svc-id" serviceId
+                }
             }
             //Kubernetes plugin injects this service selector
             //to link the service to the pod that this

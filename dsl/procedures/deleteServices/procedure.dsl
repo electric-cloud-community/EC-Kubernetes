@@ -11,7 +11,7 @@ procedure 'Cleanup Cluster - Experimental',
       subprocedure: 'Setup',
       command: null,
       errorHandling: 'failProcedure',
-      exclusiveMode: 'call',
+      exclusiveMode: 'none',
       postProcessor: 'postp',
       releaseMode: 'none',
       timeLimitUnits: 'minutes', {
@@ -25,6 +25,7 @@ procedure 'Cleanup Cluster - Experimental',
 	  exclusiveMode: 'none',
 	  postProcessor: 'postp',
 	  releaseMode: 'none',
+	  resourceName: '$[grabbedResource]',
 	  shell: 'ec-groovy',
 	  timeLimitUnits: 'minutes'
 	  

@@ -18,6 +18,7 @@
 # createAndAttachCredential.pl
 ##########################
 use ElectricCommander;
+use JSON;
 
 use constant {
 	SUCCESS => 0,
@@ -49,47 +50,32 @@ $errors .= $ec->checkAllErrors($xpath);
 
 # Give job launcher full permissions on the credential
 my $user = "$[/myJob/launchedByUser]";
-$xpath = $ec->createAclEntry("user", $user,
-    {projectName => $projName,
-     credentialName => $credName,
-     readPrivilege => allow,
-     modifyPrivilege => allow,
-     executePrivilege => allow,
-     changePermissionsPrivilege => allow});
-$errors .= $ec->checkAllErrors($xpath);
+
+$xpath = $ec->getAclEntry("user", $user, {projectName => $projName, credentialName => $credName});
+if (!$xpath->findvalue('//aclEntryId')) {
+    $xpath = $ec->createAclEntry("user", $user,
+        { projectName                  => $projName,
+            credentialName             => $credName,
+            readPrivilege              => allow,
+            modifyPrivilege            => allow,
+            executePrivilege           => allow,
+            changePermissionsPrivilege => allow });
+    $errors .= $ec->checkAllErrors($xpath);
+}
 
 # Attach credential to steps that will need it
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Check Cluster",
-     stepName => "checkCluster"});
-$errors .= $ec->checkAllErrors($xpath);
-
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Deploy Service",
-     stepName => "createOrUpdateDeployment"});
-$errors .= $ec->checkAllErrors($xpath);
-
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Undeploy Service",
-     stepName => "undeployService"});
-$errors .= $ec->checkAllErrors($xpath);
-
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Cleanup Cluster - Experimental",
-     stepName => "cleanup"});
-$errors .= $ec->checkAllErrors($xpath);
-
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Invoke Kubernetes API",
-     stepName => "invokeAPI"});
-$errors .= $ec->checkAllErrors($xpath);
-
-$xpath = $ec->attachCredential($projName, $credName,
-    {procedureName => "Discover",
-     stepName => "discover"});
-$errors .= $ec->checkAllErrors($xpath);
-
-
+my $stepsJSON = $ec->getPropertyValue("/projects/$projName/procedures/CreateConfiguration/ec_stepsWithAttachedCredentials");
+if (defined $stepsJSON && "$stepsJSON" ne "") {
+    #parse as json
+    my $steps = from_json($stepsJSON);
+    foreach my $step(@$steps) {
+        print "Attaching credential to procedure " . $step->{procedureName} . " at step " . $step->{stepName} . "\n";
+        my $apath = $ec->attachCredential($projName, $credName,
+            {procedureName => $step->{procedureName},
+                stepName => $step->{stepName}});
+        $errors .= $ec->checkAllErrors($apath);
+    }
+}
 
 if ("$errors" ne "") {
     # Cleanup the partially created configuration we just created

@@ -8,7 +8,7 @@ procedure 'Wait For Kubernetes API',
       subprocedure: 'Setup',
       command: null,
       errorHandling: 'failProcedure',
-      exclusiveMode: 'call',
+      exclusiveMode: 'none',
       postProcessor: 'postp',
       releaseMode: 'none',
       timeLimitUnits: 'minutes', {
@@ -22,6 +22,7 @@ procedure 'Wait For Kubernetes API',
 	  exclusiveMode: 'none',
 	  postProcessor: 'postp',
 	  releaseMode: 'none',
+	  resourceName: '$[grabbedResource]',
 	  shell: 'ec-groovy',
 	  timeLimitUnits: 'minutes'
 	  

@@ -10,7 +10,7 @@ procedure 'Create Resource',
       subprocedure: 'Setup',
       command: null,
       errorHandling: 'failProcedure',
-      exclusiveMode: 'call',
+      exclusiveMode: 'none',
       postProcessor: 'postp',
       releaseMode: 'none',
       timeLimitUnits: 'minutes', {
@@ -25,6 +25,7 @@ procedure 'Create Resource',
 	  postProcessor: 'postp',
 	  releaseMode: 'none',
 	  shell: 'ec-groovy',
+	  resourceName: '$[grabbedResource]',
 	  timeLimitUnits: 'minutes'
 	  
 }

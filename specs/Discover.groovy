@@ -16,14 +16,17 @@ class Discover extends KubeHelper {
         dslFile 'dsl/Discover.dsl', [
             projectName: projectName,
             params     : [
-                envName       : '',
-                envProjectName: '',
-                clusterName   : '',
-                namespace     : '',
-                projName      : '',
+                envName                         : '',
+                envProjectName                  : '',
+                clusterName                     : '',
+                namespace                       : '',
+                projName                        : '',
+                ecp_kubernetes_applicationScoped: '',
+                ecp_kubernetes_applicationName  : '',
+                ecp_kubernetes_apiEndpoint      : '',
+                ecp_kubernetes_apiToken         : '',
             ]
         ]
-
     }
 
     def doCleanupSpec() {
@@ -33,7 +36,76 @@ class Discover extends KubeHelper {
         """
     }
 
-    // TODO other fields
+    def "create application-scoped services"() {
+        given:
+        def sampleName = 'nginx-spec-application'
+        cleanupService(sampleName)
+        deploySample(sampleName)
+        def applicationName = "Discovered Application Spec"
+        when:
+        def result = runProcedureDsl """
+            runProcedure(
+                projectName: '$projectName',
+                procedureName: 'Discover',
+                actualParameter: [
+                    clusterName: '$clusterName',
+                    namespace: 'default',
+                    envProjectName: '$projectName',
+                    envName: '$envName',
+                    projName: '$projectName',
+                    ecp_kubernetes_applicationScoped: 'true',
+                    ecp_kubernetes_applicationName: '$applicationName'
+                ]
+            )
+        """
+        then:
+        logger.debug(result.logs)
+        def application = dsl "getApplication(projectName: '$projectName', applicationName: '$applicationName')"
+        logger.debug(objectToJson(application))
+        assert application.application?.applicationId
+        def services = dsl "getServices(projectName: '$projectName', applicationName: '$applicationName')"
+        logger.debug(objectToJson(services))
+        assert services.service
+        cleanup:
+        cleanupService(sampleName)
+        dsl "deleteApplication(projectName:'$projectName', applicationName: '$applicationName')"
+    }
+
+    def "create environment from scratch"() {
+        given:
+        def sampleName = 'nginx-spec-scratch'
+        cleanupService(sampleName)
+        deploySample(sampleName)
+        def token = System.getenv('KUBE_TOKEN')
+        assert token
+        def endpoint = System.getenv('KUBE_ENDPOINT')
+        assert endpoint
+        when:
+        def result = runProcedureDsl """
+            runProcedure(
+                projectName: '$projectName',
+                procedureName: 'Discover',
+                actualParameter: [
+                    clusterName: 'Created Cluster',
+                    namespace: 'default',
+                    envProjectName: '$projectName',
+                    envName: 'Spec Kubernetes Created Env',
+                    projName: '$projectName',
+                    ecp_kubernetes_apiEndpoint: '$endpoint',
+                    ecp_kubernetes_apiToken: '$token'
+                ]
+            )
+        """
+        then:
+        logger.debug(result.logs)
+        assert result.outcome != 'error'
+        def environment = dsl "getEnvironment(projectName: '$projectName', environmentName: 'Spec Kubernetes Created Env')"
+        assert environment.environment
+        cleanup:
+        cleanupService(serviceName)
+        dsl "deleteEnvironment(projectName: '$projectName', environmentName: 'Spec Kubernetes Created Env')"
+    }
+
     def "discover sample"() {
         given:
         def sampleName = 'nginx-spec'
@@ -88,6 +160,8 @@ class Discover extends KubeHelper {
         def volumeMounts = new JsonSlurper().parseText(volumeMountsJson)
         assert volumeMounts[0].name == 'my-volume'
         assert volumeMounts[0].mountPath
+        cleanup:
+        cleanupService(serviceName)
     }
 
     def "discover load balancer IP"() {
@@ -236,7 +310,6 @@ class Discover extends KubeHelper {
         assert getParameterDetail(service.service, 'minAvailabilityPercentage').parameterValue == '75'
         cleanup:
         cleanupService(serviceName)
-
     }
 
     def "Two containers"() {
@@ -381,10 +454,10 @@ class Discover extends KubeHelper {
             apiVersion: 'v1',
             metadata  : [name: serviceName],
             spec      : [
-                selector: [app: 'nginx_test_spec'],
-                type    : 'LoadBalancer',
+                selector      : [app: 'nginx_test_spec'],
+                type          : 'LoadBalancer',
                 loadBalancerIP: '35.224.8.81',
-                ports   : [
+                ports         : [
                     [port: 80, targetPort: 80]
                 ]
             ]

@@ -108,6 +108,11 @@ sub retrieveLibs {
 
     $zip->extractTree('lib', $destinationFolder);
     print "Extracted dependencies into $destinationFolder\n";
+
+    my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
+    $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
+    print "Grabbed Resource: $resource\n";
+
 }
 
 
