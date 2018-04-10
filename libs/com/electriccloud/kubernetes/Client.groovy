@@ -99,6 +99,12 @@ class Client {
         result
     }
 
+    def getPodMetrics(String namespace, String podId) {
+//        TODO get heapster endpoint from somewhere
+        def result = doHttpRequest(GET, "/api/v1/namespaces/kube-system/services/http:heapster:/proxy/apis/metrics/v1alpha1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
+
 
     def static getLogLevelStr(Integer level) {
         switch (level) {
@@ -155,4 +161,6 @@ class Client {
             println getLogLevelStr(level) + message
         }
     }
+
+
 }

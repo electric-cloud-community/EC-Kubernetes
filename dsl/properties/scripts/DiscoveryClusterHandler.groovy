@@ -118,37 +118,9 @@ class DiscoveryClusterHandler {
 
     def retrieveKubernetesVersion(endpoint, token) {
         def client = new KubernetesClient()
-        def nodes = client.getNodes(endpoint, "Bearer ${token}")?.items
-        int major
-        int minor
-
-        nodes.each { node ->
-            def info = node.status.nodeInfo
-            def versionString = info.kubeletVersion
-//            v1.7.12-gke.0
-            def groups = (versionString =~ /^v(\d+)\.(\d+)/)
-            def nodeMajor = groups[0][1] as int
-            def nodeMinor = groups[0][2] as int
-            if (!major) {
-                major = nodeMajor
-            } else {
-                if (major != nodeMajor) {
-                    throw new PluginException("Nodes in cluster have different versions")
-                }
-            }
-            if (!minor) {
-                minor = nodeMinor
-            } else {
-                if (minor != nodeMinor) {
-                    throw new PluginException("Nodes in cluster have different versions")
-                }
-            }
-        }
-
-        if (!major || !minor) {
-            throw new PluginException("Cannot determine API version")
-        }
-
+        def version = client.getVersion(endpoint, "Bearer ${token}")
+        int major = version.major as int
+        int minor = version.minor.replaceAll('\\D+', '') as int
         return "${major}.${minor}"
     }
 }
