@@ -185,6 +185,18 @@ class ContainerHelper extends PluginSpockTestSupport {
         [logs: logs, outcome: outcome, jobId: result.jobId]
     }
 
+    def getAppScopedService(projectName, serviceName, applicationName, clusterName, envName) {
+        def result = dsl """
+            getServiceDeploymentDetails(
+                projectName: '$projectName',
+                serviceName: '$serviceName',
+                applicationName: '$applicationName',
+                clusterName: '$clusterName',
+                environmentName: '$envName'
+            )
+        """
+        result
+    }
     def getService(projectName, serviceName, clusterName, envName) {
         def result = dsl """
             getServiceDeploymentDetails(
