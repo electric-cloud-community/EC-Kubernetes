@@ -92,6 +92,11 @@ try {
         .build()
 
     def services = discovery.discover(namespace)
+    if (services.size() == 0) {
+        print "No services found on the cluster ${pluginConfig.clusterEndpoint}"
+        ef.setProperty(propertyName: '/myCall/summary', value: "No services found on the cluster ${pluginConfig.clusterEndpoint}")
+        ef.setProperty(propertyName: '/myJobStep/outcome', value: 'warning')
+    }
     discovery.saveToEF(services)
 } catch (PluginException e) {
     efClient.handleProcedureError(e.getMessage())
