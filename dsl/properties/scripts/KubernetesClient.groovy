@@ -389,6 +389,15 @@ public class KubernetesClient extends BaseClient {
         response.status == 200 ? response.data : null
     }
 
+
+    def getVersion(String clusterEndPoint, String accessToken) {
+        if (OFFLINE) {
+            return null
+        }
+        def response = doHttpGet(clusterEndPoint, "/version", accessToken, true, null, null)
+        response.status == 200 ? response.data : null
+    }
+
     /**
      * Retrieves the Service instance from Kubernetes cluster.
      * Returns null if no Service instance by the given name is found.

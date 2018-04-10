@@ -7,6 +7,7 @@ import com.electriccloud.domain.ClusterTopologyImpl
 import com.electriccloud.domain.Topology
 import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
+import groovy.json.JsonOutput
 
 
 class ClusterView {
@@ -26,6 +27,14 @@ class ClusterView {
     private static final String TYPE_POD = 'ecp-pod'
     private static final String TYPE_CONTAINER = 'ecp-container'
     private static final String TYPE_EF_CLUSTER = 'cluster'
+
+
+    private static final String TYPE_STRING = 'string'
+    private static final String TYPE_MAP = 'map'
+    private static final String TYPE_LINK = 'link'
+    private static final String TYPE_TEXTAREA = 'textarea'
+    private static final String TYPE_DATE = 'date'
+
 
     ClusterTopology getRealtimeClusterTopology() {
         def namespaces = kubeClient.getNamespaces()
@@ -137,20 +146,26 @@ class ClusterView {
         def labels = pod?.metadata?.labels
 
         def node = new ClusterNodeImpl(podName, TYPE_POD, podId)
-        node.addAttribute('Status', status, 'string')
-        node.addAttribute('Labels', labels, 'map')
+        node.addAttribute('Status', status, TYPE_STRING)
+        node.addAttribute('Labels', labels, TYPE_MAP)
         node
     }
 
 
     def getContainerDetails(String containerName) {
+        containerName = containerName.replaceAll("${clusterName}::", '')
         def (namespace, podId, containerId) = containerName.split('::')
         def pod = kubeClient.getPod(namespace, podId)
         def container = pod.spec?.containers.find {
             it.name == containerId
         }
-        assert container
-//        TODO exception
+        if (!container) {
+            throw EcException
+                .code(ErrorCodes.UnknownError)
+                .message("Container ${containerId} was not found in pod ${podId}")
+                .location(this.class.canonicalName)
+                .build()
+        }
         def status = getContainerStatus(pod, container)
         def ports = container.ports?.collectEntries {
             def value = "${it.containerPort}/${it.protocol}"
@@ -166,15 +181,29 @@ class ClusterView {
                 startedAt = it?.state?.running?.startedAt
             }
         }
+        def volumeMounts = new JsonOutput().toJson(container.volumeMounts)
 
         def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
-        node.addAction('View Logs', 'viewLogs', 'textarea')
-        node.addAttribute('Status', status, 'string')
-        node.addAttribute('Status', status, 'string')
-        node.addAttribute('Start Time', startedAt, 'date')
-        node.addAttribute('Environment Variables', environmentVariables, 'map')
+        node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
+        node.addAttribute('Status', status, TYPE_STRING)
+        node.addAttribute('Start Time', startedAt, TYPE_DATE)
+        node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
         node.addAttribute('Ports', ports, 'map')
-//        TODO volume mounts
+        node.addAttribute("Volume Mounts", volumeMounts, TYPE_TEXTAREA)
+        def usage = kubeClient.getPodMetrics(namespace, podId)
+
+        def memory
+        def cpu
+
+        usage.containers?.each {
+            if (it.name == containerId) {
+                cpu = it.usage?.cpu
+                memory = it.usage?.memory
+            }
+        }
+
+        node.addAttribute('CPU', cpu, TYPE_STRING, 'Resource Usage')
+        node.addAttribute('Memory', memory, TYPE_STRING, 'Resource Usage')
 
         node
     }
