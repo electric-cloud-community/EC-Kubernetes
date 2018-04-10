@@ -14,6 +14,9 @@ def version = config.kubernetesVersion
 assert endpoint
 assert version
 
+def namespaceName = objectIdentifier.namespace     //TODO
+def serviceName = objectIdentifier.serviceName     //TODO
+
 def cluster = getCluster(projectName: projectName, environmentName: environmentName, clusterName: clusterName)
 def clusterId = cluster.clusterId.toString()
 
@@ -49,7 +52,7 @@ assert servicePods
 
 def response
 try {
-    response = clusterView.buildServiceNode(service, servicePods)
+    response = clusterView.buildServiceDetails(service, servicePods)
 } catch (EcException e) {
     throw e
 } catch (Throwable e) {

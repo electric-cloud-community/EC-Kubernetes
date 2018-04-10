@@ -11,6 +11,9 @@ def password = credentials[0].password
 def endpoint = config.clusterEndpoint
 def token = password
 def version = config.kubernetesVersion
+
+def namespaceName = objectIdentifier.namespace     //TODO
+
 assert endpoint
 assert version
 
