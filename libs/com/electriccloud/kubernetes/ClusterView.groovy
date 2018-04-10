@@ -269,18 +269,14 @@ class ClusterView {
         def node = new ClusterNodeImpl(getContainerId(service, pod, container), TYPE_CONTAINER, container.name)
         node.setStatus(getContainerStatus(pod, container))
         return node
-//
-//        def imageAndVersion = container.image.split(':')
-//        def image = imageAndVersion[0]
-//        def version = imageAndVersion.size() > 1 ? imageAndVersion[1] : 'latest'
-//        [
-//            type   : 'container',
-//            name   : container.name,
-//            id     : getContainerId(service, pod, container),
-//            status : getContainerStatus(pod, container),
-//            image  : image,
-//            version: version
-//        ]
+    }
+
+
+    def getContainerLogs(String containerName) {
+        containerName = containerName.replaceAll("${clusterName}::", '')
+        def (namespace, podId, containerId) = containerName.split('::')
+        def logs = kubeClient.getContainerLogs(namespace, podId, containerId)
+        logs
     }
 
 
