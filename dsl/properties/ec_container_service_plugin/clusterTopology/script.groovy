@@ -17,7 +17,6 @@ assert version
 def cluster = getCluster(projectName: projectName, environmentName: environmentName, clusterName: clusterName)
 def clusterId = cluster.clusterId.toString()
 
-
 import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
 import com.electriccloud.kubernetes.*
