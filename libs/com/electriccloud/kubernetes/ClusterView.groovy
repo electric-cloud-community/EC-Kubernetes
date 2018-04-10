@@ -198,10 +198,6 @@ import com.electriccloud.errors.ErrorCodes
         "${service.spec.loadBalancerIP}:${service.spec.ports[0].port}"
     }
 
-    String getServiceVolumes(service) {
-        "${service.spec.loadBalancerIP}:${service.spec.ports[0].port}"
-    }
-
     String getPodId(service, pod) {
         "${getServiceId(service)}::${pod.metadata.name}"
     }
@@ -311,7 +307,7 @@ import com.electriccloud.errors.ErrorCodes
                          value:     "${getPodsRunning(pods)}",
                          type:      TYPE_STRING])
 
-        def volumes = getServiceVolumes(service.metadata.namespace, getServiceName(service))
+        def volumes = kubeClient.getServiceVolumes(service.metadata.namespace, getServiceName(service))
         attributes.push([name:      ATTRIBUTE_VOLUMES,
                          value:     volumes,
                          type:      TYPE_TEXTAREA])
