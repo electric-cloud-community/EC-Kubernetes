@@ -1,5 +1,7 @@
 package com.electriccloud.kubernetes
 
+import com.electriccloud.domain.ClusterNode
+import com.electriccloud.domain.ClusterNodeImpl
 import com.electriccloud.domain.ClusterTopology
 import com.electriccloud.domain.ClusterTopologyImpl
 import com.electriccloud.domain.Topology
@@ -127,6 +129,56 @@ class ClusterView {
     }
 
 
+    def getPodDetails(String podName) {
+        podName = podName.replaceAll("${clusterName}::", '')
+        def (namespace, podId) = podName.split('::')
+        def pod = kubeClient.getPod(namespace, podId)
+        def status = pod?.status?.phase ?: 'UNKNOWN'
+        def labels = pod?.metadata?.labels
+
+        def node = new ClusterNodeImpl(podName, TYPE_POD, podId)
+        node.addAttribute('Status', status, 'string')
+        node.addAttribute('Labels', labels, 'map')
+        node
+    }
+
+
+    def getContainerDetails(String containerName) {
+        def (namespace, podId, containerId) = containerName.split('::')
+        def pod = kubeClient.getPod(namespace, podId)
+        def container = pod.spec?.containers.find {
+            it.name == containerId
+        }
+        assert container
+//        TODO exception
+        def status = getContainerStatus(pod, container)
+        def ports = container.ports?.collectEntries {
+            def value = "${it.containerPort}/${it.protocol}"
+            [(it.name): value]
+        }
+        def environmentVariables = container.env?.collectEntries {
+            [(it.name): it.value]
+        }
+
+        def startedAt
+        pod.status?.containerStatuses?.each {
+            if (it.name == containerId) {
+                startedAt = it?.state?.running?.startedAt
+            }
+        }
+
+        def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
+        node.addAction('View Logs', 'viewLogs', 'textarea')
+        node.addAttribute('Status', status, 'string')
+        node.addAttribute('Status', status, 'string')
+        node.addAttribute('Start Time', startedAt, 'date')
+        node.addAttribute('Environment Variables', environmentVariables, 'map')
+        node.addAttribute('Ports', ports, 'map')
+//        TODO volume mounts
+
+        node
+    }
+
     String getNamespaceId(namespace) {
         "${this.clusterName}::${getNamespaceName(namespace)}"
     }
@@ -152,7 +204,7 @@ class ClusterView {
     }
 
     String getPodId(service, pod) {
-        "${getServiceId(service)}::${pod.metadata.name}"
+        "${getNamespaceId(service)}::${pod.metadata.name}"
     }
 
     String getContainerId(service, pod, container) {

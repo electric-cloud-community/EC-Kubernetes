@@ -94,6 +94,12 @@ class Client {
     }
 
 
+    def getPod(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
+
+
     def static getLogLevelStr(Integer level) {
         switch (level) {
             case DEBUG:
