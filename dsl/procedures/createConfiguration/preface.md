@@ -3,7 +3,7 @@ For communicating with the Kubernetes cluster, you need the following details:
 1. Base address of API Endpoint URL
 2. Bearer token which has authorization to access API.
 
-    Use the following steps for creating a bearer token:
+    Use the following steps for creating a service account and obtaining the service account bearer token:
 
     * Download the Kubeconfig file from your Kubernetes cluster. Or if you have direct access to Kubectl shell of the cluster, that will work too.
     * You will need to install Kubectl (http://kubernetes.io/docs/user-guide/prereqs/) or have access to Kubectl shell
@@ -23,6 +23,6 @@ For communicating with the Kubernetes cluster, you need the following details:
 
         kubectl get secret secret-1234 -o yaml
 
-    * The value of token field in above output is the berar token in encoded format. We need to decode it and use it as berar token. On a Unix like system, following command will decode the password
+    * The value of the token field in the output above is base64 encoded. We need to decode it to use in the plugin configuration. On a Unix like system, following command can be used to decode the value:
 
-        echo "encoded_string" | base64 --decode
+        echo "<encoded_token_value>" | base64 --decode
