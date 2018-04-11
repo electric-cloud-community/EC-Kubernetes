@@ -100,7 +100,7 @@
 </li>
 <li>
 <p>Bearer token which has authorization to access API.</p>
-<p>Use the following steps for creating a bearer token:</p>
+<p>Use the following steps for creating a service account and obtaining the service account bearer token:</p>
 <ul>
 <li>
 <p>Download the Kubeconfig file from your Kubernetes cluster. Or if you have direct access to Kubectl shell of the cluster, that will work too.</p>
@@ -127,8 +127,8 @@
 <p>kubectl get secret secret-1234 -o yaml</p>
 </li>
 <li>
-<p>The value of token field in above output is the berar token in encoded format. We need to decode it and use it as berar token. On a Unix like system, following command will decode the password</p>
-<p>echo &quot;encoded_string&quot; | base64 --decode</p>
+<p>The value of the token field in the output above is base64 encoded. We need to decode it to use in the plugin configuration. On a Unix like system, following command can be used to decode the value:</p>
+<p>echo &quot;&lt;encoded_token_value&gt;&quot; | base64 --decode</p>
 </li>
 </ul>
 </li>
