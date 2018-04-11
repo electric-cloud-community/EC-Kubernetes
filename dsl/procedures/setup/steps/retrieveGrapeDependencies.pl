@@ -72,7 +72,7 @@ sub retrieveGrapeDependency($){
     my $dataDir = $ENV{COMMANDER_DATA};
     die "ERROR: Data directory not defined!" unless ($dataDir);
 
-    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape';
+    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape/grapes';
     my $dir = $xpath->findvalue("//artifactVersion/cacheDirectory");
 
     mkpath($grapesDir);
