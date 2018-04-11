@@ -51,10 +51,10 @@ try {
 } catch (RuntimeException e) {
     if (e.message =~ /NoSuchCluster|NoSuchEnvironment|NoSuchProject/) {
         if (!endpoint) {
-            efClient.handleProcedureError("Endpoint parameter should be provided")
+            efClient.handleProcedureError("API Endpoint parameter must be provided")
         }
         if (!token) {
-            efClient.handleProcedureError("Token must be provided")
+            efClient.handleProcedureError("Service Account API Token must be provided")
         }
 
         def discoveryClusterHandler = new DiscoveryClusterHandler()
