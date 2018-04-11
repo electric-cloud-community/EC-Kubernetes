@@ -5,6 +5,7 @@ import com.electriccloud.errors.ErrorCodes
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import static groovyx.net.http.ContentType.JSON
+import static groovyx.net.http.ContentType.TEXT
 import static groovyx.net.http.Method.GET
 
 class Client {
@@ -34,7 +35,6 @@ class Client {
         def http = new HTTPBuilder(this.endpoint)
         http.ignoreSSLIssues()
         def requestHeaders = [
-            'Content-Type' : 'application/json',
             'Authorization': "Bearer ${this.accessToken}"
         ]
 
@@ -58,7 +58,7 @@ class Client {
                 throw EcException
                     .code(ErrorCodes.UnknownError)
                     .location(this.getClass().getCanonicalName())
-                    .message("Request failed with $resp.statusLine")
+                    .message("Request for '$requestUri' failed with $resp.statusLine")
                     .build()
             }
         }
@@ -114,6 +114,40 @@ class Client {
     }
 
 
+    def getPod(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
+
+    def getPodMetrics(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/kube-system/services/http:heapster:/proxy/apis/metrics/v1alpha1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
+
+    def getContainerLogs(String namespace, String pod, String container) {
+        def http = new HTTPBuilder(endpoint)
+        http.ignoreSSLIssues()
+        return http.request(GET, TEXT) { req ->
+            uri.path = "/api/v1/namespaces/${namespace}/pods/${pod}/log"
+            uri.query = [container: container, tailLines: 100]
+            headers.Authorization = "Bearer ${this.accessToken}"
+            headers.Accept = "application/json"
+
+            response.success = { resp, reader ->
+                String logs = reader.text
+                logs
+            }
+            response.failure = { resp, reader ->
+                throw EcException
+                    .code(ErrorCodes.UnknownError)
+                    .location(this.getClass().getCanonicalName())
+                    .message("Request failed with $resp.statusLine: $reader")
+                    .build()
+            }
+
+        }
+    }
+
     def static getLogLevelStr(Integer level) {
         switch (level) {
             case DEBUG:
@@ -127,6 +161,7 @@ class Client {
 
         }
     }
+
 
 
     boolean isVersionGreaterThan17() {
@@ -169,4 +204,6 @@ class Client {
             println getLogLevelStr(level) + message
         }
     }
+
+
 }
