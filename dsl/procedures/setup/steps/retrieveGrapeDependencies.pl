@@ -31,90 +31,61 @@ to the grape root directory configured with ec-groovy.
 use File::Copy::Recursive qw(rcopy);
 use File::Path;
 use ElectricCommander;
-use MIME::Base64;
-use File::Temp qw(tempfile tempdir);
+
 use warnings;
 use strict;
-use Archive::Zip;
-use Digest::MD5 qw(md5_hex);
-
 $|=1;
 
+
+$::gAdditionalArtifactVersion = "$[additionalArtifactVersion]";
 
 sub main() {
     my $ec = ElectricCommander->new();
     $ec->abortOnError(1);
-    retrieveLibs($ec);
+
+    retrieveGrapeDependency($ec, 'com.electriccloud:EC-Kubernetes-Grapes:1.0.1');
+    if ($::gAdditionalArtifactVersion ne '') {
+        retrieveGrapeDependency($ec, $::gAdditionalArtifactVersion);
+    }
 }
 
-sub retrieveLibs {
-    my ($ec) = @_;
+########################################################################
+# retrieveGrapeDependency - Retrieves the artifact version and copies it
+# to the grape directory used by ec-groovy for @Grab dependencies
+#
+# Arguments:
+#   -ec
+#   -artifactVersion
+########################################################################
+sub retrieveGrapeDependency($){
+    my ($ec, $artifactVersion) = @_;
 
-    my $property = '/projects/$[/myProject/projectName]/ec_groovyDependencies';
-    print "Libs property: $property\n";
-    my $libsBase64 = '';
-    my $xpath;
-    eval {
-        $xpath = $ec->getProperties({path => $property});
-        1;
-    } or do {
-        print "[ERROR] cannot get property $property: $@";
-        exit -1;
-    };
+    my $xpath = $ec->retrieveArtifactVersions({
+        artifactVersionName => $artifactVersion
+    });
 
-    my $checksum = '';
-    my $blocks = {};
-    for my $prop ($xpath->findnodes('//property')) {
-        my $name = $prop->findvalue('propertyName')->string_value;
-        my $value = $prop->findvalue('value')->string_value;
-        if ($name eq 'checksum') {
-            $checksum = $value;
-        }
-        else {
-            $name =~ s/ec_dependencyChunk_//;
-            $blocks->{$name} = $value;
-        }
-    }
+    # copy to the grape directory ourselves instead of letting
+    # retrieveArtifactVersions download to it directly to give
+    # us better control over the over-write/update capability.
+    # We want to copy only files the retrieved files leaving
+    # the other files in the grapes directory unchanged.
+    my $dataDir = $ENV{COMMANDER_DATA};
+    die "ERROR: Data directory not defined!" unless ($dataDir);
 
-    unless($checksum) {
-        print "[ERROR] No checksum found";
-        exit -1;
-    }
+    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape';
+    my $dir = $xpath->findvalue("//artifactVersion/cacheDirectory");
 
-    for my $name (sort { $a <=> $b } keys %$blocks) {
-        $libsBase64 .= $blocks->{$name};
-    }
-    my $finalChecksum = md5_hex($libsBase64);
-    if ($finalChecksum ne $checksum) {
-        print "[ERROR] checksums do not match, expected checksum: $checksum, got checksum: $finalChecksum";
-        exit -1;
-    }
+    mkpath($grapesDir);
+    die "ERROR: Cannot create target directory" unless( -e $grapesDir );
 
-    my $binary = decode_base64($libsBase64);
-
-    my ($tempFh, $tempFilename) = tempfile(CLEANUP => 1);
-    binmode($tempFh);
-    print $tempFh $binary;
-    close $tempFh;
-
-    my $zip = Archive::Zip->new($tempFilename);
-
-    my @members = $zip->members;
-    for my $member ( $zip->members ) {
-        print $member->fileName . "\n";
-    }
-    my $dataDirectory = $ENV{COMMANDER_DATA} || die 'Data directory is not defined!';
-    my $destinationFolder = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape', '');
-
-    $zip->extractTree('lib', $destinationFolder);
-    print "Extracted dependencies into $destinationFolder\n";
+    rcopy( $dir, $grapesDir) or die "Copy failed: $!";
+    print "Retrieved and copied grape dependencies from $dir to $grapesDir\n";
 
     my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
     $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
     print "Grabbed Resource: $resource\n";
 
 }
-
 
 main();
 
