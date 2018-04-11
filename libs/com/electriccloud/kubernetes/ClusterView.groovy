@@ -229,11 +229,13 @@ class ClusterView {
     }
 
     String getServiceId(service) {
-        "${getNamespaceId(service)}::${service.metadata.name}"
+        def namespace = service.metadata.namespace
+        "${namespace}::${service.metadata.name}"
     }
 
     String getPodId(service, pod) {
-        "${getNamespaceId(service)}::${pod.metadata.name}"
+        def namespace = service.metadata.namespace
+        "${namespace}::${pod.metadata.name}"
     }
 
     String getContainerId(service, pod, container) {

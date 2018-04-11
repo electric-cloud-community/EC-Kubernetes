@@ -3,7 +3,7 @@ def environmentName = args.environmentName
 def clusterName = args.clusterName
 def config = args.configurationParameters
 def objectType = args.objectType
-def objectIdentifier = args.objectIdentifier
+def objectIdentifier = args.objectId
 def action = args.action
 
 def credentials = args.credential

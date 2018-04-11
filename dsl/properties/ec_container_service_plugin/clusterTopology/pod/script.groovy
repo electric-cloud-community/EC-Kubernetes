@@ -3,7 +3,7 @@ def environmentName = args.environmentName
 def clusterName = args.clusterName
 def config = args.configurationParameters
 def objectType = args.objectType
-def objectIdentifier = args.objectIdentifier
+def objectIdentifier = args.objectId
 
 def credentials = args.credential
 assert credentials.size() == 1
