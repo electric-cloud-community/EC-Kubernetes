@@ -190,24 +190,42 @@ class ClusterView {
         def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
         node.addAttribute('Status', status, TYPE_STRING)
-        node.addAttribute('Start Time', startedAt, TYPE_DATE)
-        node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
-        node.addAttribute('Ports', ports, 'map')
-        node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
-        def usage = kubeClient.getPodMetrics(namespace, podId)
+        if (startedAt) {
+            node.addAttribute('Start Time', startedAt, TYPE_DATE)
+        }
+        if (environmentVariables && environmentVariables.size() ) {
+            node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
+        }
+        if (ports) {
+            node.addAttribute('Ports', ports, 'map')
+        }
+        if (volumeMounts) {
+            node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
+        }
+        def usage
+        try {
+            usage = kubeClient.getPodMetrics(namespace, podId)
+        } catch (Throwable e) {
+            println "Failed to retrieve usage metrics: ${e.message}"
+//            No usage data found
+        }
 
         def memory
         def cpu
 
-        usage.containers?.each {
+        usage?.containers?.each {
             if (it.name == containerId) {
                 cpu = it.usage?.cpu
                 memory = it.usage?.memory
             }
         }
 
-        node.addAttribute('CPU', cpu, TYPE_STRING, 'Resource Usage')
-        node.addAttribute('Memory', memory, TYPE_STRING, 'Resource Usage')
+        if (cpu) {
+            node.addAttribute('CPU', cpu, TYPE_STRING, 'Resource Usage')
+        }
+        if (memory) {
+            node.addAttribute('Memory', memory, TYPE_STRING, 'Resource Usage')
+        }
 
         node
     }
@@ -233,13 +251,13 @@ class ClusterView {
     }
 
     String getServiceId(service) {
-        def namespace = service.metadata.namespace
-        "${namespace}::${service.metadata.name}"
+        def namespaceId = "${this.clusterName}::${service.metadata.namespace}"
+        "${namespaceId}::${service.metadata.name}"
     }
 
     String getPodId(service, pod) {
-        def namespace = service.metadata.namespace
-        "${namespace}::${pod.metadata.name}"
+        def namespaceId = "${this.clusterName}::${service.metadata.namespace}"
+        "${namespaceId}::${pod.metadata.name}"
     }
 
     String getContainerId(service, pod, container) {

@@ -36,7 +36,7 @@ try {
 } catch (Throwable e) {
     throw EcException
         .code(ErrorCodes.ScriptError)
-        .message("Exception occured while retrieving pod details")
+        .message("Exception occured while retrieving pod details: ${e.message}")
         .cause(e)
         .location(this.class.getCanonicalName())
         .build()
