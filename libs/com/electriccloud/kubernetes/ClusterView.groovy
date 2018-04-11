@@ -181,7 +181,11 @@ class ClusterView {
                 startedAt = it?.state?.running?.startedAt
             }
         }
-        def volumeMounts = new JsonOutput().toJson(container.volumeMounts)
+        def volumeMounts = container.volumeMounts?.collectEntries {
+            def readOnlySuffix = it.readOnly ? '(read only)' : ''
+            def value = "${it.mountPath} $readOnlySuffix"
+            [(it.name): value]
+        }
 
         def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
@@ -189,7 +193,7 @@ class ClusterView {
         node.addAttribute('Start Time', startedAt, TYPE_DATE)
         node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
         node.addAttribute('Ports', ports, 'map')
-        node.addAttribute("Volume Mounts", volumeMounts, TYPE_TEXTAREA)
+        node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
         def usage = kubeClient.getPodMetrics(namespace, podId)
 
         def memory
