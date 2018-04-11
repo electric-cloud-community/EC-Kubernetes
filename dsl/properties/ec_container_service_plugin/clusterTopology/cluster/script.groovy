@@ -26,13 +26,17 @@ def client = new Client(endpoint, token, version)
 assert clusterId
 assert clusterName
 def clusterView = new ClusterView(kubeClient: client, clusterName: clusterName, clusterId: clusterId)
-
 def response
 try {
-    response = clusterView.buildClusterNode()
+    response = clusterView.getClusterDetails()
 } catch (EcException e) {
     throw e
 } catch (Throwable e) {
-    throw EcException.code(ErrorCodes.ScriptError).message("Exception occured while retrieving cluster details ${clusterName}").cause(e).location(this.class.getCanonicalName()).build()
+    throw EcException
+            .code(ErrorCodes.ScriptError)
+            .message("Exception occured while retrieving cluster details ${clusterName}")
+            .cause(e)
+            .location(this.class.getCanonicalName())
+            .build()
 }
 response

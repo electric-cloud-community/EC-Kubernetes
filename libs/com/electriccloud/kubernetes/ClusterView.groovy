@@ -170,7 +170,6 @@ import groovy.json.JsonOutput
         node
     }
 
-
     def getContainerDetails(String containerName) {
         containerName = containerName.replaceAll("${clusterName}::", '')
         def (namespace, podId, containerId) = containerName.split('::')
@@ -236,7 +235,7 @@ import groovy.json.JsonOutput
     }
 
     //TODO
-    def getServiceLabels(){
+    def getClusterLabels(){
         null
     }
 
@@ -328,71 +327,74 @@ import groovy.json.JsonOutput
         new ClusterNodeImpl(getNamespaceId(namespace), TYPE_NAMESPACE, name)
     }
 
-    def buildClusterDetails(){
-        def attributes = []
-        attributes.push([name:      ATTRIBUTE_MASTER_VERSION,
-                         value:     "${kubeClient.getClusterVersion()}",
-                         type:      TYPE_STRING])
+    def getClusterDetails(){
+        def node = new ClusterNodeImpl(getClusterName(), TYPE_CLUSTER, getClusterId())
 
-        attributes.push([name:      ATTRIBUTE_LABELS,
-                         value:     "${getServiceLabels()}",
-                         type:      TYPE_MAP])
+        def version = kubeClient.getClusterVersion()
+        def labels = getClusterLabels()
 
-        def clusterDetails = [id:           "${getClusterId()}",
-                              type:         TYPE_CLUSTER,
-                              name:         "${getClusterName()}",
-                              attributes:   attributes]
-        clusterDetails
+        if (version){
+            node.addAttribute(ATTRIBUTE_MASTER_VERSION, version, TYPE_STRING)
+        }
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        node
     }
 
-    def buildNamespaceDetails(namespace){
-        def attributes = []
-        attributes.push([name:      ATTRIBUTE_LABELS,
-                         value:     "${getNamespaceLabels()}",
-                         type:      TYPE_MAP])
+    def getNamespaceDetails(namespaceName){
+        namespaceName = namespaceName.replaceAll("${clusterName}::", '')
+        def namespace = kubeClient.getNamespace(namespaceName)
+        def namespaceId = getNamespaceId(namespace)
 
-        def namespaceDetails = [id:             "${getNamespaceId(namespace)}",
-                                type:           TYPE_NAMESPACE,
-                                name:           "${getNamespaceName(namespace)}",
-                                attributes:     attributes]
-        namespaceDetails
+        def labels = getNamespaceLabels()
+
+        def node = new ClusterNodeImpl(namespaceName, TYPE_NAMESPACE, namespaceId)
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        node
     }
 
-    def buildServiceDetails(service, pods){
-        def attributes = []
+    def getServiceDetails(serviceName){
+        serviceName = serviceName.replaceAll("${clusterName}::", '')
+        def (namespace, serviceId) = serviceName.split('::')
+        def service = kubeClient.getService(namespace, serviceId)
+        def pods = getServicePods(service)
 
-        attributes.push([name:      ATTRIBUTE_STATUS,
-                         value:     "${getPodsStatus(pods)}",
-                         type:      TYPE_STRING])
+        def node = new ClusterNodeImpl(serviceName, TYPE_SERVICE, serviceId)
 
-        attributes.push([name:      ATTRIBUTE_LABELS,
-                         value:     "${service.metadata.labels}",
-                         type:      TYPE_MAP])
+        def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
+        if (efid){
+            node.setElectricFlowIdentifier(efid)
+        }
 
-        attributes.push([name:      ATTRIBUTE_SERVICE_TYPE,
-                         value:     "${service.spec.type}",
-                         type:      TYPE_STRING])
+        def status = getPodsStatus(pods)
+        def labels = service.metadata.labels
+        def type = service.spec.type
+        def endpoint = getServiceEndpoint(service)
+        def runningPods  = getPodsRunning(pods)
+        def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
 
-        attributes.push([name:      ATTRIBUTE_ENDPOINT,
-                         value:     "${getServiceEndpoint(service)}",
-                         type:      TYPE_LINK])
+        if (status){
+            node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
+        }
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        if (type){
+            node.addAttribute(ATTRIBUTE_SERVICE_TYPE, type, TYPE_STRING)
+        }
+        if (endpoint){
+            node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
+        }
+        if (runningPods){
+            node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods, TYPE_STRING)
+        }
+        if (volumes){
+            node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
+        }
 
-        attributes.push([name:      ATTRIBUTE_RUNNING_PODS,
-                         value:     "${getPodsRunning(pods)}",
-                         type:      TYPE_STRING])
-
-        def volumes = kubeClient.getServiceVolumes(service.metadata.namespace, getServiceName(service))
-        attributes.push([name:      ATTRIBUTE_VOLUMES,
-                         value:     volumes,
-                         type:      TYPE_TEXTAREA])
-
-        def serviceDetails = [id:           "${getServiceId(service)}",
-                              type:         TYPE_SERVICE,
-                              efid:         null,
-                              name:         "${getServiceName(service)}",
-                              attributes:   attributes]
-
-        serviceDetails
     }
 
     def getNamespaceName(namespace) {

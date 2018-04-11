@@ -2,6 +2,8 @@ def projectName = args.projectName
 def environmentName = args.environmentName
 def clusterName = args.clusterName
 def config = args.configurationParameters
+def objectType = args.objectType
+def objectIdentifier = args.objectId
 
 def credentials = args.credential
 assert credentials.size() == 1
@@ -11,9 +13,6 @@ def password = credentials[0].password
 def endpoint = config.clusterEndpoint
 def token = password
 def version = config.kubernetesVersion
-
-def namespaceName = objectIdentifier.namespace     //TODO
-
 assert endpoint
 assert version
 
@@ -29,23 +28,17 @@ def client = new Client(endpoint, token, version)
 assert clusterId
 assert clusterName
 def clusterView = new ClusterView(kubeClient: client, clusterName: clusterName, clusterId: clusterId)
-
-def namespace
-try {
-    namespace = client.getNamespace(namespaceName)
-} catch (EcException e) {
-    throw e
-} catch (Throwable e) {
-    throw EcException.code(ErrorCodes.ScriptError).message("Exception occured while retrieving namespace ${namespaceName}").cause(e).location(this.class.getCanonicalName()).build()
-}
-assert namespace
-
 def response
 try {
-    response = clusterView.buildNamespaceNode(namespace)
+    response = clusterView.getNamespaceDetails(objectIdentifier)
 } catch (EcException e) {
     throw e
 } catch (Throwable e) {
-    throw EcException.code(ErrorCodes.ScriptError).message("Exception occured while retrieving namespace ${namespaceName}").cause(e).location(this.class.getCanonicalName()).build()
+    throw EcException
+        .code(ErrorCodes.ScriptError)
+        .message("Exception occured while retrieving namespace details")
+        .cause(e)
+        .location(this.class.getCanonicalName())
+        .build()
 }
 response
