@@ -58,7 +58,7 @@ class Client {
                 throw EcException
                     .code(ErrorCodes.UnknownError)
                     .location(this.getClass().getCanonicalName())
-                    .message("Request failed with $resp.statusLine")
+                    .message("Request for '$requestUri' failed with $resp.statusLine")
                     .build()
             }
         }
