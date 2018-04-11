@@ -365,8 +365,8 @@ import groovy.json.JsonOutput
         def node = new ClusterNodeImpl(serviceName, TYPE_SERVICE, serviceId)
 
         def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
-        if (efid){
-            node.setElectricFlowIdentifier(efid)
+        if (efId){
+            node.setElectricFlowIdentifier(efId)
         }
 
         def status = getPodsStatus(pods)
@@ -395,6 +395,7 @@ import groovy.json.JsonOutput
             node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
         }
 
+        node
     }
 
     def getNamespaceName(namespace) {
