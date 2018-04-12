@@ -137,6 +137,22 @@ class ClusterView {
         pods
     }
 
+    def chainOfTries(Closure ... closures) {
+        def first = closures.head()
+        closures = closures.tail()
+        def result
+        try {
+            result = first.call()
+        } catch (Throwable e) {
+            if (closures.size()) {
+                chainOfTries(closures)
+            }
+            else {
+                throw e
+            }
+        }
+        result
+    }
 
     def getPodDetails(String podName) {
         podName = podName.replaceAll("${clusterName}::", '')
@@ -204,10 +220,19 @@ class ClusterView {
         }
         def usage
         try {
-            usage = kubeClient.getPodMetrics(namespace, podId)
-        } catch (Throwable e) {
-            println "Failed to retrieve usage metrics: ${e.message}"
-//            No usage data found
+            chainOfTries(
+                {
+                    usage = kubeClient.getPodMetricsHeapster(namespace, podId)
+                    println usage
+                },
+                {
+                    println "Cannot get metrics from heapster, switching to metrics-server"
+                    usage = kubeClient.getPodMetricsServer(namespace, podId)
+                    println usage
+                }
+            )
+        } catch (Throwable e ) {
+            println "Cannot get metrics: ${e.message}"
         }
 
         def memory

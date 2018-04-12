@@ -99,10 +99,16 @@ class Client {
         result
     }
 
-    def getPodMetrics(String namespace, String podId) {
+    def getPodMetricsHeapster(String namespace, String podId) {
         def result = doHttpRequest(GET, "/api/v1/namespaces/kube-system/services/http:heapster:/proxy/apis/metrics/v1alpha1/namespaces/${namespace}/pods/${podId}")
         result
     }
+
+    def getPodMetricsServer(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/apis/metrics.k8s.io/v1beta1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
+
 
     def getContainerLogs(String namespace, String pod, String container) {
         def http = new HTTPBuilder(endpoint)
