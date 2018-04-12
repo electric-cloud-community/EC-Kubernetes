@@ -70,9 +70,24 @@ class Client {
         result?.items
     }
 
+    def getNamespace(String namespace) {
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}")
+        result
+    }
+
+    def getClusterVersion() {
+        def result = doHttpRequest(GET, "/version")
+        "${result.major}.${result.minor}"
+    }
+
     def getServices(String namespace) {
         def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services")
         result?.items
+    }
+
+    def getService(String namespace, String serviceName){
+        def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services/${serviceName}")
+        result
     }
 
     def getDeployments(String namespace, String labelSelector = null) {
@@ -82,6 +97,11 @@ class Client {
         }
         def result = doHttpRequest(GET, "/apis/${versionSpecificAPIPath("deployments")}/namespaces/${namespace}/deployments", null, query)
         result?.items
+    }
+
+    def getServiceVolumes(String namespaceName, String serviceName) {
+        def result = doHttpRequest(GET, "/apis/${versionSpecificAPIPath("deployments")}/namespaces/${namespaceName}/deployments/${serviceName}", null, [:])
+        result?.spec?.template?.spec?.volumes
     }
 
     def getPods(String namespace, String labelSelector = null) {

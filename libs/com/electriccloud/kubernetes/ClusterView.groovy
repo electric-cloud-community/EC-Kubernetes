@@ -9,8 +9,7 @@ import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
 import groovy.json.JsonOutput
 
-
-class ClusterView {
+    class ClusterView {
     String clusterName
     String clusterId
     Client kubeClient
@@ -28,13 +27,19 @@ class ClusterView {
     private static final String TYPE_CONTAINER = 'ecp-container'
     private static final String TYPE_EF_CLUSTER = 'cluster'
 
-
     private static final String TYPE_STRING = 'string'
     private static final String TYPE_MAP = 'map'
     private static final String TYPE_LINK = 'link'
     private static final String TYPE_TEXTAREA = 'textarea'
     private static final String TYPE_DATE = 'date'
 
+    private static final String ATTRIBUTE_MASTER_VERSION = 'Master Version'
+    private static final String ATTRIBUTE_STATUS = 'Status'
+    private static final String ATTRIBUTE_LABELS = 'Labels'
+    private static final String ATTRIBUTE_SERVICE_TYPE = 'ServiceType'
+    private static final String ATTRIBUTE_ENDPOINT = 'Endpoint'
+    private static final String ATTRIBUTE_RUNNING_PODS = 'Running Pods'
+    private static final String ATTRIBUTE_VOLUMES = 'Volumes'
 
     ClusterTopology getRealtimeClusterTopology() {
         def namespaces = kubeClient.getNamespaces()
@@ -89,6 +94,20 @@ class ClusterView {
             finalStatus = RUNNING
         }
         finalStatus
+    }
+
+    def getPodsRunning(pods) {
+        def running = 0
+        def all = 0
+        pods.each { pod ->
+            def status = pod.status
+            def phase = status.phase
+            all += 1
+            if (phase == RUNNING) {
+                running += 1
+            }
+        }
+        "${running} of ${all}"
     }
 
     def getContainerStatus(pod, container) {
@@ -150,7 +169,6 @@ class ClusterView {
         node.addAttribute('Labels', labels, TYPE_MAP)
         node
     }
-
 
     def getContainerDetails(String containerName) {
         containerName = containerName.replaceAll("${clusterName}::", '')
@@ -234,6 +252,15 @@ class ClusterView {
         "${this.clusterName}::${getNamespaceName(namespace)}"
     }
 
+    //future
+    def getClusterLabels(){
+        null
+    }
+
+    def getNamespaceLabels(namespace){
+        namespace?.metadata?.labels
+    }
+
     String getClusterId() {
         this.clusterName
     }
@@ -250,9 +277,17 @@ class ClusterView {
         kubeClient.endpoint
     }
 
+    String getServiceName(service) {
+        "${service.metadata.name}"
+    }
+
     String getServiceId(service) {
         def namespaceId = "${this.clusterName}::${service.metadata.namespace}"
         "${namespaceId}::${service.metadata.name}"
+    }
+
+    String getServiceEndpoint(service) {
+        "${service.spec.loadBalancerIP}:${service.spec.ports[0].port}"
     }
 
     String getPodId(service, pod) {
@@ -307,6 +342,79 @@ class ClusterView {
     def buildNamespaceNode(namespace) {
         def name = getNamespaceName(namespace)
         new ClusterNodeImpl(getNamespaceId(namespace), TYPE_NAMESPACE, name)
+    }
+
+    def getClusterDetails(){
+        def node = new ClusterNodeImpl(getClusterName(), TYPE_CLUSTER, getClusterId())
+
+        def version = kubeClient.getClusterVersion()
+        def labels = getClusterLabels()
+
+        if (version){
+            node.addAttribute(ATTRIBUTE_MASTER_VERSION, version, TYPE_STRING)
+        }
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        node
+    }
+
+    def getNamespaceDetails(namespaceName){
+        namespaceName = namespaceName.replaceAll("${clusterName}::", '')
+        def namespace = kubeClient.getNamespace(namespaceName)
+        def namespaceId = getNamespaceId(namespace)
+
+        def labels = getNamespaceLabels(namespace)
+
+        def node = new ClusterNodeImpl(namespaceName, TYPE_NAMESPACE, namespaceId)
+
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+
+        node
+    }
+
+    def getServiceDetails(serviceName){
+        serviceName = serviceName.replaceAll("${clusterName}::", '')
+        def (namespace, serviceId) = serviceName.split('::')
+        def service = kubeClient.getService(namespace, serviceId)
+        def pods = getServicePods(service)
+
+        def node = new ClusterNodeImpl(serviceName, TYPE_SERVICE, serviceId)
+
+        def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
+        if (efId){
+            node.setElectricFlowIdentifier(efId)
+        }
+
+        def status = getPodsStatus(pods)
+        def labels = service.metadata.labels
+        def type = service.spec.type
+        def endpoint = getServiceEndpoint(service)
+        def runningPods  = getPodsRunning(pods)
+        def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+
+        if (status){
+            node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
+        }
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        if (type){
+            node.addAttribute(ATTRIBUTE_SERVICE_TYPE, type, TYPE_STRING)
+        }
+        if (endpoint){
+            node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
+        }
+        if (runningPods){
+            node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods, TYPE_STRING)
+        }
+        if (volumes){
+            node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
+        }
+
+        node
     }
 
     def getNamespaceName(namespace) {
