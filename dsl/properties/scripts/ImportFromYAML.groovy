@@ -57,7 +57,19 @@ public class ImportFromYAML extends EFClient {
                     }
 
                 }
-                allQueryDeployments.eachWithIndex { deploy, indexDeploy ->
+                def dedupedQueryDeployments = []
+                allQueryDeployments.each{ deploy ->
+                    def uniq = true
+                    dedupedQueryDeployments.each { dedupedDeploy ->
+                        if (deploy.metadata.name == dedupedDeploy.metadata.name){
+                            uniq = false
+                        }
+                    }
+                    if (uniq){
+                        dedupedQueryDeployments.push(deploy)
+                    }
+                }
+                dedupedQueryDeployments.eachWithIndex { deploy, indexDeploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
                     efServices.push(efService)
                 }
@@ -124,7 +136,7 @@ public class ImportFromYAML extends EFClient {
         def queryDeployments = []
         def i = 0
         deployments.each { deployment ->
-            deployment.metadata.labels.each{ k, v ->
+            deployment.spec.selector.matchLabels.each{ k, v ->
                 i = i + 1
                 if ((k == key) && (v == value)){
                     queryDeployments.push(deployment)
