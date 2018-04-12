@@ -234,14 +234,13 @@ import groovy.json.JsonOutput
         "${this.clusterName}::${getNamespaceName(namespace)}"
     }
 
-    //TODO
+    //future
     def getClusterLabels(){
         null
     }
 
-    //TODO
-    def getNamespaceLabels(){
-        null
+    def getNamespaceLabels(namespace){
+        namespace?.metadata?.labels
     }
 
     String getClusterId() {
@@ -347,12 +346,14 @@ import groovy.json.JsonOutput
         def namespace = kubeClient.getNamespace(namespaceName)
         def namespaceId = getNamespaceId(namespace)
 
-        def labels = getNamespaceLabels()
+        def labels = getNamespaceLabels(namespace)
 
         def node = new ClusterNodeImpl(namespaceName, TYPE_NAMESPACE, namespaceId)
+
         if (labels){
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
         }
+
         node
     }
 
