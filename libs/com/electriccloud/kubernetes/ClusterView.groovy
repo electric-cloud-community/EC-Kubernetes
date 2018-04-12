@@ -156,6 +156,22 @@ import groovy.json.JsonOutput
         pods
     }
 
+    def errorChain(Closure ... closures) {
+        def first = closures.head()
+        closures = closures.tail()
+        def result
+        try {
+            result = first.call()
+        } catch (Throwable e) {
+            if (closures.size()) {
+                errorChain(closures)
+            }
+            else {
+                throw e
+            }
+        }
+        result
+    }
 
     def getPodDetails(String podName) {
         podName = podName.replaceAll("${clusterName}::", '')
@@ -221,11 +237,25 @@ import groovy.json.JsonOutput
             node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
         }
         def usage
+
+//        Different k8s setups and versions may have different URLs for metrics server or even don't have one at all
+//        So let's poke them all, maybe we are lucky
         try {
-            usage = kubeClient.getPodMetrics(namespace, podId)
-        } catch (Throwable e) {
-            println "Failed to retrieve usage metrics: ${e.message}"
-//            No usage data found
+            errorChain(
+                {
+                    usage = kubeClient.getPodMetricsHeapster(namespace, podId)
+                },
+                {
+                    println "Switching to metrics-server - beta version"
+                    usage = kubeClient.getPodMetricsServerBeta(namespace, podId)
+                },
+                {
+                    println "Switching to metrics-server-alpha"
+                    usage = kubeClient.getPodMetricsServerAlpha(namespace, podId)
+                }
+            )
+        } catch (Throwable e ) {
+            println "Cannot get metrics: ${e.message}"
         }
 
         def memory
