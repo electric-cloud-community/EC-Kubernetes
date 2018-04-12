@@ -137,7 +137,7 @@ class ClusterView {
         pods
     }
 
-    def chainOfTries(Closure ... closures) {
+    def errorChain(Closure ... closures) {
         def first = closures.head()
         closures = closures.tail()
         def result
@@ -145,7 +145,7 @@ class ClusterView {
             result = first.call()
         } catch (Throwable e) {
             if (closures.size()) {
-                chainOfTries(closures)
+                errorChain(closures)
             }
             else {
                 throw e
@@ -219,16 +219,21 @@ class ClusterView {
             node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
         }
         def usage
+
+//        Different k8s setups and versions may have different URLs for metrics server or even don't have one at all
+//        So let's poke them all, maybe we are lucky
         try {
-            chainOfTries(
+            errorChain(
                 {
                     usage = kubeClient.getPodMetricsHeapster(namespace, podId)
-                    println usage
                 },
                 {
-                    println "Cannot get metrics from heapster, switching to metrics-server"
-                    usage = kubeClient.getPodMetricsServer(namespace, podId)
-                    println usage
+                    println "Switching to metrics-server - beta version"
+                    usage = kubeClient.getPodMetricsServerBeta(namespace, podId)
+                },
+                {
+                    println "Switching to metrics-server-alpha"
+                    usage = kubeClient.getPodMetricsServerAlpha(namespace, podId)
                 }
             )
         } catch (Throwable e ) {

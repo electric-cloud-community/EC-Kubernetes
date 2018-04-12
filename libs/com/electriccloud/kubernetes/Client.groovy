@@ -104,11 +104,15 @@ class Client {
         result
     }
 
-    def getPodMetricsServer(String namespace, String podId) {
-        def result = doHttpRequest(GET, "/apis/metrics.k8s.io/v1beta1/namespaces/${namespace}/pods/${podId}")
+    def getPodMetricsServerAlpha(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/apis/metrics/v1alpha1/namespaces/${namespace}/pods/${podId}")
         result
     }
 
+    def getPodMetricsServerBeta(String namespace, String podId) {
+        def result = doHttpRequest(GET, "/apis/metrics.k8s.io/v1beta1/namespaces/${namespace}/pods/${podId}")
+        result
+    }
 
     def getContainerLogs(String namespace, String pod, String container) {
         def http = new HTTPBuilder(endpoint)
