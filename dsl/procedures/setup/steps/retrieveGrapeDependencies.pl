@@ -47,6 +47,10 @@ sub main() {
     if ($::gAdditionalArtifactVersion ne '') {
         retrieveGrapeDependency($ec, $::gAdditionalArtifactVersion);
     }
+
+    my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
+    $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
+    print "Grabbed Resource: $resource\n";
 }
 
 ########################################################################
@@ -80,11 +84,6 @@ sub retrieveGrapeDependency($){
 
     rcopy( $dir, $grapesDir) or die "Copy failed: $!";
     print "Retrieved and copied grape dependencies from $dir to $grapesDir\n";
-
-    my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
-    $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
-    print "Grabbed Resource: $resource\n";
-
 }
 
 main();
