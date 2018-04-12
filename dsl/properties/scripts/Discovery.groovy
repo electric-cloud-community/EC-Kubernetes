@@ -80,19 +80,27 @@ public class Discovery extends EFClient {
 
     def saveToEF(services) {
         if (applicationName) {
-            ensureApplication()
+            def app = ensureApplication()
+            // create link for the application
+            def applicationId = app.applicationId
+            setEFProperty("/myJob/report-urls/Application: $applicationName", "/flow/#applications/$applicationId")
         }
         def efServices = ef.getServices(projectName: projectName, applicationName: applicationName)?.service as List
         services.each { service ->
-            createOrUpdateService(service)
+            def svc = createOrUpdateService(service)
+            // create links for the service if creating top-level services
+            if (svc && !applicationName) {
+                def serviceId = svc.serviceId
+                setEFProperty("/myJob/report-urls/Microservice: ${svc.serviceName}", "/flow/#services/$serviceId")
+            }
         }
 
         def lines = ["Discovered services: ${discoveredSummary.size()}"]
         discoveredSummary.each { serviceName, containers ->
-            def containerNames = containers.collect { k -> k }
+            def containerNames = containers.collect { k -> k.key }
             lines.add("${serviceName}: ${containerNames.join(', ')}")
         }
-        updateJobSummary(lines.join("\n"))
+        updateJobSummary(lines.join("\n"), /*jobStepSummary*/ true)
     }
 
     def findService(service) {
@@ -119,7 +127,7 @@ public class Discovery extends EFClient {
             // logger INFO, "Service ${existingService.serviceName} has been updated"
         } else {
             serviceName = service.service.serviceName
-            result = createEFService(service)
+            result = createEFService(service)?.service
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
         }
@@ -149,6 +157,7 @@ public class Discovery extends EFClient {
         if (service.serviceMapping) {
             createOrUpdateMapping(serviceName, service)
         }
+        result
     }
 
 

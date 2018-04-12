@@ -144,25 +144,33 @@ public class ImportFromYAML extends EFClient {
 
     def saveToEF(services, projectName, envProjectName, envName, clusterName, String applicationName = null) {
         if (applicationName && !getExistingApp(applicationName, projectName)){
+            def app = createApplication(projectName, applicationName)
             logger INFO, "Application ${applicationName} has been created"
-            createApplication(projectName, applicationName)
+            // create link for the application
+            def applicationId = app.applicationId
+            setEFProperty("/myJob/report-urls/Application: $applicationName", "/flow/#applications/$applicationId")
         }
       
         def efServices = getServices(projectName, applicationName)
         services.each { service ->
-            createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
+            def svc = createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)
+            // create links for the service if creating top-level services
+            if (svc && !applicationName) {
+                def serviceId = svc.serviceId
+                setEFProperty("/myJob/report-urls/Microservice: ${svc.serviceName}", "/flow/#services/$serviceId")
+            }
         }
 
         def lines = ["Discovered services: ${discoveredSummary.size()}"]
         discoveredSummary.each { serviceName, containers ->
-            def containerNames = containers.collect { k -> k }
+            def containerNames = containers.collect { k -> k.key }
             if (applicationName) {
                 lines.add("${applicationName}: ${serviceName}: ${containerNames.join(', ')}")
             } else {
                 lines.add("${serviceName}: ${containerNames.join(', ')}")
             }
         }
-        updateJobSummary(lines.join("\n"))
+        updateJobSummary(lines.join("\n"), /*jobStepSummary*/ true)
     }
 
     def createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, String applicationName = null) {
@@ -178,14 +186,14 @@ public class ImportFromYAML extends EFClient {
         if (existingService) {
             serviceName = existingService.serviceName
             logger WARNING, "Service ${existingService.serviceName} already exists, skipping"
-            return
+            return null
             // Future
             // result = updateEFService(existingService, service)
             // logger INFO, "Service ${existingService.serviceName} has been updated"
         }
         else {
             serviceName = service.service.serviceName
-            result = createEFService(projectName, service, applicationName)
+            result = createEFService(projectName, service, applicationName)?.service
             logger INFO, "Service ${serviceName} has been created"
             discoveredSummary[serviceName] = [:]
         }
@@ -212,6 +220,7 @@ public class ImportFromYAML extends EFClient {
         }
 
         createDeployProcess(projectName, serviceName, applicationName)
+        result
     }
 
     def createDeployProcess(projectName, serviceName, applicationName = null) {
