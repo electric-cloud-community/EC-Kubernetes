@@ -7,7 +7,7 @@ my $setup = ECSetup->new(
     promoteAction => $promoteAction,
 );
 $setup->promotePlugin([
-    {artifactName => '@PLUGIN_KEY@', artifactVersion => '1.0.1', fromDirectory => 'lib/grapes'}
+    {artifactName => '@PLUGIN_KEY@-Grapes', artifactVersion => '1.0.1', fromDirectory => 'lib/grapes'}
 ]);
 
 # ec_setup.pl shared code
@@ -55,7 +55,7 @@ sub publishArtifact {
     # This is here because we cannot do publishArtifactVersion in dsl today
     # delete artifact if it exists first
     my $commander = $self->commander;
-    $commander->deleteArtifactVersion("com.electriccloud:$artifactName-Grapes:$artifactVersion");
+    $commander->deleteArtifactVersion("com.electriccloud:$artifactName:$artifactVersion");
 
     my $dependenciesProperty = '/projects/@PLUGIN_NAME@/ec_groovyDependencies';
     my $base64 = '';
@@ -112,7 +112,7 @@ sub publishArtifact {
         my $am = new ElectricCommander::ArtifactManagement($commander);
         my $artifactVersion = $am->publish(
             {   groupId         => "com.electriccloud",
-                artifactKey     => "$artifactName-Grapes",
+                artifactKey     => "$artifactName",
                 version         => $artifactVersion,
                 includePatterns => "**",
                 fromDirectory   => File::Spec->catfile($tempDir, $fromDirectory),
