@@ -711,6 +711,7 @@ public class ImportFromYAML extends EFClient {
             // It may be an image without repo, like nginx
             if (repoName =~ /\./) {
                 registry = repoName
+                repoName = null
             }
         }
         if (!registry && parts.size() > 2) {
