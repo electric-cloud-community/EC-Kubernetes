@@ -50,12 +50,15 @@ public class ImportFromYAML extends EFClient {
                 kubeService.spec.selector.each{ k, v ->
                     i = i + 1
                     def queryDeployments = getDeploymentsBySelector(deployments, k, v)
-                    if (queryDeployments != null){
-                        queryDeployments.each{ deployment->
-                            allQueryDeployments.push(deployment)
+                    if (queryDeployments != null) {
+                        queryDeployments.eachWithIndex { deployment, index ->
+                            if (index == 0) {
+                                allQueryDeployments.push(deployment)
+                            } else {
+                                logger WARNING, "More than one deployment ${deployment.metadata.name} with the matching label was found for service ${kubeService.metadata.name} with selector ( ${k} : ${v} )."
+                            }
                         }
                     }
-
                 }
                 def dedupedQueryDeployments = []
                 allQueryDeployments.each{ deploy ->
@@ -138,10 +141,15 @@ public class ImportFromYAML extends EFClient {
         deployments.each { deployment ->
             def removeLabels = []
             deployment.spec?.template?.metadata?.labels.each{ k, v ->
-                if ((k == key) && (v == value) && first){
-                    queryDeployments.push(deployment)
-                    removeLabels.push(k)
-                    first = false
+                if ((k == key) && (v == value)){
+                    if (first){
+                        queryDeployments.push(deployment)
+                        removeLabels.push(k)
+                        first = false
+                    }
+                    else{
+                        queryDeployments.push(deployment)
+                    }
                 }
             }
             if (removeLabels){
