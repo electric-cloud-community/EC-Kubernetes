@@ -134,12 +134,19 @@ public class ImportFromYAML extends EFClient {
 
     def getDeploymentsBySelector(deployments, key, value){
         def queryDeployments = []
-        def i = 0
+        def first = true
         deployments.each { deployment ->
-            deployment.spec.selector.matchLabels.each{ k, v ->
-                i = i + 1
-                if ((k == key) && (v == value)){
+            def removeLabels = []
+            deployment.spec?.template?.metadata?.labels.each{ k, v ->
+                if ((k == key) && (v == value) && first){
                     queryDeployments.push(deployment)
+                    removeLabels.push(k)
+                    first = false
+                }
+            }
+            if (removeLabels){
+                removeLabels.each { keyToRemove ->
+                    deployment.spec?.template?.metadata?.labels.remove(keyToRemove)
                 }
             }
         }
