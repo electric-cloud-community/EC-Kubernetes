@@ -146,6 +146,7 @@ public class ImportFromYAML extends EFClient {
         if (applicationName && !getExistingApp(applicationName, projectName)){
             def app = createApplication(projectName, applicationName)
             logger INFO, "Application ${applicationName} has been created"
+            createAppDeployProcess(projectName, applicationName)
             // create link for the application
             def applicationId = app.applicationId
             setEFProperty("/myJob/report-urls/Application: $applicationName", "/flow/#applications/$applicationId")
@@ -219,22 +220,27 @@ public class ImportFromYAML extends EFClient {
             createOrUpdateMapping(projectName, envProjectName, envName, clusterName, serviceName, service, applicationName)
         }
 
-        createDeployProcess(projectName, serviceName, applicationName)
+        if (applicationName) {
+            createAppDeployProcessStep(projectName, applicationName, serviceName)
+        }
         result
     }
 
-    def createDeployProcess(projectName, serviceName, applicationName = null) {
+    def createAppDeployProcess(projectName, applicationName) {
         def processName = 'Deploy'
-        def process = createProcess(projectName, serviceName, [processName: processName, processType: 'DEPLOY'], applicationName)
-        logger INFO, "Process ${processName} has been created for ${serviceName}"
-        def processStepName = 'deployService'
-        def processStep = createProcessStep(projectName, serviceName, processName, [
-            processStepName: processStepName,
-            processStepType: 'service', subservice: serviceName],
-            applicationName)
-        logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
+        createAppProcess(projectName, applicationName, [processName: processName, processType: 'DEPLOY'])
+        logger INFO, "Process ${processName} has been created for applicationName: '${applicationName}'"
     }
 
+    def createAppDeployProcessStep(projectName, applicationName, serviceName) {
+        def processName = 'Deploy'
+        def processStepName = "deployService-${serviceName}"
+        createAppProcessStep(projectName, applicationName, processName, [
+                processStepName: processStepName,
+                processStepType: 'service', subservice: serviceName]
+        )
+        logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
+    }
 
     def createOrUpdateMapping(projName, envProjName, envName, clusterName, serviceName, service, applicationName = null) {
         assert envProjName
