@@ -50,14 +50,29 @@ public class ImportFromYAML extends EFClient {
                 kubeService.spec.selector.each{ k, v ->
                     i = i + 1
                     def queryDeployments = getDeploymentsBySelector(deployments, k, v)
-                    if (queryDeployments != null){
-                        queryDeployments.each{ deployment->
-                            allQueryDeployments.push(deployment)
+                    if (queryDeployments != null) {
+                        queryDeployments.eachWithIndex { deployment, index ->
+                            if (index == 0) {
+                                allQueryDeployments.push(deployment)
+                            } else {
+                                logger WARNING, "More than one deployment ${deployment.metadata.name} with the matching label was found for service ${kubeService.metadata.name} with selector ( ${k} : ${v} )."
+                            }
                         }
                     }
-
                 }
-                allQueryDeployments.eachWithIndex { deploy, indexDeploy ->
+                def dedupedQueryDeployments = []
+                allQueryDeployments.each{ deploy ->
+                    def uniq = true
+                    dedupedQueryDeployments.each { dedupedDeploy ->
+                        if (deploy.metadata.name == dedupedDeploy.metadata.name){
+                            uniq = false
+                        }
+                    }
+                    if (uniq){
+                        dedupedQueryDeployments.push(deploy)
+                    }
+                }
+                dedupedQueryDeployments.eachWithIndex { deploy, indexDeploy ->
                     def efService = buildServiceDefinition(kubeService, deploy, namespace)
                     efServices.push(efService)
                 }
@@ -122,12 +137,24 @@ public class ImportFromYAML extends EFClient {
 
     def getDeploymentsBySelector(deployments, key, value){
         def queryDeployments = []
-        def i = 0
+        def first = true
         deployments.each { deployment ->
-            deployment.metadata.labels.each{ k, v ->
-                i = i + 1
+            def removeLabels = []
+            deployment.spec?.template?.metadata?.labels.each{ k, v ->
                 if ((k == key) && (v == value)){
-                    queryDeployments.push(deployment)
+                    if (first){
+                        queryDeployments.push(deployment)
+                        removeLabels.push(k)
+                        first = false
+                    }
+                    else{
+                        queryDeployments.push(deployment)
+                    }
+                }
+            }
+            if (removeLabels){
+                removeLabels.each { keyToRemove ->
+                    deployment.spec?.template?.metadata?.labels.remove(keyToRemove)
                 }
             }
         }
