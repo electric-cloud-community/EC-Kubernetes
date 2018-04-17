@@ -446,6 +446,16 @@ public class EFClient extends BaseClient {
         result?.data
     }
 
+    def createAppProcess(projName, applicationName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${applicationName}/processes", payload)
+        result?.data
+    }
+
+    def createAppProcessStep(projName, applicationName, processName, payload) {
+        def result = doRestPost("/rest/${REST_VERSION}/projects/${projName}/applications/${applicationName}/processes/${processName}/processSteps", payload, false)
+        result?.data
+    }
+
     def createProcess(projName, serviceName, payload, appName = null) {
         if (appName) {
             payload.applicationName = appName

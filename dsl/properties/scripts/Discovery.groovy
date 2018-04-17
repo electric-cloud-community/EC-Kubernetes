@@ -81,6 +81,7 @@ public class Discovery extends EFClient {
     def saveToEF(services) {
         if (applicationName) {
             def app = ensureApplication()
+            createAppDeployProcess(projectName, applicationName)
             // create link for the application
             def applicationId = app.applicationId
             setEFProperty("/myJob/report-urls/Application: $applicationName", "/flow/#applications/$applicationId")
@@ -109,6 +110,22 @@ public class Discovery extends EFClient {
             equalNames(it.serviceName, service.service.serviceName)
         }
         found
+    }
+
+    def createAppDeployProcess(projectName, applicationName) {
+        def processName = 'Deploy'
+        createAppProcess(projectName, applicationName, [processName: processName, processType: 'DEPLOY'])
+        logger INFO, "Process ${processName} has been created for applicationName: '${applicationName}'"
+    }
+
+    def createAppDeployProcessStep(projectName, applicationName, serviceName) {
+        def processName = 'Deploy'
+        def processStepName = "deployService-${serviceName}"
+        createAppProcessStep(projectName, applicationName, processName, [
+                processStepName: processStepName,
+                processStepType: 'service', subservice: serviceName]
+        )
+        logger INFO, "Process step ${processStepName} has been created for process ${processName} in service ${serviceName}"
     }
 
     def createOrUpdateService(service) {
@@ -156,6 +173,10 @@ public class Discovery extends EFClient {
 
         if (service.serviceMapping) {
             createOrUpdateMapping(serviceName, service)
+        }
+
+        if (applicationName) {
+            createAppDeployProcessStep(projectName, applicationName, serviceName)
         }
         result
     }
