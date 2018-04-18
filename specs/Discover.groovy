@@ -277,6 +277,7 @@ class Discover extends KubeHelper {
         deleteSecret(secretName)
     }
 
+    @Ignore("Until deploy strategies")
     def "Percentage in surge/maxUnavailable"() {
         given:
         def serviceName = 'kube-spec-service-percentage'

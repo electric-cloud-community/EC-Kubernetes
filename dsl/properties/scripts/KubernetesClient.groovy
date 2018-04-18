@@ -96,6 +96,7 @@ public class KubernetesClient extends BaseClient {
                     serviceDetails.port?.each { port ->
                         def targetPort = port.subport?:port.listenerPort
                         String url = "${serviceEndpoint}:${port.listenerPort}"
+                        logger INFO, "Load Balancer Endpoint: ${url}"
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                         efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                     }
@@ -110,9 +111,11 @@ public class KubernetesClient extends BaseClient {
                     String url = "${clusterIP}:${port.listenerPort}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                     efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
+                    logger INFO, "NodePort endpoint: ${url}"
                     // get the assigned node port for the service port
                     def nodePort = getNodePortServiceEndpoint(clusterEndpoint, namespace, serviceDetails, portName, accessToken)
                     if (nodePort) {
+                        logger INFO, "Node Port: $nodePort"
                         efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/nodePort", "$nodePort")
                         efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'nodePort', "$nodePort")
                     } else {
@@ -126,6 +129,7 @@ public class KubernetesClient extends BaseClient {
                 serviceDetails.port?.each { port ->
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
+                    logger INFO, "Endpoint: ${url}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                     efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                 }
