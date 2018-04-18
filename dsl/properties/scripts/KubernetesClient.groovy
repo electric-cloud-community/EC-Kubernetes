@@ -126,6 +126,7 @@ public class KubernetesClient extends BaseClient {
                 serviceDetails.port?.each { port ->
                     def targetPort = port.subport?:port.listenerPort
                     String url = "${clusterIP}:${port.listenerPort}"
+                    logger INFO, "Service endpoint: ${url}"
                     efClient.createProperty("${resultsPropertySheet}/${serviceName}/${targetPort}/url", url)
                     efClient.createPropertyInPipelineContext(applicationName, serviceName, targetPort, 'url', url)
                 }
