@@ -14,7 +14,6 @@ class Deploy extends KubeHelper {
 
 
     @Unroll
-    // Broken for now
     def "deploy service #imageName, #imageVersion, capacity #defaultCapacity, #containerPort:#listenerPort"() {
         given:
         def serviceName = 'Kube Deploy Spec'
@@ -53,15 +52,17 @@ class Deploy extends KubeHelper {
 
         def expectedDefaultCapacity = defaultCapacity ? defaultCapacity.toInteger() : 1
         assert deployment.spec.replicas == expectedDefaultCapacity
-        assert container.image == "${imageName}${imageVersion ? ':' + imageVersion : 'latest'}"
+        assert container.image == "${imageName}:${imageVersion ?: 'latest'}"
         assert container.ports[0].containerPort.toString() == containerPort
-//
-//            def strategy = deployment.spec.strategy.rollingUpdate
-//            assert strategy
-//            def expectedMaxSurge = maxCapacity ? maxCapacity - expectedDefaultCapacity : 1
-//            def expectedMaxUnavailable = minCapacity ? expectedDefaultCapacity - minCapacity : 1
-//            assert strategy.maxSurge == expectedMaxSurge
-//            assert strategy.maxUnavailable == expectedMaxUnavailable
+
+        /*
+        def strategy = deployment.spec.strategy.rollingUpdate
+        assert strategy
+        def expectedMaxSurge = maxCapacity ? maxCapacity - expectedDefaultCapacity : 1
+        def expectedMaxUnavailable = minCapacity ? expectedDefaultCapacity - minCapacity : 1
+        assert strategy.maxSurge == expectedMaxSurge
+        assert strategy.maxUnavailable == expectedMaxUnavailable
+        */
         cleanup:
         undeployService(projectName, serviceName)
         dsl """
@@ -76,7 +77,6 @@ class Deploy extends KubeHelper {
         'imagostorm/hello-world' | '1.0'        | '1'             | '80'          | '8080'       | '2'         | '1'
         'imagostorm/hello-world' | '1.0'        | '2'             | '81'          | '8081'       | '3'         | null
         'imagostorm/hello-world' | '2.0'        | null            | '81'          | '8081'       | '3'         | null
-
 
     }
 
