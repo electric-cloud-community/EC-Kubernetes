@@ -6,6 +6,11 @@ import org.yaml.snakeyaml.Yaml
 public class ImportFromYAML extends EFClient {
     static final String CREATED_DESCRIPTION = "Created by ImportFromYAML"
     static final String DELIMITER = "---"
+    static def REPORT_TEMPLATE = '''
+    $[/myProject/resources/report]
+    '''
+    static def REPORT_URL_PROPERTY = '/myJob/report-urls/'
+
     def discoveredSummary = [:]
     Yaml parser = new Yaml()
 
@@ -648,16 +653,23 @@ public class ImportFromYAML extends EFClient {
         def flatService = flattenMap('', kubeService, [:])
         def flatDeployment = flattenMap('', deployment, [:])
 
+        def ignoreList = []
         flatService.each{ key, value ->
             if (!listContains(logService, key)){
-                logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
+//                logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
+                ignoreList.push("Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!")
             }
 
         }
         flatDeployment.each{ key, value ->
             if (!listContains(logDeployment, key)){
-                logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
+//                logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
+                ignoreList.push("Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!")
             }
+        }
+
+        if(ignoreList){
+            publishReport(ignoreList)
         }
 
         efService
@@ -940,8 +952,45 @@ public class ImportFromYAML extends EFClient {
         println new JsonBuilder(object).toPrettyString()
     }
 
-
     def pretty(o) {
         new JsonBuilder(o).toPrettyString()
+    }
+
+    def publishReport(ignoredList) {
+        def text = renderIgnoredFieldsReport(ignoredList, REPORT_TEMPLATE)
+
+        def dir = new File('artifacts').mkdir()
+        def random = new Random()
+        def randomSuffix = random.nextInt(10 ** 5)
+
+        def reportFilename = "kubernetesIgnoreList_${randomSuffix}.html"
+        def report = new File("artifacts/${reportFilename}")
+        report.write(text)
+        String jobStepId = System.getenv('COMMANDER_JOBSTEPID')
+
+        def reportName = "Kubernetes Ignored Fields Report (${testRun.getCategory().getInternal()})"
+        publishLink(reportName, "/commander/jobSteps/${jobStepId}/${reportFilename}")
+    }
+
+    def renderIgnoredFieldsReport(ignoredLinks, String template) {
+        def engine = new groovy.text.SimpleTemplateEngine()
+        def templateParams = [:]
+        templateParams.ignoredLinks = ignoredLinks
+        templateParams.icon =
+        def text = engine.createTemplate(template).make(templateParams).toString()
+        text
+    }
+
+    def publishLink(String name, String link) {
+        setEFProperty("${REPORT_URL_PROPERTY}${name}", link)
+        try {
+            setEFProperty("/myPipelineStageRuntime/ec_summary/${name}",
+                    "<html><a href=\"${link}\" target=\"_blank\">${name}</a></html>",
+                    true, /* use job step id */
+                    false, /* fail on error */)
+        }
+        catch (Throwable e) {
+            logger ERROR, "Issues while setting property cause ${e} !"
+        }
     }
 }
