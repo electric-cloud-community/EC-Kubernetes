@@ -360,7 +360,8 @@ class ClusterView {
     }
 
     String getServiceEndpoint(service) {
-        "${service.spec.loadBalancerIP}:${service.spec.ports[0].port}"
+//        TODO ingress
+        "${service.spec.loadBalancerIP}:${service?.spec?.ports?.getAt(0)?.port}"
     }
 
     String getPodId(service, pod) {
@@ -465,11 +466,8 @@ class ClusterView {
         def labels = service?.metadata?.labels
         def type = service?.spec?.type
         def endpoint = getServiceEndpoint(service)
-        println "Endpoint: $endpoint"
         def runningPods = getPodsRunning(pods)
-        println "Running pods: $runningPods"
         def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
-        println "Volumes: $volumes"
 
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
