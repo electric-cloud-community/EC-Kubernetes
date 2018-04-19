@@ -34,7 +34,7 @@ try {
 } catch (Throwable e) {
     throw EcException
             .code(ErrorCodes.ScriptError)
-            .message("Exception occured while retrieving cluster details ${clusterName}")
+            .message("Exception occured while retrieving cluster details ${clusterName}: ${e.message}")
             .cause(e)
             .location(this.class.getCanonicalName())
             .build()

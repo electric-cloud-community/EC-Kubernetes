@@ -424,7 +424,7 @@ class ClusterView {
         def labels = getClusterLabels()
 
         if (version) {
-            node.addAttribute(ATTRIBUTE_MASTER_VERSION, version, TYPE_STRING)
+            node.addAttribute(ATTRIBUTE_MASTER_VERSION, version.toString(), TYPE_STRING)
         }
         if (labels) {
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
