@@ -60,7 +60,7 @@ public class ImportFromYAML extends EFClient {
                             if (index == 0) {
                                 allQueryDeployments.push(deployment)
                             } else {
-                                logger WARNING, "More than one deployment ${deployment.metadata.name} with the matching label was found for service ${kubeService.metadata.name} with selector ( ${k} : ${v} )."
+                                logger INFO, "More than one deployment (${deployment.metadata.name}) with the matching label was found for service ${kubeService.metadata.name} with selector ( ${k} : ${v} )."
                             }
                         }
                     }
@@ -657,19 +657,23 @@ public class ImportFromYAML extends EFClient {
         flatService.each{ key, value ->
             if (!listContains(logService, key)){
 //                logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
-                ignoreList.push("Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!")
+//                ignoreList.push("Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!")
+                ignoreList.push([type: "Service", name: "${kubeService.metadata.name}", field: "${key} = ${value}"])
+
             }
 
         }
         flatDeployment.each{ key, value ->
             if (!listContains(logDeployment, key)){
 //                logger WARNING, "Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!"
-                ignoreList.push("Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!")
+//                ignoreList.push("Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!")
+                ignoreList.push([type: "Deployment", name: "${deployment.metadata.name}", field: "${key} = ${value}"])
             }
         }
 
         if(ignoreList){
-            publishReport(ignoreList)
+            def textTable = buildReportText(ignoreList)
+            publishReport(textTable)
         }
 
         efService
@@ -956,8 +960,8 @@ public class ImportFromYAML extends EFClient {
         new JsonBuilder(o).toPrettyString()
     }
 
-    def publishReport(ignoredList) {
-        def text = renderIgnoredFieldsReport(ignoredList, REPORT_TEMPLATE)
+    def publishReport(ignoreList) {
+        def text = renderIgnoredFieldsReport(ignoreList, REPORT_TEMPLATE)
 
         def dir = new File('artifacts').mkdir()
         def random = new Random()
@@ -968,15 +972,15 @@ public class ImportFromYAML extends EFClient {
         report.write(text)
         String jobStepId = System.getenv('COMMANDER_JOBSTEPID')
 
-        def reportName = "Kubernetes Ignored Fields Report (${testRun.getCategory().getInternal()})"
+        def reportName = "Kubernetes Ignored Fields Report-(${reportFilename})"
         publishLink(reportName, "/commander/jobSteps/${jobStepId}/${reportFilename}")
     }
 
-    def renderIgnoredFieldsReport(ignoredLinks, String template) {
+    def renderIgnoredFieldsReport(tableText, String template) {
         def engine = new groovy.text.SimpleTemplateEngine()
         def templateParams = [:]
-        templateParams.ignoredLinks = ignoredLinks
-        templateParams.icon =
+
+        templateParams.tableText = tableText
         def text = engine.createTemplate(template).make(templateParams).toString()
         text
     }
@@ -984,13 +988,34 @@ public class ImportFromYAML extends EFClient {
     def publishLink(String name, String link) {
         setEFProperty("${REPORT_URL_PROPERTY}${name}", link)
         try {
-            setEFProperty("/myPipelineStageRuntime/ec_summary/${name}",
-                    "<html><a href=\"${link}\" target=\"_blank\">${name}</a></html>",
-                    true, /* use job step id */
-                    false, /* fail on error */)
+            setEFProperty("/myJob/report-urls/${name}",
+                    "<html><a href=\"${link}\" target=\"_blank\">${name}</a></html>")
         }
         catch (Throwable e) {
             logger ERROR, "Issues while setting property cause ${e} !"
         }
     }
+
+    def buildReportText(list){
+        def writer = new StringWriter()
+        def markup = new groovy.xml.MarkupBuilder(writer)
+        markup.html{
+            list.each{ item ->
+                tr {
+                    td(class:"text-center", item.type)
+                    td(class:"text-center", item.name)
+                    td(class:"text-center", item.field)
+                }
+            }
+        }
+        writer.toString()
+    }
+
+//    <%
+//    def tableText = ''' '''
+//    ignoreList.each {
+//        tableText += '''<tr><td class="text-left">${it.type}</td>]<td class="text-center">${it.name}</td><td class="text-center">${it.field}</td></tr>'''
+//    }
+//    %>
+
 }
