@@ -22,22 +22,22 @@ class Client {
 
     static Integer logLevel = INFO
 
+    private HTTPBuilder http
+
     Client(String endpoint, String accessToken, String version) {
         this.endpoint = endpoint
         this.kubernetesVersion = version
         this.accessToken = accessToken
+        this.http = new HTTPBuilder(this.endpoint)
+        this.http.ignoreSSLIssues()
     }
 
     Object doHttpRequest(Method method, String requestUri,
                          Object requestBody = null,
                          def queryArgs = null) {
-
-        def http = new HTTPBuilder(this.endpoint)
-        http.ignoreSSLIssues()
         def requestHeaders = [
             'Authorization': "Bearer ${this.accessToken}"
         ]
-
         http.request(method, JSON) {
             if (requestUri) {
                 uri.path = requestUri
