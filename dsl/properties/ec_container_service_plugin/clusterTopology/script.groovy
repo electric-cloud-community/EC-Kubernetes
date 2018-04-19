@@ -31,6 +31,11 @@ try {
 } catch (EcException e) {
     throw e
 } catch (Throwable e) {
-    throw EcException.code(ErrorCodes.ScriptError).message("Exception occured while retrieving cluster topology").cause(e).location(this.class.getCanonicalName()).build()
+    throw EcException
+        .code(ErrorCodes.ScriptError)
+        .message("Exception occured while retrieving cluster topology: ${e.message}")
+        .cause(e)
+        .location(this.class.getCanonicalName())
+        .build()
 }
 response
