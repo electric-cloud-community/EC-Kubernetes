@@ -69,7 +69,7 @@ class ClusterView {
             }
 
             services.findAll { !isSystemService(it) }.each { service ->
-                def pods = getServicePods(service)
+                def pods = getServicePodsTopology(service)
                 topology.addLink(getNamespaceId(namespace), getServiceId(service))
                 topology.addNode(buildServiceNode(service, pods))
 
@@ -147,6 +147,29 @@ class ClusterView {
     }
 
     def getServicePods(def service) {
+        def selector = service.spec?.selector
+        assert selector
+        def selectorString = selector.collect { k, v ->
+            "${k}=${v}"
+        }.join(',')
+        def namespace = service.metadata.namespace
+        def deployments = kubeClient.getDeployments(namespace, selectorString)
+        def pods = []
+        deployments.each { deployment ->
+            def labels = deployment?.spec?.selector?.matchLabels ?: deployment?.spec?.template?.metadata?.labels
+
+            def podSelectorString = labels.collect { k, v ->
+                "${k}=${v}"
+            }.join(',')
+            def deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+            pods.addAll(deploymentPods)
+        }
+
+        pods
+    }
+
+
+    def getServicePodsTopology(def service) {
         def serviceSelector = service?.spec?.selector
         def pods = []
 
@@ -431,7 +454,7 @@ class ClusterView {
         def service = kubeClient.getService(namespace, serviceId)
         def pods = getServicePods(service)
 
-        def node = new ClusterNodeImpl(serviceName, TYPE_SERVICE, serviceId)
+        def node = new ClusterNodeImpl(serviceId, TYPE_SERVICE, serviceName)
 
         def efId = service.metadata?.labels?.find { it.key == 'ec-svc-id' }?.value
         if (efId) {
@@ -439,11 +462,14 @@ class ClusterView {
         }
 
         def status = getPodsStatus(pods)
-        def labels = service.metadata.labels
-        def type = service.spec.type
+        def labels = service?.metadata?.labels
+        def type = service?.spec?.type
         def endpoint = getServiceEndpoint(service)
+        println "Endpoint: $endpoint"
         def runningPods = getPodsRunning(pods)
+        println "Running pods: $runningPods"
         def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+        println "Volumes: $volumes"
 
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
@@ -458,7 +484,7 @@ class ClusterView {
             node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
         }
         if (runningPods) {
-            node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods, TYPE_STRING)
+            node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods.toString(), TYPE_STRING)
         }
         if (volumes) {
             node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
