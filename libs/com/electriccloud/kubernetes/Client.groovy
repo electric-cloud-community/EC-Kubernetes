@@ -85,6 +85,21 @@ class Client {
         result?.items
     }
 
+    def getAllServices() {
+        def result = doHttpRequest(GET, "/api/v1/services")
+        result?.items
+    }
+
+    def getAllDeployments() {
+        def result = doHttpRequest(GET, "/apis/apps/v1beta1/deployments")
+        result?.items
+    }
+
+    def getAllPods() {
+        def result = doHttpRequest(GET, "/api/v1/pods")
+        result?.items
+    }
+
     def getService(String namespace, String serviceName){
         def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services/${serviceName}")
         result

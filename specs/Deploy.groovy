@@ -113,7 +113,7 @@ class Deploy extends KubeHelper {
         def deployedServiceName = serviceName.replaceAll(/\s+/, '-').toLowerCase() + '-canary'
         def canaryDeployment = getDeployment(deployedServiceName)
         logger.debug(objectToJson(canaryDeployment))
-        assert canaryDeployment.status.replicas == 2
+        assert canaryDeployment.status.replicas == 1
         assert result.outcome == 'success'
         cleanup:
         dslFile "dsl/Deploy.dsl", [

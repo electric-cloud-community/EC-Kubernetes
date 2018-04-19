@@ -9,7 +9,7 @@ import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
 import groovy.json.JsonOutput
 
-    class ClusterView {
+class ClusterView {
     String clusterName
     String clusterId
     Client kubeClient
@@ -41,34 +41,46 @@ import groovy.json.JsonOutput
     private static final String ATTRIBUTE_RUNNING_PODS = 'Running Pods'
     private static final String ATTRIBUTE_VOLUMES = 'Volumes'
 
-    ClusterTopology getRealtimeClusterTopology() {
-        def namespaces = kubeClient.getNamespaces()
+    @Lazy
+    private kubeNamespaces = { kubeClient.getNamespaces() }()
 
+    @Lazy
+    private kubeServices = { kubeClient.getAllServices() }()
+
+    @Lazy
+    private kubeDeployments = { kubeClient.getAllDeployments() }()
+
+    @Lazy
+    private kubePods = { kubeClient.getAllPods() }()
+
+
+    ClusterTopology getRealtimeClusterTopology() {
         ClusterTopology topology = new ClusterTopologyImpl()
         topology.addNode(getEFClusterId(), TYPE_EF_CLUSTER, getEFClusterName())
         topology.addLink(getEFClusterId(), getClusterId())
         topology.addNode(buildClusterNode())
 
-        namespaces.findAll { !isSystemNamespace(it) }.each { namespace ->
-            if (!isSystemNamespace(namespace)) {
-                topology.addNode(buildNamespaceNode(namespace))
-                topology.addLink(getClusterId(), getNamespaceId(namespace))
+        kubeNamespaces.findAll { !isSystemNamespace(it) }.each { namespace ->
+            topology.addNode(buildNamespaceNode(namespace))
+            topology.addLink(getClusterId(), getNamespaceId(namespace))
 
-                def services = kubeClient.getServices(getNamespaceName(namespace))
-                services.findAll { !isSystemService(it) }.each { service ->
-                    def pods = getServicePods(service)
-                    topology.addLink(getNamespaceId(namespace), getServiceId(service))
-                    topology.addNode(buildServiceNode(service, pods))
+            def services = kubeServices.findAll { kubeService ->
+                kubeService.metadata.namespace == namespace.metadata.name
+            }
 
-                    pods.each { pod ->
-                        topology.addLink(getServiceId(service), getPodId(service, pod))
-                        topology.addNode(buildPodNode(service, pod))
+            services.findAll { !isSystemService(it) }.each { service ->
+                def pods = getServicePods(service)
+                topology.addLink(getNamespaceId(namespace), getServiceId(service))
+                topology.addNode(buildServiceNode(service, pods))
 
-                        def containers = pod.spec.containers
-                        containers.each { container ->
-                            topology.addLink(getPodId(service, pod), getContainerId(service, pod, container))
-                            topology.addNode(buildContainerNode(service, pod, container))
-                        }
+                pods.each { pod ->
+                    topology.addLink(getServiceId(service), getPodId(service, pod))
+                    topology.addNode(buildPodNode(service, pod))
+
+                    def containers = pod.spec.containers
+                    containers.each { container ->
+                        topology.addLink(getPodId(service, pod), getContainerId(service, pod, container))
+                        topology.addNode(buildContainerNode(service, pod, container))
                     }
                 }
             }
@@ -124,10 +136,10 @@ import groovy.json.JsonOutput
             return states[0]
         }
         throw EcException
-                .code(ErrorCodes.UnknownError)
-                .message("Container has more than one status: ${containerStatus}")
-                .location(this.class.canonicalName)
-                .build()
+            .code(ErrorCodes.UnknownError)
+            .message("Container has more than one status: ${containerStatus}")
+            .location(this.class.canonicalName)
+            .build()
     }
 
     def isSystemService(service) {
@@ -135,28 +147,37 @@ import groovy.json.JsonOutput
     }
 
     def getServicePods(def service) {
-        def selector = service.spec?.selector
-        assert selector
-        def selectorString = selector.collect { k, v ->
-            "${k}=${v}"
-        }.join(',')
-        def namespace = service.metadata.namespace
-        def deployments = kubeClient.getDeployments(namespace, selectorString)
+        def serviceSelector = service?.spec?.selector
         def pods = []
-        deployments.each { deployment ->
-            def labels = deployment?.spec?.template?.metadata?.labels
 
-            def podSelectorString = labels.collect { k, v ->
-                "${k}=${v}"
-            }.join(',')
-            def deploymentPods = kubeClient.getPods(namespace, podSelectorString)
-            pods.addAll(deploymentPods)
+        def match = { selector, object ->
+            if (!selector) {
+                return false
+            }
+            def labels = object.metadata?.labels
+            def match = true
+            selector.each { k, v ->
+                if (labels.get(k) != v) {
+                    match = false
+                }
+            }
+            match
+        }
+
+        def deployments = kubeDeployments.findAll {
+            match(serviceSelector, it)
+        }
+        deployments.each { deploy ->
+            def deploySelector = deploy?.spec?.selector?.matchLabels ?: deploy?.spec?.template?.metadata?.labels
+            pods.addAll(kubePods.findAll {
+                match(deploySelector, it)
+            })
         }
 
         pods
     }
 
-    def errorChain(Closure ... closures) {
+    def errorChain(Closure... closures) {
         def first = closures.head()
         closures = closures.tail()
         def result
@@ -165,8 +186,7 @@ import groovy.json.JsonOutput
         } catch (Throwable e) {
             if (closures.size()) {
                 errorChain(closures)
-            }
-            else {
+            } else {
                 throw e
             }
         }
@@ -227,7 +247,7 @@ import groovy.json.JsonOutput
         if (startedAt) {
             node.addAttribute('Start Time', startedAt, TYPE_DATE)
         }
-        if (environmentVariables && environmentVariables.size() ) {
+        if (environmentVariables && environmentVariables.size()) {
             node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
         }
         if (ports) {
@@ -254,7 +274,7 @@ import groovy.json.JsonOutput
                     usage = kubeClient.getPodMetricsServerAlpha(namespace, podId)
                 }
             )
-        } catch (Throwable e ) {
+        } catch (Throwable e) {
             println "Cannot get metrics: ${e.message}"
         }
 
@@ -283,11 +303,11 @@ import groovy.json.JsonOutput
     }
 
     //future
-    def getClusterLabels(){
+    def getClusterLabels() {
         null
     }
 
-    def getNamespaceLabels(namespace){
+    def getNamespaceLabels(namespace) {
         namespace?.metadata?.labels
     }
 
@@ -347,7 +367,7 @@ import groovy.json.JsonOutput
         def status = getPodsStatus(pods)
         ClusterNode node = new ClusterNodeImpl(getServiceId(service), TYPE_SERVICE, name)
         node.setStatus(status)
-        def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
+        def efId = service.metadata?.labels?.find { it.key == 'ec-svc-id' }?.value
         if (efId) {
             node.setElectricFlowIdentifier(efId)
         }
@@ -374,22 +394,22 @@ import groovy.json.JsonOutput
         new ClusterNodeImpl(getNamespaceId(namespace), TYPE_NAMESPACE, name)
     }
 
-    def getClusterDetails(){
+    def getClusterDetails() {
         def node = new ClusterNodeImpl(getClusterName(), TYPE_CLUSTER, getClusterId())
 
         def version = kubeClient.getClusterVersion()
         def labels = getClusterLabels()
 
-        if (version){
+        if (version) {
             node.addAttribute(ATTRIBUTE_MASTER_VERSION, version, TYPE_STRING)
         }
-        if (labels){
+        if (labels) {
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
         }
         node
     }
 
-    def getNamespaceDetails(namespaceName){
+    def getNamespaceDetails(namespaceName) {
         namespaceName = namespaceName.replaceAll("${clusterName}::", '')
         def namespace = kubeClient.getNamespace(namespaceName)
         def namespaceId = getNamespaceId(namespace)
@@ -398,14 +418,14 @@ import groovy.json.JsonOutput
 
         def node = new ClusterNodeImpl(namespaceName, TYPE_NAMESPACE, namespaceId)
 
-        if (labels){
+        if (labels) {
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
         }
 
         node
     }
 
-    def getServiceDetails(serviceName){
+    def getServiceDetails(serviceName) {
         serviceName = serviceName.replaceAll("${clusterName}::", '')
         def (namespace, serviceId) = serviceName.split('::')
         def service = kubeClient.getService(namespace, serviceId)
@@ -413,8 +433,8 @@ import groovy.json.JsonOutput
 
         def node = new ClusterNodeImpl(serviceName, TYPE_SERVICE, serviceId)
 
-        def efId = service.metadata?.labels?.find{ it.key == 'ec-svc-id' }?.value
-        if (efId){
+        def efId = service.metadata?.labels?.find { it.key == 'ec-svc-id' }?.value
+        if (efId) {
             node.setElectricFlowIdentifier(efId)
         }
 
@@ -422,25 +442,25 @@ import groovy.json.JsonOutput
         def labels = service.metadata.labels
         def type = service.spec.type
         def endpoint = getServiceEndpoint(service)
-        def runningPods  = getPodsRunning(pods)
+        def runningPods = getPodsRunning(pods)
         def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
 
-        if (status){
+        if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         }
-        if (labels){
+        if (labels) {
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
         }
-        if (type){
+        if (type) {
             node.addAttribute(ATTRIBUTE_SERVICE_TYPE, type, TYPE_STRING)
         }
-        if (endpoint){
+        if (endpoint) {
             node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
         }
-        if (runningPods){
+        if (runningPods) {
             node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods, TYPE_STRING)
         }
-        if (volumes){
+        if (volumes) {
             node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
         }
 
