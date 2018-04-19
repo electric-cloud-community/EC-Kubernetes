@@ -23,6 +23,8 @@ class Client {
     static Integer logLevel = INFO
 
     private HTTPBuilder http
+    private static final Integer SOCKET_TIMEOUT = 20 * 1000
+    private static final Integer CONNECTION_TIMEOUT = 5 * 1000
 
     Client(String endpoint, String accessToken, String version) {
         this.endpoint = endpoint
@@ -38,7 +40,7 @@ class Client {
         def requestHeaders = [
             'Authorization': "Bearer ${this.accessToken}"
         ]
-        http.request(method, JSON) {
+        http.request(method, JSON) { req ->
             if (requestUri) {
                 uri.path = requestUri
             }
@@ -47,6 +49,8 @@ class Client {
             }
             headers = requestHeaders
             body = requestBody
+            req.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT)
+            req.getParams().setParameter("http.socket.timeout", SOCKET_TIMEOUT)
 
             response.success = { resp, json ->
                 logger DEBUG, "request was successful $resp.statusLine.statusCode $json"
