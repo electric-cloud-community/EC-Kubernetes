@@ -229,20 +229,6 @@ spec:
 
     ---
 
-kind: Service
-apiVersion: v1
-metadata:
-  name: my-service2
-spec:
-  selector:
-    app: nginx2
-  ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 9376
-
-    ---
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -257,7 +243,7 @@ spec:
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx1
     spec:
       containers:
       - name: nginx
@@ -282,6 +268,21 @@ spec:
             cpu: 0.5
         ports:
         - containerPort: 90
+        
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: my-service2
+spec:
+  selector:
+    app: nginx2
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 9376
+    
 ---
 
 apiVersion: apps/v1
@@ -298,7 +299,7 @@ spec:
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx2
     spec:
       containers:
       - name: nginx
@@ -419,11 +420,11 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: nginx1
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx1
     spec:
       containers:
       - name: nginx
@@ -460,11 +461,11 @@ spec:
   replicas: 3
   selector:
     matchLabels:
-      app: nginx
+      app: nginx2
   template:
     metadata:
       labels:
-        app: nginx
+        app: nginx2
     spec:
       containers:
       - name: nginx
