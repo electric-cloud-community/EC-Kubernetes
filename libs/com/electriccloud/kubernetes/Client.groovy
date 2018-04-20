@@ -163,8 +163,13 @@ class Client {
             headers.Accept = "application/json"
 
             response.success = { resp, reader ->
-                String logs = reader.text
-                logs
+                if (reader) {
+                    String logs = reader.text
+                    logs
+                }
+                else {
+                    ''
+                }
             }
             response.failure = { resp, reader ->
                 throw EcException
@@ -187,7 +192,6 @@ class Client {
                 return '[WARNING] '
             default://ERROR
                 return '[ERROR] '
-
         }
     }
 
