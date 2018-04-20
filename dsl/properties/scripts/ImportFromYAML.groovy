@@ -11,6 +11,7 @@ public class ImportFromYAML extends EFClient {
     '''
     static def REPORT_URL_PROPERTY = '/myJob/report-urls/'
 
+    def ignoreList = []
     def discoveredSummary = [:]
     Yaml parser = new Yaml()
 
@@ -83,6 +84,12 @@ public class ImportFromYAML extends EFClient {
                 }
             }
         }
+
+        if(ignoreList){
+            def textTable = buildReportText(ignoreList)
+            publishReport(textTable)
+        }
+
         efServices
     }
 
@@ -653,7 +660,7 @@ public class ImportFromYAML extends EFClient {
         def flatService = flattenMap('', kubeService, [:])
         def flatDeployment = flattenMap('', deployment, [:])
 
-        def ignoreList = []
+//        def ignoreList = []
         flatService.each{ key, value ->
             if (!listContains(logService, key)){
 //                logger WARNING, "Ignored items ${key} = ${value} from Service '${kubeService.metadata.name}'!"
@@ -669,11 +676,6 @@ public class ImportFromYAML extends EFClient {
 //                ignoreList.push("Ignored items ${key} = ${value} from Deployment '${deployment.metadata.name}'!")
                 ignoreList.push([type: "Deployment", name: "${deployment.metadata.name}", field: "${key} = ${value}"])
             }
-        }
-
-        if(ignoreList){
-            def textTable = buildReportText(ignoreList)
-            publishReport(textTable)
         }
 
         efService
@@ -994,6 +996,7 @@ public class ImportFromYAML extends EFClient {
         catch (Throwable e) {
             logger ERROR, "Issues while setting property cause ${e} !"
         }
+        logger INFO, "Some fields have not been imported. Full list of ignored fields available in the report on the link: ${link} !"
     }
 
     def buildReportText(list){
@@ -1010,12 +1013,4 @@ public class ImportFromYAML extends EFClient {
         }
         writer.toString()
     }
-
-//    <%
-//    def tableText = ''' '''
-//    ignoreList.each {
-//        tableText += '''<tr><td class="text-left">${it.type}</td>]<td class="text-center">${it.name}</td><td class="text-center">${it.field}</td></tr>'''
-//    }
-//    %>
-
 }
