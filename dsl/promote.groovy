@@ -124,7 +124,25 @@ project pluginName, {
 		}
 
 		property 'clusterTopology', credentialProtected: true, {
+			property 'cluster', credentialProtected: true, {
 
+			}
+			property 'container', credentialProtected: true, {
+				property 'actions', {
+					property 'viewLogs', credentialProtected: true, {
+
+					}
+				}
+			}
+			property 'namespace', credentialProtected: true, {
+
+			}
+			property 'pod', credentialProtected: true, {
+
+			}
+			property 'service', credentialProtected: true, {
+
+			}
 		}
 	}
 	property 'ec_dsl_libraries_path', value: 'libs'
