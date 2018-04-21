@@ -162,7 +162,7 @@
             
             <tr>
                 <td class="required">Bearer Token of Kubernetes Cluster</td>
-                <td>The bearer token related to a serviceAccount which has access to create resources in the Kubernetes cluster</td>
+                <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</td>
             </tr>
             
             <tr>
@@ -173,6 +173,11 @@
             <tr>
                 <td >Test Connection</td>
                 <td>Check this checkbox to verify connectivity to Kubernetes master.</td>
+            </tr>
+            
+            <tr>
+                <td >URI for checking cluster connectivity</td>
+                <td>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
             </tr>
             
             <tr>
@@ -364,27 +369,47 @@ definitions retrieved from there.</p>
             
             <tr>
                 <td class="required">Environment Project Name</td>
-                <td>The name of project that the environment belongs to.</td>
+                <td>The project containing the existing environment, or where the new environment will be created.</td>
             </tr>
             
             <tr>
                 <td class="required">Environment Name</td>
-                <td>The name of the environment containing the Kubernetes-backed cluster whose deployed services are to be discovered.</td>
+                <td>Provide the name of an existing environment that contains the Kubernetes-backend cluster to be discovered. If the environment does not already exist, provide the Kubernetes connection details below for discovery, and a new environment will be created.</td>
             </tr>
             
             <tr>
                 <td class="required">Cluster Name</td>
-                <td>The name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered.</td>
+                <td>In an existing environment, provide the name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</td>
+            </tr>
+            
+            <tr>
+                <td >Kubernetes API Endpoint</td>
+                <td>The endpoint at which the Kubernetes API will be reachable. Must be an IP address or a resolvable DNS name. This field is required and used only if you are not providing an existing environment above for discovery.</td>
+            </tr>
+            
+            <tr>
+                <td >Service Account API Token</td>
+                <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. This field is required and used only if you are not providing an existing environment above for discovery.</td>
             </tr>
             
             <tr>
                 <td class="required">Kubernetes Namespace</td>
-                <td>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </td>
+                <td>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace.</td>
             </tr>
             
             <tr>
                 <td class="required">Project Name</td>
                 <td>The name of project in which the discovered microservices will be created.</td>
+            </tr>
+            
+            <tr>
+                <td >Create Microservices within an Application</td>
+                <td>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
+            </tr>
+            
+            <tr>
+                <td >Application Name</td>
+                <td>The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
             </tr>
             
             </tbody>
@@ -540,7 +565,7 @@ definitions retrieved from there.</p>
     
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
-        <p>Creating microservice models using Kubernetes YAML file.</p>
+        <p>Creating microservice models using Kubernetes YAML file. </p>
         
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
@@ -562,38 +587,38 @@ If the object with the provided name already exists in the ElectricFlow, this ob
             <tbody>
             
             <tr>
-                <td class="required">Kubernetes YAML file</td>
-                <td>Kubernetes YAML file contents containing related services and deployments definitions.</td>
+                <td class="required">Kubernetes YAML File Content</td>
+                <td>Content of a Kubernetes YAML file containing related services and deployments definitions.</td>
             </tr>
             
             <tr>
                 <td class="required">Project Name</td>
-                <td>The name of project in which the application or the microservices will be created.</td>
+                <td>The name of project in which the application or microservices will be created.</td>
             </tr>
             
             <tr>
-                <td >Create application-scoped microservices</td>
-                <td>Whether all the services defined in the Kubernetes YAML file should be created within one application in ElectricFlow. If checked, then the application name must be provided.</td>
+                <td >Create Microservices within an Application</td>
+                <td>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
             </tr>
             
             <tr>
                 <td >Application Name</td>
-                <td>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</td>
+                <td>(Optional) The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
             </tr>
             
             <tr>
                 <td >Environment Project Name</td>
-                <td>The name of project that the environment belongs to.</td>
+                <td>(Optional) The project containing the Environment where the services will be deployed.</td>
             </tr>
             
             <tr>
                 <td >Environment Name</td>
-                <td>The name of the ElectricFlow environment containing the Kubernetes-based cluster where the newly created microservice(s) will be deployed.</td>
+                <td>(Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.</td>
             </tr>
             
             <tr>
                 <td >Cluster Name</td>
-                <td>The name of the ElectricFlow cluster representing a Kubernetes cluster where the newly created microservice(s) will be deployed.</td>
+                <td>(Optional) The name of the existing ElectricFlow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</td>
             </tr>
             
             </tbody>
@@ -699,8 +724,10 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <li>Added "Discover" procedure.</li>
         
         <li>Added "Import Microservices" procedure.</li>
-
-        <li>Configured the 'setup' procedure step that retrieves groovy dependency jars to run all subsequent procedure steps on the same resource.</li>
+        
+        <li>Configured the plugin to allow the ElectricFlow UI to render the plugin procedure parameters entirely using the configured form XMLs.</li>
+        
+        <li>Enabled the plugin for managing the plugin configurations in-line when defining an application process step or a pipeline stage task.</li>
         
     </ul>
     
