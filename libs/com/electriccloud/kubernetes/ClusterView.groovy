@@ -188,12 +188,14 @@ class ClusterView {
         }
 
         def deployments = kubeDeployments.findAll {
-            match(serviceSelector, it)
+            it.metadata.namespace == service.metadata.namespace &&
+                    match(serviceSelector, it)
         }
         deployments.each { deploy ->
             def deploySelector = deploy?.spec?.selector?.matchLabels ?: deploy?.spec?.template?.metadata?.labels
             pods.addAll(kubePods.findAll {
-                match(deploySelector, it)
+                it.metadata.namespace == service.metadata.namespace &&
+                        match(deploySelector, it)
             })
         }
 
