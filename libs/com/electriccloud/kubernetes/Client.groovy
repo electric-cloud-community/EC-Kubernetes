@@ -58,12 +58,10 @@ class Client {
             }
 
             response.failure = { resp, reader ->
-                logger ERROR, "Response: $reader"
                 throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.getClass().getCanonicalName())
-                    .message("Request for '$requestUri' failed with $resp.statusLine")
-                    .build()
+                        .code(ErrorCodes.RealtimeClusterLookupFailed)
+                        .message("Request for '$requestUri' failed with $resp.statusLine")
+                        .build()
             }
         }
     }
@@ -172,11 +170,11 @@ class Client {
                 }
             }
             response.failure = { resp, reader ->
-                throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.getClass().getCanonicalName())
-                    .message("Request failed with $resp.statusLine: $reader")
-                    .build()
+                String result = "Failed to read container logs: ${resp.statusLine}.\nStatus: ${resp.status}"
+                if (reader) {
+                    result += "\n${reader.text}"
+                }
+                result
             }
 
         }
@@ -225,10 +223,9 @@ class Client {
                 return isVersionGreaterThan15() ? (isVersionGreaterThan17() ? 'apps/v1beta2' : 'apps/v1beta1') : 'extensions/v1beta1'
             default:
                 throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.class.getCanonicalName())
-                    .message("Unsupported resource '$resource' for determining version specific API path")
-                    .build()
+                        .code(ErrorCodes.ScriptError)
+                        .message("Unsupported resource '$resource' for determining version specific API path")
+                        .build()
         }
     }
 
