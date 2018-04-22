@@ -129,14 +129,14 @@ class ClusterView {
         }
         def containerStatus = pod.status.containerStatuses.find { it.name == name }
         if (!containerStatus) {
-            throw EcException.code(ErrorCodes.UnknownError).message("No container status found for name ${name}").build()
+            throw EcException.code(ErrorCodes.RealtimeClusterLookupFailed).message("No container status found for name ${name}").build()
         }
         def states = containerStatus?.state.keySet()
         if (states.size() == 1) {
             return states[0]
         }
         throw EcException
-            .code(ErrorCodes.UnknownError)
+            .code(ErrorCodes.RealtimeClusterLookupFailed)
             .message("Container has more than one status: ${containerStatus}")
             .location(this.class.canonicalName)
             .build()
@@ -240,7 +240,7 @@ class ClusterView {
         }
         if (!container) {
             throw EcException
-                .code(ErrorCodes.UnknownError)
+                .code(ErrorCodes.RealtimeClusterLookupFailed)
                 .message("Container ${containerId} was not found in pod ${podId}")
                 .location(this.class.canonicalName)
                 .build()
