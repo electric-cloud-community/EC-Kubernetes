@@ -68,8 +68,8 @@ class ClusterView {
             topology.addLink(getClusterId(), getNamespaceId(namespace))
 
             def services = kubeServices.findAll { kubeService ->
-                kubeService.metadata.namespace == namespace.metadata.name && 
-                    isValidService(kubeService) && !isSystemService(service)
+                kubeService.metadata.namespace == namespace.metadata.name &&
+                    isValidService(kubeService) && !isSystemService(kubeService)
             }
 
             services.each { service ->
@@ -169,7 +169,7 @@ class ClusterView {
         service.metadata.name == 'kubernetes'
     }
 
-    def getServicePods(def service) {
+    def getServicePods(def service, boolean skipDeleted = false) {
         def selector = service.spec?.selector
         assert selector
         def selectorString = selector.collect { k, v ->
@@ -184,8 +184,22 @@ class ClusterView {
             def podSelectorString = labels.collect { k, v ->
                 "${k}=${v}"
             }.join(',')
-
-            def deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+            def deploymentPods = []
+            if (skipDeleted) {
+                try {
+                    deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+                } catch(Throwable e) {
+                    if (e.message =~ /404/) {
+                        deploymentPods = []
+                    }
+                    else {
+                        throw e
+                    }
+                }
+            }
+            else {
+                deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+            }
             pods.addAll(deploymentPods.findAll { isValidPod(it)} )
         }
 
@@ -544,9 +558,8 @@ class ClusterView {
             else {
                 throw e
             }
-
         }
-        def pods = getServicePods(service)
+        def pods = getServicePods(service, true)
 
         // The constructor takes parameters in this order: id, type, name
         // But argument name 'serviceName' really represents the fully qualified service-id
@@ -564,7 +577,17 @@ class ClusterView {
         def type = service?.spec?.type
         def endpoint = getServiceEndpoint(service)
         def runningPods = getPodsRunning(pods)
-        def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+        def volumes
+        try {
+            volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+//                Do nothing
+            }
+            else {
+                throw e
+            }
+        }
 
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
