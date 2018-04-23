@@ -445,12 +445,12 @@ class ClusterView {
             case 'NodePort':
                 String host = new URL(kubeClient.endpoint).host
                 String port = service?.spec?.ports?.find({ it.protocol == 'TCP'})?.port
-                endpoint = "${host}:${port}"
+                endpoint = port ? "${host}:${port}" : host
                 break
             default:
                 String host = new URL(kubeClient.endpoint).host
                 String port = service?.spec?.ports?.getAt(0)?.port
-                endpoint = "${host}:${port}"
+                endpoint = port ? "${host}:${port}" : host
                 break
         }
         return endpoint
