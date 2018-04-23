@@ -40,6 +40,9 @@ class ClusterView {
     private static final String ATTRIBUTE_ENDPOINT = 'Endpoint'
     private static final String ATTRIBUTE_RUNNING_PODS = 'Running Pods'
     private static final String ATTRIBUTE_VOLUMES = 'Volumes'
+    private static final String ATTRIBUTE_START_TIME = 'Start time'
+    private static final String ATTRIBUTE_IMAGE = 'Image'
+    private static final String ATTRIBUTE_NODE_NAME = 'Node Name'
 
     @Lazy
     private kubeNamespaces = { kubeClient.getNamespaces() }()
@@ -260,17 +263,36 @@ class ClusterView {
                 startedAt = it?.state?.running?.startedAt
             }
         }
+
         def volumeMounts = container.volumeMounts?.collectEntries {
             def readOnlySuffix = it.readOnly ? '(read only)' : ''
             def value = "${it.mountPath} $readOnlySuffix"
             [(it.name): value]
         }
 
+        def image
+        pod.status?.containerStatuses?.each {
+            if (it.name == containerId) {
+                image = it?.image
+            }
+        }
+        def startTime = pod?.status?.startTime
+        def nodeName = pod?.spec?.nodeName
+
         def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
         node.addAttribute('Status', status, TYPE_STRING)
         if (startedAt) {
             node.addAttribute('Start Time', startedAt, TYPE_DATE)
+        }
+        if (image) {
+            node.addAttribute(ATTRIBUTE_IMAGE, image, TYPE_STRING)
+        }
+        if (startTime) {
+            node.addAttribute(ATTRIBUTE_START_TIME, startTime, TYPE_DATE)
+        }
+        if (nodeName) {
+            node.addAttribute(ATTRIBUTE_NODE_NAME, nodeName, TYPE_STRING)
         }
         if (environmentVariables && environmentVariables.size()) {
             node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
