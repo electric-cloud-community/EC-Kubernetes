@@ -110,9 +110,12 @@ class ClusterView {
 
 
     def isValidPod(Map pod) {
-        if (pod?.status?.phase == FAILED) {
+        //allow a failed pod to be returned.
+        //we should then handle 404 not found errors
+        //when retrieving pod and container details.
+        /*if (pod?.status?.phase == FAILED) {
             return false
-        }
+        }*/
         return true
     }
 
