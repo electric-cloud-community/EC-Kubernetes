@@ -40,6 +40,7 @@ class ClusterView {
     private static final String ATTRIBUTE_ENDPOINT = 'Endpoint'
     private static final String ATTRIBUTE_RUNNING_PODS = 'Running Pods'
     private static final String ATTRIBUTE_VOLUMES = 'Volumes'
+    private static final String ATTRIBUTE_START_TIME = 'Start time'
 
     @Lazy
     private kubeNamespaces = { kubeClient.getNamespaces() }()
@@ -224,10 +225,12 @@ class ClusterView {
         def pod = kubeClient.getPod(namespace, podId)
         def status = pod?.status?.phase ?: 'UNKNOWN'
         def labels = pod?.metadata?.labels
+        def startTime = pod?.metadata?.creationTimestamp
 
         def node = new ClusterNodeImpl(podName, TYPE_POD, podId)
         node.addAttribute('Status', status, TYPE_STRING)
         node.addAttribute('Labels', labels, TYPE_MAP)
+        node.addAttribute(ATTRIBUTE_START_TIME, startTime, TYPE_DATE)
         node
     }
 
