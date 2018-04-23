@@ -21,35 +21,35 @@
         <label>Environment Project Name:</label>
         <property>envProjectName</property>
         <required>1</required>
-        <documentation>The name of project that the environment belongs to.</documentation>
+        <documentation>The project containing the existing environment, or where the new environment will be created.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Environment Name:</label>
         <property>envName</property>
         <required>1</required>
-        <documentation>The name of the environment containing the Kubernetes-backed cluster whose deployed services are to be discovered. The environment will be created if it does not exist.</documentation>
+        <documentation>Provide the name of an existing environment that contains the Kubernetes-backend cluster to be discovered. If the environment does not already exist, provide the Kubernetes connection details below for discovery, and a new environment will be created.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>1</required>
-        <documentation>The name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered. The cluster will be created if it does not exist.</documentation>
+        <documentation>In an existing environment, provide the name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <property>ecp_kubernetes_apiEndpoint</property>
         <label>Kubernetes API Endpoint:</label>
         <required>0</required>
-        <documentation>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name. Applicable and required only if the ElectricFlow cluster does not already exist.</documentation>
+        <documentation>The endpoint at which the Kubernetes API will be reachable. Must be an IP address or a resolvable DNS name. This field is required and used only if you are not providing an existing environment above for discovery.</documentation>
     </formElement>
     <formElement>
         <type>textarea</type>
         <label>Service Account API Token:</label>
         <required>0</required>
         <property>ecp_kubernetes_apiToken</property>
-        <documentation>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. Applicable and required only if the ElectricFlow cluster does not already exist.</documentation>
+        <documentation>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. This field is required and used only if you are not providing an existing environment above for discovery.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -57,7 +57,7 @@
         <property>namespace</property>
         <required>1</required>
         <value>default</value>
-        <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace. </documentation>
+        <documentation>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace.</documentation>
     </formElement>
     <formElement>
         <type>project</type>
@@ -68,18 +68,18 @@
     </formElement>
     <formElement>
         <type>checkbox</type>
-        <label>Create application-scoped microservices:</label>
+        <label>Create Microservices within an Application:</label>
         <checkedValue>true</checkedValue>
         <uncheckedValue>false</uncheckedValue>
         <required>0</required>
         <property>ecp_kubernetes_applicationScoped</property>
-        <documentation>Whether all the services discovered in the Kubernetes namespace should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
+        <documentation>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Application Name:</label>
         <required>0</required>
         <property>ecp_kubernetes_applicationName</property>
-        <documentation>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</documentation>
+        <documentation>The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</documentation>
     </formElement>
 </editor>

@@ -33,10 +33,17 @@ try {
     response = clusterView.getServiceDetails(objectIdentifier)
 } catch (EcException e) {
     throw e
+} catch (SocketTimeoutException | ConnectException e) {
+    throw EcException
+            .code(ErrorCodes.RealtimeClusterLookupFailed)
+            .message("Kubernetes API Endpoint ${endpoint} could not be reached - ${e.message}")
+            .cause(e)
+            .location(this.class.getCanonicalName())
+            .build()
 } catch (Throwable e) {
     throw EcException
         .code(ErrorCodes.ScriptError)
-        .message("Exception occured while retrieving service details")
+        .message("Exception occured while retrieving service details: ${e.message}")
         .cause(e)
         .location(this.class.getCanonicalName())
         .build()

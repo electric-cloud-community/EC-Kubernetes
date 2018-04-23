@@ -113,7 +113,7 @@ class Deploy extends KubeHelper {
         def deployedServiceName = serviceName.replaceAll(/\s+/, '-').toLowerCase() + '-canary'
         def canaryDeployment = getDeployment(deployedServiceName)
         logger.debug(objectToJson(canaryDeployment))
-        assert canaryDeployment.status.replicas == 2
+        assert canaryDeployment.status.replicas == 1
         assert result.outcome == 'success'
         cleanup:
         dslFile "dsl/Deploy.dsl", [
@@ -202,10 +202,10 @@ class Deploy extends KubeHelper {
         logger.debug(objectToJson(svc))
         assert deploy.spec.selector.matchLabels['ec-track'] == 'stable'
         assert deploy.status.availableReplicas == 2
-        def ip = service.status.loadBalancer.ingress[0].ip
+        def ip = svc.status.loadBalancer.ingress[0].ip
         def endpoint = "http://${ip}:80"
         def content = new URL(endpoint).text
-        assert contnet =~ /Welcome to nginx/
+        assert content =~ /Welcome to nginx/
         cleanup:
         undeployService(projectName, serviceName)
         dsl """

@@ -45,7 +45,10 @@ sub main() {
 
     retrieveGrapeDependency($ec, 'com.electriccloud:EC-Kubernetes-Grapes:1.0.1');
     if ($::gAdditionalArtifactVersion ne '') {
-        retrieveGrapeDependency($ec, $::gAdditionalArtifactVersion);
+        my @versions = split(/\s*,\s*/, $::gAdditionalArtifactVersion);
+        for my $version (@versions) {
+            retrieveGrapeDependency($ec, $version);
+        }
     }
 
     my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;

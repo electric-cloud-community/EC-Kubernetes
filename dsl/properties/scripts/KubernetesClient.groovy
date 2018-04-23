@@ -1011,6 +1011,7 @@ public class KubernetesClient extends BaseClient {
                 selector {
                     matchLabels {
                         "ec-svc" selectorLabel
+                        "ec-track" deploymentFlag
                     }
                 }
                 template {

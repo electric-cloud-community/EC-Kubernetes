@@ -18,54 +18,54 @@
 <editor>
     <formElement>
         <type>textarea</type>
-        <label>Kubernetes YAML file</label>
+        <label>Kubernetes YAML File Content</label>
         <property>kubeYAMLFile</property>
         <required>1</required>
-        <documentation>Kubernetes YAML file contents containing related services and deployments definitions. </documentation>
+        <documentation>Content of a Kubernetes YAML file containing related services and deployments definitions.</documentation>
     </formElement>
         <formElement>
         <type>project</type>
         <label>Project Name:</label>
         <property>projName</property>
         <required>1</required>
-        <documentation>The name of project in which the application or the microservices will be created.</documentation>
+        <documentation>The name of project in which the application or microservices will be created.</documentation>
     </formElement>
     <formElement>
         <type>checkbox</type>
-        <label>Create application-scoped microservices:</label>
+        <label>Create Microservices within an Application:</label>
         <property>application_scoped</property>
         <required>0</required>
         <checkedValue>1</checkedValue>
         <uncheckedValue>0</uncheckedValue>
         <initiallyChecked>0</initiallyChecked>
-        <documentation>Whether all the services defined in the Kubernetes YAML file should be created within one application in ElectricFlow. If checked, then the application name must be provided.</documentation>
+        <documentation>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Application Name:</label>
         <property>application_name</property>
         <required>0</required>
-        <documentation>The name of the application to create, within which the microservices will be created. Required if 'Create application-scoped microservices' is checked.</documentation>
+        <documentation>(Optional) The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</documentation>
     </formElement>
     <formElement>
         <type>project</type>
         <label>Environment Project Name:</label>
         <property>envProjectName</property>
         <required>0</required>
-        <documentation>The name of project that the environment belongs to.</documentation>
+        <documentation>(Optional) The project containing the Environment where the services will be deployed.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Environment Name:</label>
         <property>envName</property>
         <required>0</required>
-        <documentation>The name of the ElectricFlow environment containing the Kubernetes-based cluster where the newly created microservice(s) will be deployed.</documentation>
+        <documentation>(Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>0</required>
-        <documentation>The name of the ElectricFlow cluster representing a Kubernetes cluster where the newly created microservice(s) will be deployed.</documentation>
+        <documentation>(Optional) The name of the existing ElectricFlow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</documentation>
     </formElement>
 </editor>

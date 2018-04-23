@@ -22,23 +22,25 @@ class Client {
 
     static Integer logLevel = INFO
 
+    private HTTPBuilder http
+    private static final Integer SOCKET_TIMEOUT = 20 * 1000
+    private static final Integer CONNECTION_TIMEOUT = 5 * 1000
+
     Client(String endpoint, String accessToken, String version) {
         this.endpoint = endpoint
         this.kubernetesVersion = version
         this.accessToken = accessToken
+        this.http = new HTTPBuilder(this.endpoint)
+        this.http.ignoreSSLIssues()
     }
 
     Object doHttpRequest(Method method, String requestUri,
                          Object requestBody = null,
                          def queryArgs = null) {
-
-        def http = new HTTPBuilder(this.endpoint)
-        http.ignoreSSLIssues()
         def requestHeaders = [
             'Authorization': "Bearer ${this.accessToken}"
         ]
-
-        http.request(method, JSON) {
+        http.request(method, JSON) { req ->
             if (requestUri) {
                 uri.path = requestUri
             }
@@ -47,6 +49,8 @@ class Client {
             }
             headers = requestHeaders
             body = requestBody
+            req.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT)
+            req.getParams().setParameter("http.socket.timeout", SOCKET_TIMEOUT)
 
             response.success = { resp, json ->
                 logger DEBUG, "request was successful $resp.statusLine.statusCode $json"
@@ -54,12 +58,10 @@ class Client {
             }
 
             response.failure = { resp, reader ->
-                logger ERROR, "Response: $reader"
                 throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.getClass().getCanonicalName())
-                    .message("Request for '$requestUri' failed with $resp.statusLine")
-                    .build()
+                        .code(ErrorCodes.RealtimeClusterLookupFailed)
+                        .message("Request for '$requestUri' failed with $resp.statusLine")
+                        .build()
             }
         }
     }
@@ -82,6 +84,21 @@ class Client {
 
     def getServices(String namespace) {
         def result = doHttpRequest(GET, "/api/v1/namespaces/${namespace}/services")
+        result?.items
+    }
+
+    def getAllServices() {
+        def result = doHttpRequest(GET, "/api/v1/services")
+        result?.items
+    }
+
+    def getAllDeployments() {
+        def result = doHttpRequest(GET, "/apis/apps/v1beta1/deployments")
+        result?.items
+    }
+
+    def getAllPods() {
+        def result = doHttpRequest(GET, "/api/v1/pods")
         result?.items
     }
 
@@ -144,15 +161,20 @@ class Client {
             headers.Accept = "application/json"
 
             response.success = { resp, reader ->
-                String logs = reader.text
-                logs
+                if (reader) {
+                    String logs = reader.text
+                    logs
+                }
+                else {
+                    ''
+                }
             }
             response.failure = { resp, reader ->
-                throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.getClass().getCanonicalName())
-                    .message("Request failed with $resp.statusLine: $reader")
-                    .build()
+                String result = "Failed to read container logs: ${resp.statusLine}.\nStatus: ${resp.status}"
+                if (reader) {
+                    result += "\n${reader.text}"
+                }
+                result
             }
 
         }
@@ -168,7 +190,6 @@ class Client {
                 return '[WARNING] '
             default://ERROR
                 return '[ERROR] '
-
         }
     }
 
@@ -202,10 +223,9 @@ class Client {
                 return isVersionGreaterThan15() ? (isVersionGreaterThan17() ? 'apps/v1beta2' : 'apps/v1beta1') : 'extensions/v1beta1'
             default:
                 throw EcException
-                    .code(ErrorCodes.UnknownError)
-                    .location(this.class.getCanonicalName())
-                    .message("Unsupported resource '$resource' for determining version specific API path")
-                    .build()
+                        .code(ErrorCodes.ScriptError)
+                        .message("Unsupported resource '$resource' for determining version specific API path")
+                        .build()
         }
     }
 
