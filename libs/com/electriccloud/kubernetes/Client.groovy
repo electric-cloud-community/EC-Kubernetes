@@ -60,7 +60,7 @@ class Client {
             response.failure = { resp, reader ->
                 throw EcException
                         .code(ErrorCodes.RealtimeClusterLookupFailed)
-                        .message("Request for '$requestUri' failed with $resp.statusLine")
+                        .message("Request for '$requestUri' failed with $resp.statusLine, code: ${resp.status}")
                         .build()
             }
         }
@@ -156,7 +156,7 @@ class Client {
         http.ignoreSSLIssues()
         return http.request(GET, TEXT) { req ->
             uri.path = "/api/v1/namespaces/${namespace}/pods/${pod}/log"
-            uri.query = [container: container, tailLines: 100]
+            uri.query = [container: container, tailLines: 500]
             headers.Authorization = "Bearer ${this.accessToken}"
             headers.Accept = "application/json"
 
@@ -176,7 +176,6 @@ class Client {
                 }
                 result
             }
-
         }
     }
 
