@@ -702,6 +702,7 @@ public class ImportFromYAML extends EFClient {
 
     def createEFService(projectName, service, appName = null) {
         def payload = service.service
+        payload.addDeployProcess = true
         payload.description = "Created by EF Discovery"
         def result = createService(projectName, payload, appName)
         result
