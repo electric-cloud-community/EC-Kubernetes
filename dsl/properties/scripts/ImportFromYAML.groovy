@@ -695,7 +695,7 @@ public class ImportFromYAML extends EFClient {
         def payload = kubeService.service
         def projName = efService.projectName
         def serviceName = efService.serviceName
-        payload.description = efService.description ?: "Updated by EF Discovery"
+        payload.description = efService.description ?: "Updated by EF Import Microservices"
         def result = updateService(projName, serviceName, payload)
         result
     }
@@ -703,7 +703,7 @@ public class ImportFromYAML extends EFClient {
     def createEFService(projectName, service, appName = null) {
         def payload = service.service
         payload.addDeployProcess = true
-        payload.description = "Created by EF Discovery"
+        payload.description = "Created by EF Import Microservices"
         def result = createService(projectName, payload, appName)
         result
     }
