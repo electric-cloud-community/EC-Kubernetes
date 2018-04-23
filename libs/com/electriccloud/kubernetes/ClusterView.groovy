@@ -422,8 +422,38 @@ class ClusterView {
     }
 
     String getServiceEndpoint(service) {
-//        TODO ingress
-        "${service.spec.loadBalancerIP}:${service?.spec?.ports?.getAt(0)?.port}"
+        String endpoint
+        switch (service?.spec?.type) {
+            case 'LoadBalancer':
+                def ingress = service?.status?.loadBalancer?.ingress?.find {
+                    it.hostname || it.ip
+                }
+                String host
+                if (ingress) {
+                    host = ingress.hostname ?: ingress.ip
+                }
+
+                if (!host) {
+                    host = service?.spec?.loadBalancerIP
+                }
+                if (!host) {
+                    host = '<undefined>'
+                }
+                String port = service?.spec?.ports?.getAt(0)?.port
+                endpoint = "${host}:${port}"
+                break
+            case 'NodePort':
+                String host = new URL(kubeClient.endpoint).host
+                String port = service?.spec?.ports?.find({ it.protocol == 'TCP'})?.port
+                endpoint = "${host}:${port}"
+                break
+            default:
+                String host = new URL(kubeClient.endpoint).host
+                String port = service?.spec?.ports?.getAt(0)?.port
+                endpoint = "${host}:${port}"
+                break
+        }
+        return endpoint
     }
 
     String getPodId(service, pod) {
