@@ -60,7 +60,7 @@ class Client {
             response.failure = { resp, reader ->
                 throw EcException
                         .code(ErrorCodes.RealtimeClusterLookupFailed)
-                        .message("Request for '$requestUri' failed with $resp.statusLine")
+                        .message("Request for '$requestUri' failed with $resp.statusLine, code: ${resp.status}")
                         .build()
             }
         }
@@ -152,13 +152,14 @@ class Client {
     }
 
     def getContainerLogs(String namespace, String pod, String container) {
-        def http = new HTTPBuilder(endpoint)
-        http.ignoreSSLIssues()
-        return http.request(GET, TEXT) { req ->
+        http.request(GET, TEXT) { req ->
             uri.path = "/api/v1/namespaces/${namespace}/pods/${pod}/log"
-            uri.query = [container: container, tailLines: 100]
+            uri.query = [container: container, tailLines: 500]
             headers.Authorization = "Bearer ${this.accessToken}"
             headers.Accept = "application/json"
+
+            req.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT)
+            req.getParams().setParameter("http.socket.timeout", SOCKET_TIMEOUT)
 
             response.success = { resp, reader ->
                 if (reader) {
@@ -176,7 +177,6 @@ class Client {
                 }
                 result
             }
-
         }
     }
 
