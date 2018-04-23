@@ -425,6 +425,8 @@ class ClusterView {
 
         def version = kubeClient.getClusterVersion()
         def labels = getClusterLabels()
+        def endpoint = getClusterName()
+        node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
 
         if (version) {
             node.addAttribute(ATTRIBUTE_MASTER_VERSION, version.toString(), TYPE_STRING)
@@ -457,7 +459,11 @@ class ClusterView {
         def service = kubeClient.getService(namespace, serviceId)
         def pods = getServicePods(service)
 
-        def node = new ClusterNodeImpl(serviceId, TYPE_SERVICE, serviceName)
+        // The constructor takes parameters in this order: id, type, name
+        // But argument name 'serviceName' really represents the fully qualified service-id
+        // and 'serviceId' is the actual service name. That is why the order
+        // below will appear swapped but is it the correct order.
+        def node = new ClusterNodeImpl(/*node id*/ serviceName, TYPE_SERVICE, /*node name*/ serviceId)
 
         def efId = service.metadata?.labels?.find { it.key == 'ec-svc-id' }?.value
         if (efId) {
