@@ -347,7 +347,44 @@
     
     <div id="Discover">
         <h2>Discover</h2>
-        <p>Discovers services on Kubernetes and creates corresponding service models for them in ElectricFlow.</p>
+        <p><html>
+                    Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+                    <div>
+                        <ol>
+                        <li><b>Select your method of discovery from a Kubernetes Cluster</b>  There are two options for connecting to Kubernetes for discovery
+                            <ul>
+                                <li><b>Existing ElectricFlow Environment and Cluster</b>  Use the Cluster configuration details in an existing ElectricFlow environment to connect to Kubernetes. Enter details for the existing environment and cluster in the following parameters:
+                                    <ul>
+                                        <li>Environment Project Name: The project containing the existing environment</li>
+                                        <li>Environment Name:  the name of an existing environment that contains the Kubernetes backend cluster to be discovered</li>
+                                        <li>Cluster Name: The name of the ElectricFlow cluster in the environment above that represents the Kubernetes cluster</li>
+                                    </ul></li>
+                                <li><b>Kubernetes Connection Details</b>  Enter Kubernetes endpoint and Account details to directly connect to the endpoint and discover the clusters and pods.  Enter the endpoint and account details in the following parameters:
+                                <ul>
+                                    <li>Kubernetes Endpoint: The endpoint where the Kubernetes endpoint will be reachable</li>
+                                    <li>Service Account API Token</li>
+                                    <li><i>If selecting this connection option, you can optionally enter a new values for Environment Name and Cluster Name parameters, to create a new environment and cluster in ElectricFlow based on the discovered services and pods.</i></li>
+                                </ul>
+                                </li>
+                            </ul>
+                        <li><b>Determine how the discovered microservices will be created in ElectricFlow</b>
+                            <ul>
+                            <li><b>Create the microservices individually at the top-level within the project.</b> All discovered microservices will be created at the top-level.  Enter the following parameters:
+                                <ul>
+                                    <li>Project Name: Enter the name of the project where the microservices will be created</li>
+                                </ul>
+                            </li>
+                            <li><b>Create the Microservices within an application in ElectricFlow.</b> All discovered microservices will be created as services within a new application. Enter the following parameters:
+                                <ul>
+                                    <li>Project Name: Enter the name of the project where the new application will be created</li>
+                                    <li>Create Microservices within and Application:  Select the checkbox</li>
+                                    <li>Application Name:  The name of a new application which will be created in ElectricFlow containing the discovered services</li>
+                                </ul>
+                            </li></ul>
+                        </li>
+                        </ol>
+                    </div>
+                    </html></p>
         
             <p>Procedure looks for services and deployments on Kubernetes
 cluster and transfers data into ElectricFlow. Services found
@@ -565,7 +602,33 @@ definitions retrieved from there.</p>
     
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
-        <p>Creating microservice models using Kubernetes YAML file. </p>
+        <p>Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
+    <div>
+        <ol>
+            <li><b>Copy and enter the content of your Kubernetes YAML file</b></li>
+            <li><b>Determine how the new microservices will be created in ElectricFlow</b>
+            <ul>
+                <li><b>Create the microservices individually at the top-level within the project.</b> All microservices will be created at the top-level. Enter the following parameters:
+                <ul>
+                    <li>Project Name: Enter the name of the project where the microservices will be created</li>
+                </ul></li>
+                <li><b>Create the Microservices within an application in ElectricFlow.</b> All microservices will be created as services within a new application. Enter the following parameters:
+                <ul>
+                    <li>Project Name: Enter the name of the project where the new application will be created</li>
+                    <li>Create Microservices within and Application: Select the checkbox</li>
+                    <li>Application Name:  The name of a new application which will be created in ElectricFlow containing the new services.</li>
+                </ul>
+                </li>
+            </ul></li>
+            <li><b>Optionally map the services to an existing Environment Cluster</b> Select an existing Environment that contains a cluster with Kubernetes configuration details where the new microservices can be deployed. Enter the following parameters:
+            <ul>
+                <li>Environment Project Name: The project containing the ElectricFlow environment where the services will be deployed.</li>
+                <li>Environment Name: The name of the existing environment that contains a cluster where the newly created microservice(s) will be deployed.</li>
+                <li>Cluster Name: The name of an existing EC-Kubernetes backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
+            </ul>
+            </li>
+        </ol>
+    </div></p>
         
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
