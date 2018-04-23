@@ -280,9 +280,23 @@ class ClusterView {
         }
         def status = pod?.status?.phase ?: 'UNKNOWN'
         def labels = pod?.metadata?.labels
+        def startTime = pod?.metadata?.creationTimestamp
+        def nodeName = pod?.spec?.nodeName
 
-        node.addAttribute('Status', status, TYPE_STRING)
-        node.addAttribute('Labels', labels, TYPE_MAP)
+        
+        if (status){
+            node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
+        }
+        if (labels){
+            node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
+        }
+        if (startTime){
+            node.addAttribute(ATTRIBUTE_START_TIME, startTime, TYPE_DATE)
+        }
+        if (nodeName){
+            node.addAttribute(ATTRIBUTE_NODE_NAME, nodeName, TYPE_STRING)
+        }
+
         node
     }
 
@@ -344,9 +358,9 @@ class ClusterView {
         def nodeName = pod?.spec?.nodeName
 
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
-        node.addAttribute('Status', status, TYPE_STRING)
+        node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         if (startedAt) {
-            node.addAttribute('Start Time', startedAt, TYPE_DATE)
+            node.addAttribute(ATTRIBUTE_START_TIME, startedAt, TYPE_DATE)
         }
         if (image) {
             node.addAttribute(ATTRIBUTE_IMAGE, image, TYPE_STRING)
@@ -361,7 +375,7 @@ class ClusterView {
             node.addAttribute('Environment Variables', environmentVariables, TYPE_MAP)
         }
         if (ports) {
-            node.addAttribute('Ports', ports, 'map')
+            node.addAttribute('Ports', ports, TYPE_MAP)
         }
         if (volumeMounts) {
             node.addAttribute("Volume Mounts", volumeMounts, TYPE_MAP)
