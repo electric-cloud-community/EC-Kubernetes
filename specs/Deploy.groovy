@@ -205,7 +205,7 @@ class Deploy extends KubeHelper {
         def ip = svc.status.loadBalancer.ingress[0].ip
         def endpoint = "http://${ip}:80"
         def content = new URL(endpoint).text
-        assert contnet =~ /Welcome to nginx/
+        assert content =~ /Welcome to nginx/
         cleanup:
         undeployService(projectName, serviceName)
         dsl """
