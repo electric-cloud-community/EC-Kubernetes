@@ -8,6 +8,7 @@ import com.electriccloud.domain.Topology
 import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
 import groovy.json.JsonOutput
+import javax.xml.bind.DatatypeConverter
 
 class ClusterView {
     String clusterName
@@ -19,6 +20,7 @@ class ClusterView {
     private static final String SUCCEEDED = 'Succeeded'
     private static final String PENDING = 'Pending'
     private static final String CRUSH_LOOP = 'CrushLoopBackoff'
+    private static final String TERMINATING = 'Terminating'
 
     private static final String TYPE_CLUSTER = 'ecp-cluster'
     private static final String TYPE_NAMESPACE = 'ecp-namespace'
@@ -43,6 +45,7 @@ class ClusterView {
     private static final String ATTRIBUTE_START_TIME = 'Start time'
     private static final String ATTRIBUTE_IMAGE = 'Image'
     private static final String ATTRIBUTE_NODE_NAME = 'Node Name'
+    private static final String ATTRIBUTE_ERROR = 'Error'
 
     @Lazy
     private kubeNamespaces = { kubeClient.getNamespaces() }()
@@ -63,15 +66,16 @@ class ClusterView {
         topology.addLink(getEFClusterId(), getClusterId())
         topology.addNode(buildClusterNode())
 
-        kubeNamespaces.findAll { !isSystemNamespace(it) }.each { namespace ->
+        kubeNamespaces.findAll { !isSystemNamespace(it) && isValidNamespace(it) }.each { namespace ->
             topology.addNode(buildNamespaceNode(namespace))
             topology.addLink(getClusterId(), getNamespaceId(namespace))
 
             def services = kubeServices.findAll { kubeService ->
-                kubeService.metadata.namespace == namespace.metadata.name
+                kubeService.metadata.namespace == namespace.metadata.name &&
+                    isValidService(kubeService) && !isSystemService(kubeService)
             }
 
-            services.findAll { !isSystemService(it) }.each { service ->
+            services.each { service ->
                 def pods = getServicePodsTopology(service)
                 topology.addLink(getNamespaceId(namespace), getServiceId(service))
                 topology.addNode(buildServiceNode(service, pods))
@@ -94,6 +98,28 @@ class ClusterView {
     def isSystemNamespace(namespace) {
         def name = getNamespaceName(namespace)
         name == 'kube-public' || name == 'kube-system'
+    }
+
+    def isValidNamespace(Map namespace) {
+        if (namespace.status?.phase == TERMINATING) {
+            return false
+        }
+        return true
+    }
+
+    def isValidService(Map service) {
+        return true
+    }
+
+
+    def isValidPod(Map pod) {
+        //allow a failed pod to be returned.
+        //we should then handle 404 not found errors
+        //when retrieving pod and container details.
+        /*if (pod?.status?.phase == FAILED) {
+            return false
+        }*/
+        return true
     }
 
     def getPodsStatus(pods) {
@@ -149,7 +175,7 @@ class ClusterView {
         service.metadata.name == 'kubernetes'
     }
 
-    def getServicePods(def service) {
+    def getServicePods(def service, boolean skipDeleted = false) {
         def selector = service.spec?.selector
         assert selector
         def selectorString = selector.collect { k, v ->
@@ -164,8 +190,23 @@ class ClusterView {
             def podSelectorString = labels.collect { k, v ->
                 "${k}=${v}"
             }.join(',')
-            def deploymentPods = kubeClient.getPods(namespace, podSelectorString)
-            pods.addAll(deploymentPods)
+            def deploymentPods = []
+            if (skipDeleted) {
+                try {
+                    deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+                } catch(Throwable e) {
+                    if (e.message =~ /404/) {
+                        deploymentPods = []
+                    }
+                    else {
+                        throw e
+                    }
+                }
+            }
+            else {
+                deploymentPods = kubeClient.getPods(namespace, podSelectorString)
+            }
+            pods.addAll(deploymentPods.findAll { isValidPod(it)} )
         }
 
         pods
@@ -198,7 +239,7 @@ class ClusterView {
             def deploySelector = deploy?.spec?.selector?.matchLabels ?: deploy?.spec?.template?.metadata?.labels
             pods.addAll(kubePods.findAll {
                 it.metadata.namespace == service.metadata.namespace &&
-                        match(deploySelector, it)
+                        match(deploySelector, it) && isValidPod(it)
             })
         }
 
@@ -224,11 +265,22 @@ class ClusterView {
     def getPodDetails(String podName) {
         podName = podName.replaceAll("${clusterName}::", '')
         def (namespace, podId) = podName.split('::')
-        def pod = kubeClient.getPod(namespace, podId)
+        def node = new ClusterNodeImpl(podName, TYPE_POD, podId)
+        def pod
+        try {
+            pod = kubeClient.getPod(namespace, podId)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+                node.addAttribute(ATTRIBUTE_ERROR, "Kubernetes pod ${podName} does not exist".toString(), TYPE_STRING)
+                return node
+            }
+            else {
+                throw e
+            }
+        }
         def status = pod?.status?.phase ?: 'UNKNOWN'
         def labels = pod?.metadata?.labels
 
-        def node = new ClusterNodeImpl(podName, TYPE_POD, podId)
         node.addAttribute('Status', status, TYPE_STRING)
         node.addAttribute('Labels', labels, TYPE_MAP)
         node
@@ -237,7 +289,19 @@ class ClusterView {
     def getContainerDetails(String containerName) {
         containerName = containerName.replaceAll("${clusterName}::", '')
         def (namespace, podId, containerId) = containerName.split('::')
-        def pod = kubeClient.getPod(namespace, podId)
+        def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
+        def pod
+        try {
+            pod = kubeClient.getPod(namespace, podId)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+                node.addAttribute(ATTRIBUTE_ERROR, "Kubernetes pod ${podId} does not exist", TYPE_STRING)
+                return node
+            }
+            else {
+                throw e
+            }
+        }
         def container = pod.spec?.containers.find {
             it.name == containerId
         }
@@ -279,7 +343,6 @@ class ClusterView {
         def startTime = pod?.status?.startTime
         def nodeName = pod?.spec?.nodeName
 
-        def node = new ClusterNodeImpl(containerName, TYPE_CONTAINER, containerId)
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
         node.addAttribute('Status', status, TYPE_STRING)
         if (startedAt) {
@@ -384,8 +447,38 @@ class ClusterView {
     }
 
     String getServiceEndpoint(service) {
-//        TODO ingress
-        "${service.spec.loadBalancerIP}:${service?.spec?.ports?.getAt(0)?.port}"
+        String endpoint
+        switch (service?.spec?.type) {
+            case 'LoadBalancer':
+                def ingress = service?.status?.loadBalancer?.ingress?.find {
+                    it.hostname || it.ip
+                }
+                String host
+                if (ingress) {
+                    host = ingress.hostname ?: ingress.ip
+                }
+
+                if (!host) {
+                    host = service?.spec?.loadBalancerIP
+                }
+                if (!host) {
+                    host = '<undefined>'
+                }
+                String port = service?.spec?.ports?.getAt(0)?.port
+                endpoint = "${host}:${port}"
+                break
+            case 'NodePort':
+                String host = new URL(kubeClient.endpoint).host
+                String port = service?.spec?.ports?.find({ it.protocol == 'TCP'})?.port
+                endpoint = port ? "${host}:${port}" : host
+                break
+            default:
+                String host = new URL(kubeClient.endpoint).host
+                String port = service?.spec?.ports?.getAt(0)?.port
+                endpoint = port ? "${host}:${port}" : host
+                break
+        }
+        return endpoint
     }
 
     String getPodId(service, pod) {
@@ -459,33 +552,75 @@ class ClusterView {
         node
     }
 
-    def getNamespaceDetails(namespaceName) {
-        namespaceName = namespaceName.replaceAll("${clusterName}::", '')
-        def namespace = kubeClient.getNamespace(namespaceName)
-        def namespaceId = getNamespaceId(namespace)
-
-        def labels = getNamespaceLabels(namespace)
-
+    def getNamespaceDetails(String namespaceId) {
+        String namespaceName = namespaceId.replaceAll("${clusterName}::", '')
         def node = new ClusterNodeImpl(namespaceName, TYPE_NAMESPACE, namespaceId)
+        def namespace
+        try {
+            namespace = kubeClient.getNamespace(namespaceName)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+                node.addAttribute(ATTRIBUTE_ERROR, "Kubernetes namespace ${namespaceName} does not exist", TYPE_STRING)
+                return node
+            }
+            else {
+                throw e
+            }
+        }
+        def labels = getNamespaceLabels(namespace)
 
         if (labels) {
             node.addAttribute(ATTRIBUTE_LABELS, labels, TYPE_MAP)
         }
 
+        def status = namespace.status?.phase
+        if (status) {
+            node.addAttribute("Status", status, TYPE_STRING)
+        }
+
+        def age = getNamespaceAge(namespace)
+        if (age) {
+            node.addAttribute("Age", age, TYPE_STRING)
+        }
+
         node
+    }
+
+    String getNamespaceAge(namespace) {
+        def creationTimestamp = namespace?.metadata?.creationTimestamp
+        if (!creationTimestamp) {
+            return null
+        }
+        Calendar calendar = DatatypeConverter.parseDateTime(creationTimestamp)
+        Calendar now = Calendar.getInstance()
+        def age = now - calendar
+        def retval = "${age} day(s)"
+        return retval.toString()
     }
 
     def getServiceDetails(serviceName) {
         serviceName = serviceName.replaceAll("${clusterName}::", '')
         def (namespace, serviceId) = serviceName.split('::')
-        def service = kubeClient.getService(namespace, serviceId)
-        def pods = getServicePods(service)
+        def node = new ClusterNodeImpl(/*node id*/ serviceName, TYPE_SERVICE, /*node name*/ serviceId)
+        def service
+        try {
+            service = kubeClient.getService(namespace, serviceId)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+                node.addAttribute(ATTRIBUTE_ERROR, "Kubernetes service ${serviceName} does not exist", TYPE_STRING)
+                return node
+            }
+            else {
+                throw e
+            }
+        }
+        def pods = getServicePods(service, true)
 
         // The constructor takes parameters in this order: id, type, name
         // But argument name 'serviceName' really represents the fully qualified service-id
         // and 'serviceId' is the actual service name. That is why the order
         // below will appear swapped but is it the correct order.
-        def node = new ClusterNodeImpl(/*node id*/ serviceName, TYPE_SERVICE, /*node name*/ serviceId)
+
 
         def efId = service.metadata?.labels?.find { it.key == 'ec-svc-id' }?.value
         if (efId) {
@@ -497,7 +632,17 @@ class ClusterView {
         def type = service?.spec?.type
         def endpoint = getServiceEndpoint(service)
         def runningPods = getPodsRunning(pods)
-        def volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+        def volumes
+        try {
+            volumes = kubeClient.getServiceVolumes(namespace, serviceId)
+        } catch (Throwable e) {
+            if (e.message =~ /404/) {
+//                Do nothing
+            }
+            else {
+                throw e
+            }
+        }
 
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
