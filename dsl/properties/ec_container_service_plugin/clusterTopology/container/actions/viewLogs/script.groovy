@@ -28,7 +28,11 @@ import com.electriccloud.kubernetes.*
 def client = new Client(endpoint, token, version)
 assert clusterId
 assert clusterName
-def clusterView = new ClusterView(kubeClient: client, clusterName: clusterName, clusterId: clusterId)
+def clusterView = new ClusterView(kubeClient: client,
+        projectName: projectName,
+        environmentName: environmentName,
+        clusterName: clusterName,
+        clusterId: clusterId)
 def response
 try {
     response = clusterView.getContainerLogs(objectIdentifier)
