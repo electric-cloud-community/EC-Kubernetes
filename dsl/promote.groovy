@@ -167,6 +167,8 @@ project pluginName, {
 			property '1.6', value: '1.6'
 			property '1.7', value: '1.7'
 			property '1.8', value: '1.8'
+			property '1.9', value: '1.9'
+			property '1.10', value: '1.10'
 		}
 	}
 
