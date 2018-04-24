@@ -435,7 +435,9 @@ class ClusterView {
     }
 
     String getClusterId() {
-        this.clusterName
+        //A cluster is uniquely identified by its end-point
+        // So we use it as the cluster id
+        kubeClient.endpoint
     }
 
     String getEFClusterName() {
@@ -549,11 +551,11 @@ class ClusterView {
     }
 
     def getClusterDetails() {
-        def node = createClusterNode(getClusterName(), TYPE_CLUSTER, getClusterId())
+        def node = createClusterNode(getClusterId(), TYPE_CLUSTER, getClusterName())
 
         def version = kubeClient.getClusterVersion()
         def labels = getClusterLabels()
-        def endpoint = getClusterName()
+        def endpoint = getClusterId()
         node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
 
         if (version) {
