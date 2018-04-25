@@ -493,7 +493,7 @@ class ClusterView {
                 endpoint = port ? "${host}:${port}" : host
                 break
         }
-        return endpoint
+        return "http://${endpoint}"
     }
 
     String getPodId(service, pod) {
