@@ -267,8 +267,19 @@ class ClusterView {
     }
 
     def getPodDetails(String podName) {
-        podName = podName.replaceAll("${clusterName}::", '')
-        def (namespace, podId) = podName.split('::')
+        def objectIdentifier = podName
+        podName = podName.replaceAll("${getClusterId()}::", '')
+        def namespace, podId
+        try{
+            (namespace, podId) = podName.split('::')
+        }
+        catch (Throwable e){
+            throw EcException
+                    .code(ErrorCodes.InvalidArgument)
+                    .message("Invalid object identifier for pod: ${objectIdentifier}")
+                    .location(this.class.getCanonicalName())
+                    .build()
+        }
         def node = createClusterNode(podName, TYPE_POD, podId)
         def pod
         try {
@@ -306,16 +317,15 @@ class ClusterView {
 
     def getContainerDetails(String containerName) {
         def objectIdentifier = containerName
-        containerName = containerName.replaceAll("${clusterName}::", '')
+        containerName = containerName.replaceAll("${getClusterId()}::", '')
         def namespace, podId, containerId
         try{
             (namespace, podId, containerId) = containerName.split('::')
         }
         catch (Throwable e){
             throw EcException
-                    .code(ErrorCodes.ScriptError)
-                    .message("Incorrect object identifier for container: ${objectIdentifier}")
-                    .cause(e)
+                    .code(ErrorCodes.InvalidArgument)
+                    .message("Invalid object identifier for container: ${objectIdentifier}")
                     .location(this.class.getCanonicalName())
                     .build()
         }
@@ -437,7 +447,7 @@ class ClusterView {
     }
 
     String getNamespaceId(namespace) {
-        "${this.clusterName}::${getNamespaceName(namespace)}"
+        "${this.getClusterId()}::${getNamespaceName(namespace)}"
     }
 
     //future
@@ -472,7 +482,7 @@ class ClusterView {
     }
 
     String getServiceId(service) {
-        def namespaceId = "${this.clusterName}::${service.metadata.namespace}"
+        def namespaceId = "${this.getClusterId()}::${service.metadata.namespace}"
         "${namespaceId}::${service.metadata.name}"
     }
 
@@ -512,7 +522,7 @@ class ClusterView {
     }
 
     String getPodId(service, pod) {
-        def namespaceId = "${this.clusterName}::${service.metadata.namespace}"
+        def namespaceId = "${this.getClusterId()}::${service.metadata.namespace}"
         "${namespaceId}::${pod.metadata.name}"
     }
 
@@ -554,16 +564,15 @@ class ClusterView {
 
     def getContainerLogs(String containerName) {
         def objectIdentifier = containerName
-        containerName = containerName.replaceAll("${clusterName}::", '')
+        containerName = containerName.replaceAll("${getClusterId()}::", '')
         def namespace, podId, containerId
         try{
             (namespace, podId, containerId) = containerName.split('::')
         }
         catch (Throwable e){
             throw EcException
-            .code(ErrorCodes.ScriptError)
-            .message("Incorrect object identifier for container: ${objectIdentifier}")
-            .cause(e)
+            .code(ErrorCodes.InvalidArgument)
+            .message("Invalid object identifier for container: ${objectIdentifier}")
             .location(this.class.getCanonicalName())
             .build()
         }
@@ -598,7 +607,7 @@ class ClusterView {
     }
 
     def getNamespaceDetails(String namespaceId) {
-        String namespaceName = namespaceId.replaceAll("${clusterName}::", '')
+        String namespaceName = namespaceId.replaceAll("${getClusterId()}::", '')
         def node = createClusterNode(namespaceId, TYPE_NAMESPACE, namespaceName)
         def namespace
         try {
@@ -645,7 +654,7 @@ class ClusterView {
 
     def getServiceDetails(serviceName) {
         def objectIdentifier = serviceName
-        serviceName = serviceName.replaceAll("${clusterName}::", '')
+        serviceName = serviceName.replaceAll("${getClusterId()}::", '')
         def namespace, serviceId
 
         try{
@@ -653,9 +662,8 @@ class ClusterView {
         }
         catch (Throwable e){
             throw EcException
-                    .code(ErrorCodes.ScriptError)
-                    .message("Incorrect object identifier for service: ${objectIdentifier}")
-                    .cause(e)
+                    .code(ErrorCodes.InvalidArgument)
+                    .message("Invalid object identifier for service: ${objectIdentifier}")
                     .location(this.class.getCanonicalName())
                     .build()
         }
