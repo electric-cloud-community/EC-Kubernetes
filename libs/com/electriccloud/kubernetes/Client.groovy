@@ -126,7 +126,7 @@ class Client {
         if (labelSelector) {
             query.labelSelector = labelSelector
         }
-        def result= doHttpRequest(GET, "/api/v1/namespaces/${namespace}/pods")
+        def result= doHttpRequest(GET, "/api/v1/namespaces/${namespace}/pods", null, query)
         result?.items
     }
 
