@@ -7,6 +7,7 @@ import com.electriccloud.domain.ClusterTopologyImpl
 import com.electriccloud.domain.Topology
 import com.electriccloud.errors.EcException
 import com.electriccloud.errors.ErrorCodes
+import groovy.json.JsonBuilder
 import groovy.json.JsonOutput
 import javax.xml.bind.DatatypeConverter
 
@@ -179,7 +180,9 @@ class ClusterView {
 
     def getServicePods(def service, boolean skipDeleted = false) {
         def selector = service.spec?.selector
-        assert selector
+        if (!selector) {
+            return []
+        }
         def selectorString = selector.collect { k, v ->
             "${k}=${v}"
         }.join(',')
@@ -188,7 +191,6 @@ class ClusterView {
         def pods = []
         deployments.each { deployment ->
             def labels = deployment?.spec?.selector?.matchLabels ?: deployment?.spec?.template?.metadata?.labels
-
             def podSelectorString = labels.collect { k, v ->
                 "${k}=${v}"
             }.join(',')
@@ -675,7 +677,7 @@ class ClusterView {
             node.addAttribute(ATTRIBUTE_RUNNING_PODS, runningPods.toString(), TYPE_STRING)
         }
         if (volumes) {
-            node.addAttribute(ATTRIBUTE_VOLUMES, volumes, TYPE_TEXTAREA)
+            node.addAttribute(ATTRIBUTE_VOLUMES, new JsonBuilder(volumes).toPrettyString(), TYPE_TEXTAREA)
         }
 
         node
