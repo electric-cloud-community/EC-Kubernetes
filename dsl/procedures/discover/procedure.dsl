@@ -39,6 +39,10 @@ procedure 'Discover',
 </div>
 </html>''', {
 
+    //Using a simple description for use with the step picker since it cannot handle HTML content
+    property 'stepPickerDescription',
+        value: 'Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.'
+
     step 'setup',
       subproject: '',
       subprocedure: 'Setup',

@@ -32,6 +32,10 @@ procedure 'Import Microservices',
     </html>''',
     {
 
+    //Using a simple description for use with the step picker since it cannot handle HTML content
+    property 'stepPickerDescription',
+        value: 'Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.'
+
     step 'setup',
           subproject: '',
           subprocedure: 'Setup',
