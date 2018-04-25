@@ -47,7 +47,7 @@ try {
 } catch (Throwable e) {
     throw EcException
         .code(ErrorCodes.ScriptError)
-        .message("Exception occured while retrieving container details: ${e.message}")
+        .message("Exception occured while retrieving container details, cause: ${e.message}")
         .cause(e)
         .location(this.class.getCanonicalName())
         .build()
