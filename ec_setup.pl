@@ -7,7 +7,7 @@ my $setup = ECSetup->new(
     promoteAction => $promoteAction,
 );
 $setup->promotePlugin([
-    {artifactName => '@PLUGIN_KEY@-Grapes', artifactVersion => '1.0.1', fromDirectory => 'lib/grapes'}
+    {artifactName => '@PLUGIN_KEY@-Grapes', artifactVersion => '1.0.2', fromDirectory => 'lib/grapes'}
 ]);
 
 # ec_setup.pl shared code
