@@ -303,8 +303,21 @@ class ClusterView {
     }
 
     def getContainerDetails(String containerName) {
+        def objectIdentifier = containerName
         containerName = containerName.replaceAll("${clusterName}::", '')
-        def (namespace, podId, containerId) = containerName.split('::')
+        def namespace, podId, containerId
+        try{
+            (namespace, podId, containerId) = containerName.split('::')
+        }
+        catch (Throwable e){
+            throw EcException
+                    .code(ErrorCodes.ScriptError)
+                    .message("Incorrect object identifier for container: ${objectIdentifier}")
+                    .cause(e)
+                    .location(this.class.getCanonicalName())
+                    .build()
+        }
+
         def node = createClusterNode(containerName, TYPE_CONTAINER, containerId)
         def pod
         try {
@@ -538,8 +551,23 @@ class ClusterView {
 
 
     def getContainerLogs(String containerName) {
+        def objectIdentifier = containerName
         containerName = containerName.replaceAll("${clusterName}::", '')
-        def (namespace, podId, containerId) = containerName.split('::')
+        def namespace, podId, containerId
+        try{
+            (namespace, podId, containerId) = containerName.split('::')
+        }
+        catch (Throwable e){
+            throw EcException
+            .code(ErrorCodes.ScriptError)
+            .message("Incorrect object identifier for container: ${objectIdentifier}")
+            .cause(e)
+            .location(this.class.getCanonicalName())
+            .build()
+        }
+        assert namespace != null
+        assert podId != null
+        assert containerId != null
         def logs = kubeClient.getContainerLogs(namespace, podId, containerId)
         logs
     }
@@ -614,8 +642,22 @@ class ClusterView {
     }
 
     def getServiceDetails(serviceName) {
+        def objectIdentifier = serviceName
         serviceName = serviceName.replaceAll("${clusterName}::", '')
-        def (namespace, serviceId) = serviceName.split('::')
+        def namespace, serviceId
+
+        try{
+            (namespace, serviceId) = serviceName.split('::')
+        }
+        catch (Throwable e){
+            throw EcException
+                    .code(ErrorCodes.ScriptError)
+                    .message("Incorrect object identifier for service: ${objectIdentifier}")
+                    .cause(e)
+                    .location(this.class.getCanonicalName())
+                    .build()
+        }
+
         def node = createClusterNode(/*node id*/ serviceName, TYPE_SERVICE, /*node name*/ serviceId)
         def service
         try {
