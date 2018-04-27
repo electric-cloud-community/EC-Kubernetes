@@ -24,7 +24,7 @@
 1.0.6:
   - Added 'Wait For Kubernetes API' procedure.
 1.1.0:
-  - Added "Discover" procedure.
-  - Added "Import Microservices" procedure.
-  - Configured the plugin to allow the ElectricFlow UI to render the plugin procedure parameters entirely using the configured form XMLs.
-  - Enabled the plugin for managing the plugin configurations in-line when defining an application process step or a pipeline stage task.
+  - Added "Discover" procedure which can be used through the "Kubernetes Discovery" catalog item in the "Containers" service catalog for automatically creating microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+  - Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.
+  - Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.
+  - Verified EC-Kubernetes plugin on Kubernetes version 1.10.
