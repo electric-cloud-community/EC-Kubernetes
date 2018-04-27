@@ -1,7 +1,7 @@
 import java.io.File
 
 procedure 'Create Resource',
-	description: '[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input', {
+	description: '[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.', {
 
     property 'standardStepPicker', value: false
 

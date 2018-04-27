@@ -222,7 +222,7 @@
     
     <div id="DeployService">
         <h2>Deploy Service</h2>
-        <p>Creates or updates a Deployment to bring up a Replica Set and Pods.</p>
+        <p>Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.</p>
         
         <h3>Deploy Service Parameters</h3>
         <table class="grid">
@@ -555,7 +555,7 @@ definitions retrieved from there.</p>
     
     <div id="CreateResource">
         <h2>Create Resource (DEPRECATED)</h2>
-        <p>[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input</p>
+        <p>[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.</p>
         
         <h3>Create Resource Parameters</h3>
         <table class="grid">
@@ -781,14 +781,14 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
     <ul>
+
+        <li>Added "Discover" procedure which can be used through the "Kubernetes Discovery" catalog item in the "Containers" service catalog for automatically creating microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.</li>
         
-        <li>Added "Discover" procedure.</li>
+        <li>Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.</li>
         
-        <li>Added "Import Microservices" procedure.</li>
-        
-        <li>Configured the plugin to allow the ElectricFlow UI to render the plugin procedure parameters entirely using the configured form XMLs.</li>
-        
-        <li>Enabled the plugin for managing the plugin configurations in-line when defining an application process step or a pipeline stage task.</li>
+        <li>Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.</li>
+
+        <li>Verified EC-Kubernetes plugin on Kubernetes version 1.10.</li>
         
     </ul>
     

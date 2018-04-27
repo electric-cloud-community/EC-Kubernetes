@@ -1,7 +1,7 @@
 import java.io.File
 
 procedure 'Deploy Service',
-	description: 'Creates or updates a Deployment to bring up a Replica Set and Pods.', {
+	description: 'Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.', {
 
 	step 'setup',
       subproject: '',
