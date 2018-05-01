@@ -66,6 +66,8 @@
     </ul>
     
     
+    <li><a href="#knownIssues">Known Issues</a></li>
+    
     <li><a href="#releaseNotes">Release Notes</a></li>
 </ul>
     
@@ -776,18 +778,23 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
 
     
+    <h1 id="knownIssues">Known Issues</h1>
+    <div>
+        <p>If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with "HTTP/1.1 422 Unprocessable Entity" error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.</p>
+    </div>
+    
 
     <h1 id="releaseNotes">Release Notes</h1>
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
     <ul>
-
+        
         <li>Added "Discover" procedure which can be used through the "Kubernetes Discovery" catalog item in the "Containers" service catalog for automatically creating microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.</li>
         
         <li>Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.</li>
         
         <li>Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.</li>
-
+        
         <li>Verified EC-Kubernetes plugin on Kubernetes version 1.10.</li>
         
     </ul>
