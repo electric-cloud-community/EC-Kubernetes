@@ -17,3 +17,5 @@ proceduresOrder:
   - Discover
   - Invoke Kubernetes API
   - Wait For Kubernetes API
+knownIssues: |
+  If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with "HTTP/1.1 422 Unprocessable Entity" error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.
