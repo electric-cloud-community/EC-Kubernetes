@@ -44,10 +44,6 @@ public class ImportFromYAML extends EFClient {
             println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
             System.exit(-1)
         }
-        if (deployments.size() < 1){
-            println "Failed to find any deployment configurations in the YAML file. Cause: ${e.message}"
-            System.exit(-1)
-        }
 
         services.each { kubeService ->
             if (!isSystemService(kubeService)) {
