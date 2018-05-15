@@ -38,6 +38,12 @@ class ClusterView {
     private static final String TYPE_TEXTAREA = 'textarea'
     private static final String TYPE_DATE = 'date'
 
+    private static final String DISPLAY_CLUSTER = 'Kubernetes Cluster'
+    private static final String DISPLAY_NAMESPACE = 'Kubernetes Namespace'
+    private static final String DISPLAY_POD = 'Kubernetes Pod'
+    private static final String DISPLAY_CONTAINER = 'Kubernetes Container'
+    private static final String DISPLAY_SERVICE = 'Kubernetes Service'
+
     private static final String ATTRIBUTE_MASTER_VERSION = 'Master Version'
     private static final String ATTRIBUTE_STATUS = 'Status'
     private static final String ATTRIBUTE_LABELS = 'Labels'
@@ -298,7 +304,7 @@ class ClusterView {
         def startTime = pod?.metadata?.creationTimestamp
         def nodeName = pod?.spec?.nodeName
 
-
+        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_POD, TYPE_STRING)
         if (status){
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         }
@@ -386,6 +392,7 @@ class ClusterView {
 
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
         node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
+        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_CONTAINER, TYPE_STRING)
         if (image) {
             node.addAttribute(ATTRIBUTE_IMAGE, image, TYPE_STRING)
         }
@@ -596,7 +603,7 @@ class ClusterView {
         def labels = getClusterLabels()
         def endpoint = getClusterId()
         node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
-
+        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_CLUSTER, TYPE_STRING)
         if (version) {
             node.addAttribute(ATTRIBUTE_MASTER_VERSION, version.toString(), TYPE_STRING)
         }
@@ -622,6 +629,7 @@ class ClusterView {
             }
         }
         def status = namespace.status?.phase
+        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_NAMESPACE, TYPE_STRING)
         if (status) {
             node.addAttribute("Status", status, TYPE_STRING)
         }
@@ -711,6 +719,7 @@ class ClusterView {
             }
         }
 
+        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_SERVICE, TYPE_STRING)
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         }
