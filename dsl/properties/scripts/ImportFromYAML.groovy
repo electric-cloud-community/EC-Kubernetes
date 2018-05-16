@@ -971,7 +971,7 @@ public class ImportFromYAML extends EFClient {
         report.write(text)
         String jobStepId = System.getenv('COMMANDER_JOBSTEPID')
 
-        def reportName = "Kubernetes Ignored Fields Report-(${reportFilename})"
+        def reportName = "Kubernetes Ignored Fields Report"
         publishLink(reportName, "/commander/jobSteps/${jobStepId}/${reportFilename}")
     }
 
@@ -988,7 +988,7 @@ public class ImportFromYAML extends EFClient {
         setEFProperty("${REPORT_URL_PROPERTY}${name}", link)
         try {
             setEFProperty("/myJob/report-urls/${name}",
-                    "<html><a href=\"${link}\" target=\"_blank\">${name}</a></html>")
+                    "${link}")
         }
         catch (Throwable e) {
             logger ERROR, "Issues while setting property cause ${e} !"
