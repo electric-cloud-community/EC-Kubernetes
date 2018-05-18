@@ -28,3 +28,5 @@
   - Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.
   - Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.
   - Verified EC-Kubernetes plugin on Kubernetes version 1.10.
+1.1.1:
+  -  Added report generation on unsupported tags for <i>Import Microservices</i> procedure.
