@@ -986,13 +986,6 @@ public class ImportFromYAML extends EFClient {
 
     def publishLink(String name, String link) {
         setEFProperty("${REPORT_URL_PROPERTY}${name}", link)
-//        try {
-//            setEFProperty("/myJob/report-urls/${name}",
-//                    "${link}")
-//        }
-//        catch (Throwable e) {
-//            logger ERROR, "Issues while setting property cause ${e} !"
-//        }
         logger INFO, "Some fields have not been imported. Full list of ignored fields available in the report on the link: ${link} !"
     }
 
