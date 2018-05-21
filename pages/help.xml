@@ -13,6 +13,9 @@
 <div class="help">
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
+    
+    <p>Revised on May 21, 2018</p>
+    
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
     <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
@@ -349,7 +352,7 @@
     
     <div id="Discover">
         <h2>Discover</h2>
-        <p><html>Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+        Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
         <li><b>Select your method of discovery from a Kubernetes Cluster</b>  There are two options for connecting to Kubernetes for discovery
@@ -385,7 +388,7 @@
         </li>
     </ol>
 </div>
-</html></p>
+
         
             <p>Procedure looks for services and deployments on Kubernetes
 cluster and transfers data into ElectricFlow. Services found
@@ -603,7 +606,7 @@ definitions retrieved from there.</p>
     
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
-        <p><html>
+        
     Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
         <ol>
@@ -631,7 +634,7 @@ definitions retrieved from there.</p>
             </li>
         </ol>
     </div>
-    </html></p>
+    
         
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
