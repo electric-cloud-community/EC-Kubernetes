@@ -13,6 +13,9 @@
 <div class="help">
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
+    
+    <p>Revised on May 21, 2018</p>
+    
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
     <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
@@ -349,7 +352,7 @@
     
     <div id="Discover">
         <h2>Discover</h2>
-        <p>Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+        Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
         <li><b>Select your method of discovery from a Kubernetes Cluster</b>  There are two options for connecting to Kubernetes for discovery
@@ -384,7 +387,8 @@
                 </li></ul>
         </li>
     </ol>
-</div></p>
+</div>
+
         
             <p>Procedure looks for services and deployments on Kubernetes
 cluster and transfers data into ElectricFlow. Services found
@@ -602,7 +606,8 @@ definitions retrieved from there.</p>
     
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
-        <p>Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
+        
+    Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
         <ol>
             <li><b>Copy and enter the content of your Kubernetes YAML file</b></li>
@@ -628,7 +633,8 @@ definitions retrieved from there.</p>
             </ul>
             </li>
         </ol>
-    </div></p>
+    </div>
+    
         
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
@@ -780,11 +786,19 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
     <h1 id="knownIssues">Known Issues</h1>
     <div>
-        <p>If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with "HTTP/1.1 422 Unprocessable Entity" error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.</p>
+        <p>If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with &quot;HTTP/1.1 422 Unprocessable Entity&quot; error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.</p>
+
     </div>
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+    
+    <h3>@PLUGIN_KEY@ 1.1.1</h3>
+    <ul>
+        
+        <li>Added report generation on unsupported tags for <i>Import Microservices</i> procedure.</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
     <ul>
