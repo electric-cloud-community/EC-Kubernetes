@@ -120,7 +120,6 @@ class ClusterView {
         return true
     }
 
-
     def isValidPod(Map pod) {
         //allow a failed pod to be returned.
         //we should then handle 404 not found errors
@@ -222,7 +221,6 @@ class ClusterView {
         pods
     }
 
-
     def getServicePodsTopology(def service) {
         def serviceSelector = service?.spec?.selector
         def pods = []
@@ -304,7 +302,9 @@ class ClusterView {
         def startTime = pod?.metadata?.creationTimestamp
         def nodeName = pod?.spec?.nodeName
 
-        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_POD, TYPE_STRING)
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_POD)
+        }
         if (status){
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         }
@@ -390,9 +390,11 @@ class ClusterView {
         def startTime = pod?.status?.startTime
         def nodeName = pod?.spec?.nodeName
 
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_CONTAINER)
+        }
         node.addAction('View Logs', 'viewLogs', TYPE_TEXTAREA)
         node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
-        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_CONTAINER, TYPE_STRING)
         if (image) {
             node.addAttribute(ATTRIBUTE_IMAGE, image, TYPE_STRING)
         }
@@ -568,7 +570,6 @@ class ClusterView {
         return node
     }
 
-
     def getContainerLogs(String containerName) {
         def objectIdentifier = containerName
         containerName = containerName.replaceAll("${getClusterId()}::", '')
@@ -590,7 +591,6 @@ class ClusterView {
         logs
     }
 
-
     def buildNamespaceNode(namespace) {
         def name = getNamespaceName(namespace)
         createClusterNode(getNamespaceId(namespace), TYPE_NAMESPACE, name)
@@ -602,8 +602,11 @@ class ClusterView {
         def version = kubeClient.getClusterVersion()
         def labels = getClusterLabels()
         def endpoint = getClusterId()
+
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_CLUSTER)
+        }
         node.addAttribute(ATTRIBUTE_ENDPOINT, endpoint, TYPE_LINK)
-        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_CLUSTER, TYPE_STRING)
         if (version) {
             node.addAttribute(ATTRIBUTE_MASTER_VERSION, version.toString(), TYPE_STRING)
         }
@@ -629,7 +632,9 @@ class ClusterView {
             }
         }
         def status = namespace.status?.phase
-        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_NAMESPACE, TYPE_STRING)
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_NAMESPACE)
+        }
         if (status) {
             node.addAttribute("Status", status, TYPE_STRING)
         }
@@ -719,7 +724,9 @@ class ClusterView {
             }
         }
 
-        node.addAttribute(ATTRIBUTE_DISPLAY_TYPE, DISPLAY_SERVICE, TYPE_STRING)
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_SERVICE)
+        }
         if (status) {
             node.addAttribute(ATTRIBUTE_STATUS, status, TYPE_STRING)
         }
