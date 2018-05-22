@@ -180,6 +180,35 @@ class Client {
         }
     }
 
+    def getPodLogs(String namespace, String pod) {
+        http.request(GET, TEXT) { req ->
+            uri.path = "/api/v1/namespaces/${namespace}/pods/${pod}/log"
+            uri.query = [tailLines: 500]
+            headers.Authorization = "Bearer ${this.accessToken}"
+            headers.Accept = "application/json"
+
+            req.getParams().setParameter("http.connection.timeout", CONNECTION_TIMEOUT)
+            req.getParams().setParameter("http.socket.timeout", SOCKET_TIMEOUT)
+
+            response.success = { resp, reader ->
+                if (reader) {
+                    String logs = reader.text
+                    logs
+                }
+                else {
+                    ''
+                }
+            }
+            response.failure = { resp, reader ->
+                String result = "Failed to read pod logs: ${resp.statusLine}.\nStatus: ${resp.status}"
+                if (reader) {
+                    result += "\n${reader.text}"
+                }
+                result
+            }
+        }
+    }
+
     def static getLogLevelStr(Integer level) {
         switch (level) {
             case DEBUG:
