@@ -541,6 +541,9 @@ class ClusterView {
 
     def buildClusterNode() {
         ClusterNode node = createClusterNode(getClusterId(), TYPE_CLUSTER, getClusterName())
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_CLUSTER)
+        }
         node
     }
 
@@ -549,6 +552,9 @@ class ClusterView {
         def status = pod.status.phase
         ClusterNode node = createClusterNode(getPodId(service, pod), TYPE_POD, name)
         node.setStatus(status)
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_POD)
+        }
         node
     }
 
@@ -561,12 +567,18 @@ class ClusterView {
         if (efId) {
             node.setElectricFlowIdentifier(efId)
         }
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_SERVICE)
+        }
         node
     }
 
     def buildContainerNode(service, pod, container) {
         def node = createClusterNode(getContainerId(service, pod, container), TYPE_CONTAINER, container.name)
         node.setStatus(getContainerStatus(pod, container))
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_CONTAINER)
+        }
         return node
     }
 
@@ -593,7 +605,11 @@ class ClusterView {
 
     def buildNamespaceNode(namespace) {
         def name = getNamespaceName(namespace)
-        createClusterNode(getNamespaceId(namespace), TYPE_NAMESPACE, name)
+        def node = createClusterNode(getNamespaceId(namespace), TYPE_NAMESPACE, name)
+        if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
+            node.setDisplayType(DISPLAY_NAMESPACE)
+        }
+        node
     }
 
     def getClusterDetails() {
