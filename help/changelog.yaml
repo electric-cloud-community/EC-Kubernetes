@@ -30,3 +30,4 @@
   - Verified EC-Kubernetes plugin on Kubernetes version 1.10.
 1.1.1:
   -  Added report generation on unsupported tags for <i>Import Microservices</i> procedure.
+  -  Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.
