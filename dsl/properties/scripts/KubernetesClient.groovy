@@ -898,7 +898,7 @@ public class KubernetesClient extends BaseClient {
         for (item in jsonData){
             def name = formatName(item.name)
             if(item.hostPath){
-                result << [name: name, hostPath: [path : item.hostPath, type: "Directory"]]
+                result << [name: name, hostPath: [path : item.hostPath]]
             } else {
                 result << [name: name, emptyDir: {}]
             }
