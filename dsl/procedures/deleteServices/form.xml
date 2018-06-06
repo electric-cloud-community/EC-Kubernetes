@@ -19,6 +19,9 @@
     <formElement>
         <type>entry</type>
         <label>Configuration:</label>
+        <!-- Improvements for CEV-18687 -->
+        <configuration>1</configuration>
+        <!-- End of improvements for CEV-18687 -->
         <property>config</property>
         <required>1</required>
         <documentation>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</documentation>
