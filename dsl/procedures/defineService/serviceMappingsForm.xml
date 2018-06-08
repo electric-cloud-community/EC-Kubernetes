@@ -57,6 +57,9 @@
         <value>1</value>
         <documentation>The number of replicas to create if performing a canary deployment. Defaults to 1 replica for the canary deployment.</documentation>
     </formElement>
+    
+    <!-- Load balancer section -->
+    <!-- main field -->
     <formElement>
         <type>select</type>
         <label>Service Type:</label>
@@ -82,11 +85,24 @@
         <documentation>Kind of Kubernetes service to create.</documentation>
     </formElement>
 
+    <!-- Improvements for ECKUBE-173 -->
+    <!-- Header for Additional Resource Details -->
+    <formElement>
+        <type>header</type>
+        <label>Additional LoadBalancer Details</label>
+        <property>headerType</property>
+    </formElement>
+    <!-- End of improvements for ECKUBE-173 -->
+    <!-- Dependent fields -->
     <formElement>
         <type>entry</type>
         <label>LoadBalancer IP:</label>
         <property>loadBalancerIP</property>
         <required>0</required>
+        <!-- Improvements for ECKUBE-173 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End of improvements for ECKUBE-173 -->
         <documentation>IP to use for the load balancer for 'LoadBalancer' service type.</documentation>
     </formElement>
 
@@ -95,9 +111,14 @@
         <label>LoadBalancer Source Ranges:</label>
         <property>loadBalancerSourceRanges</property>
         <required>0</required>
+        <!-- Improvements for ECKUBE-173 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End of improvements for ECKUBE-173 -->
         <documentation>Comma-separated list of IP CIDR ranges to specify the IP ranges that are allowed to access the load balancer.</documentation>
     </formElement>
 
+    <!-- End of load balancer section -->
     <formElement>
         <type>entry</type>
         <label>Deployment Timeout (in seconds):</label>
@@ -117,6 +138,9 @@
         <initiallyChecked>0</initiallyChecked>
         <documentation>Whether to enable client-IP based session affinity. Defaults to round robin if not checked.</documentation>
     </formElement>
+
+    <!-- Additional resource section -->
+    <!-- Main field -->
     <formElement>
         <type>checkbox</type>
         <label>Create or update Additional Resource in the Cluster?</label>
@@ -127,11 +151,23 @@
         <initiallyChecked>0</initiallyChecked>
         <documentation>Whether to create or update any additional Kubernetes resource in the cluster.</documentation>
     </formElement>
+    <!-- Improvements for ECKUBE-173 -->
+    <!-- Header for Additional Resource Details -->
+    <formElement>
+        <type>header</type>
+        <label>Additional Resource Details</label>
+        <property>headerType</property>
+    </formElement>
+    <!-- End of improvements for ECKUBE-173 -->
     <formElement>
         <type>entry</type>
         <label>Additional Resource URI:</label>
         <property>resourceUri</property>
         <required>0</required>
+        <!-- Improvements for ECKUBE-173 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECKUBE-173 -->
         <documentation>The URI for the additional Kubernetes resource to be created or updated during service deployment. E.g., '/api/v1/namespaces/default/persistentvolumeclaims'.</documentation>
     </formElement>
     <formElement>
@@ -139,8 +175,13 @@
         <label>Additional Resource Payload:</label>
         <property>resourceData</property>
         <required>0</required>
+        <!-- Improvements for ECKUBE-173 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECKUBE-173 -->
         <documentation>The request body in JSON or YAML format for the additional Kubernetes resource to be created or updated during service deployment.</documentation>
     </formElement>
+    <!-- End of additional resource section -->
     <formElement>
         <type>select</type>
         <label>Operation Type:</label>
