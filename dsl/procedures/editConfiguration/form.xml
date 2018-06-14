@@ -1,0 +1,94 @@
+<!--
+
+     Copyright 2016 Electric Cloud, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>entry</type>
+        <label>Description:</label>
+        <property>desc</property>
+        <required>0</required>
+        <documentation>Description for the plugin configuration.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Kubernetes API Endpoint:</label>
+        <property>clusterEndpoint</property>
+        <required>1</required>
+        <documentation>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</documentation>
+    </formElement>
+    <formElement>
+        <type>credential</type>
+        <label>Bearer Token of Kubernetes Cluster:</label>
+        <property>credential</property>
+        <required>1</required>
+        <keyLabel>Kubernetes Bearer token:</keyLabel>
+        <credentialType>key</credentialType>
+        <documentation>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</documentation>
+        <attachedAsParameterToStep>testConnection</attachedAsParameterToStep>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Kubernetes Version:</label>
+        <property>kubernetesVersion</property>
+        <propertyReference>/plugins/@PLUGIN_NAME@/project/ec_options/k8sVersions</propertyReference>
+        <documentation>Kubernetes version running on the cluster master</documentation>
+        <value>1.6</value>
+        <required>0</required>
+    </formElement>
+    <formElement> 
+        <label>Test Connection:</label>    
+        <property>testConnection</property> 
+        <documentation>Check this checkbox to verify connectivity to Kubernetes master.</documentation>
+        <type>checkbox</type>   
+        <checkedValue>true</checkedValue> 
+        <uncheckedValue>false</uncheckedValue> 
+        <initiallyChecked>1</initiallyChecked> 
+        <value>true</value> 
+        <required>0</required>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>URI for checking cluster connectivity:</label>
+        <property>uriToCheckCluster</property>
+        <required>0</required>
+        <documentation>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</documentation>
+    </formElement>
+    <formElement>
+        <type>select</type>
+        <label>Log Level:</label>
+        <property>logLevel</property>
+        <value>2</value>
+        <option>
+            <name>Debug</name>
+            <value>1</value>
+        </option>
+        <option>
+            <name>Info</name>
+            <value>2</value>
+        </option>
+        <option>
+            <name>Warning</name>
+            <value>3</value>
+        </option>
+        <option>
+            <name>Error</name>
+            <value>4</value>
+        </option>
+        <documentation>Log level to use for logging output. Error=4, Warning=3, Info=2, Debug=1.</documentation>
+        <required>0</required>
+    </formElement>
+</editor>
