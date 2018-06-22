@@ -1207,6 +1207,10 @@ public class KubernetesClient extends BaseClient {
                     ]
                 }
 
+        if (portMapping.size() == 0) {
+            logger WARNING, "The service '$serviceName' is being created as a 'headless' service since there are no ports defined for the service."
+        }
+
         def serviceId = args.serviceId
 
         def result = json {
