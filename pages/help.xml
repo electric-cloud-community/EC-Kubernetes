@@ -798,7 +798,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         
         <li>Added report generation on unsupported tags for <i>Import Microservices</i> procedure.</li>
         <li>Added 'Test Connection' step for 'EditConfiguration' procedure.</li>
-        <li>Updated 'Deploy Service' procedure by Warning in case of creating 'Headless' service.</li>
+        <li>Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.</li>
     </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
