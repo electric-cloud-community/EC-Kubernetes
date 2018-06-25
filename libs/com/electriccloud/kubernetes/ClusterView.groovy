@@ -363,7 +363,7 @@ class ClusterView {
         def status = getContainerStatus(pod, container)
         def ports = container.ports?.collectEntries {
             def value = "${it.containerPort}/${it.protocol}"
-            [(it.name): value]
+            [(it.name ? it.name : "unnamed port"): value]
         }
         def environmentVariables = container.env?.collectEntries {
             [(it.name): it.value]
