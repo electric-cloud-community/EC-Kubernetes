@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on May 21, 2018</p>
+    <p>Revised on June 25, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
@@ -25,6 +25,7 @@
     <h1>Contents</h1>
     <ul>
     <li><a href="#overview">Overview</a></li>
+    
     
     <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
     
@@ -73,6 +74,8 @@
     
     <li><a href="#releaseNotes">Release Notes</a></li>
 </ul>
+    
+
     
     <div id="CreateConfiguration">
         <a name='CreateConfiguration' id="CreateConfiguration"> </a>
@@ -797,8 +800,13 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     <ul>
         
         <li>Added report generation on unsupported tags for <i>Import Microservices</i> procedure.</li>
+        
+        <li>Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.</li>
+        
         <li>Added 'Test Connection' step for 'EditConfiguration' procedure.</li>
+        
         <li>Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.</li>
+        
     </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
