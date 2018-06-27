@@ -31,7 +31,8 @@
 1.1.1:
   -  Added report generation on unsupported tags for <i>Import Microservices</i> procedure.
   -  Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.
-  -  Added 'Test Connection' step for 'EditConfiguration' procedure.
-  -  Relabeled parameter label in Create/EditConfiguration - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'
   -  Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.
   -  Fixed viewing of container nodes within 'Topology View' for single-port services with unnamed port.
+  -  Added 'Test Connection' step for 'EditConfiguration' procedure.
+  -  Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'
+  -  Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'
