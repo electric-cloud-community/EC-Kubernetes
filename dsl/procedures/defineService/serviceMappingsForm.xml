@@ -91,6 +91,10 @@
         <type>header</type>
         <label>Additional LoadBalancer Details</label>
         <property>headerType</property>
+        <!-- Improvements for ECKUBE-188 -->
+        <condition>${serviceType} == 'LoadBalancer'</condition>
+        <dependsOn>serviceType</dependsOn>
+        <!-- End of improvements for ECKUBE-188 -->
     </formElement>
     <!-- End of improvements for ECKUBE-173 -->
     <!-- Dependent fields -->
@@ -157,6 +161,10 @@
         <type>header</type>
         <label>Additional Resource Details</label>
         <property>headerType</property>
+        <!-- Improvements for ECKUBE-188 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECKUBE-188 -->
     </formElement>
     <!-- End of improvements for ECKUBE-173 -->
     <formElement>
@@ -188,6 +196,10 @@
         <property>requestType</property>
         <value>create</value>
         <required>0</required>
+        <!-- Improvements for ECKUBE-188 -->
+        <condition>${createOrUpdateResource} == 1</condition>
+        <dependsOn>createOrUpdateResource</dependsOn>
+        <!-- End of improvements for ECKUBE-188 -->
         <option>
             <name>Create (POST)</name>
             <value>create</value>
