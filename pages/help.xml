@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on June 27, 2018</p>
+    <p>Revised on July 05, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
@@ -796,6 +796,15 @@ If the object with the provided name already exists in the ElectricFlow, this ob
 
     <h1 id="releaseNotes">Release Notes</h1>
     
+    <h3>@PLUGIN_KEY@ 1.1.2</h3>
+    <ul>
+        
+        <li>Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'</li>
+        
+        <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
+        
+    </ul>
+    
     <h3>@PLUGIN_KEY@ 1.1.1</h3>
     <ul>
         
@@ -803,15 +812,11 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         
         <li>Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.</li>
         
+        <li>Added 'Test Connection' step for 'EditConfiguration' procedure.</li>
+        
         <li>Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.</li>
         
         <li>Fixed viewing of container nodes within 'Topology View' for single-port services with unnamed port.</li>
-        
-        <li>Added 'Test Connection' step for 'EditConfiguration' procedure.</li>
-        
-        <li>Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'</li>
-        
-        <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
         
     </ul>
     
