@@ -10,24 +10,28 @@ if (efClient.toBoolean(actualParams.get('testConnection'))) {
 	String accessToken = 'Bearer ' + cred.password
 	String uriToCheckCluster = actualParams.get('uriToCheckCluster').trim()
 	String clusterEndpoint = actualParams.get('clusterEndpoint').trim()
-	String kubernetesHealthUrl = "$clusterEndpoint"
-	if (uriToCheckCluster){
-		if(uriToCheckCluster[0] == '/'){
-			kubernetesHealthUrl += uriToCheckCluster
-		}
-		else{
-			kubernetesHealthUrl += '/' + uriToCheckCluster
-		}
-	}
 
 	KubernetesClient client = new KubernetesClient()
 	client.setVersion(actualParams)
 
-	def resp = client.checkClusterHealth(kubernetesHealthUrl, accessToken)
-	if (resp.status == 200){ 
-		efClient.logger INFO, "Kubernetes cluster is reachable at ${clusterEndpoint}. Health check at ${kubernetesHealthUrl}."
+	String healthUrlDefault = "${clusterEndpoint}/apis"
+	def responseHealthCheckDefault = client.checkClusterHealth(clusterEndpoint, accessToken)
+	if (responseHealthCheckDefault.status >= 400){
+		efClient.handleProcedureError("Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#1) at ${healthUrlDefault} failed with ${responseHealthCheckDefault.statusLine}")
+	} else {
+		efClient.logger INFO, "Kubernetes cluster is reachable at ${clusterEndpoint}. Health check (#1) at ${healthUrlDefault}."
 	}
-	if (resp.status >= 400){
-		efClient.handleProcedureError("Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check at ${kubernetesHealthUrl} failed with ${resp.statusLine}")
+
+	if (uriToCheckCluster && uriToCheckCluster[0] != '/'){
+		uriToCheckCluster = '/' + uriToCheckCluster
+	}
+	String healthUrlProcedure = "${clusterEndpoint}${uriToCheckCluster}"
+	def responseHealthCheckProcedure = client.doHttpGet(clusterEndpoint,
+			uriToCheckCluster,
+			accessToken, /*failOnErrorCode*/ false)
+	if (responseHealthCheckProcedure.status >= 400){
+		efClient.handleProcedureError("Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${healthUrlProcedure} failed with ${responseHealthCheckProcedure.statusLine}")
+	} else {
+		efClient.logger INFO, "Kubernetes cluster is reachable at ${clusterEndpoint}. Health check (#2) at ${healthUrlProcedure}."
 	}
 }

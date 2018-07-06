@@ -69,10 +69,10 @@
     </formElement>
     <formElement>
         <type>entry</type>
-        <label>URI for checking cluster connectivity:</label>
+        <label>URI Path for Checking Cluster Connectivity:</label>
         <property>uriToCheckCluster</property>
         <required>0</required>
-        <documentation>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</documentation>
+        <documentation>URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</documentation>
     </formElement>
     <formElement>
         <type>select</type>

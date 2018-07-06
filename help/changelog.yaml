@@ -34,3 +34,6 @@
   -  Added 'Test Connection' step for 'EditConfiguration' procedure.
   -  Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.
   -  Fixed viewing of container nodes within 'Topology View' for single-port services with unnamed port.
+1.1.2:
+  -  Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'
+  -  Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'

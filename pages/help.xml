@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on June 25, 2018</p>
+    <p>Revised on July 05, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
@@ -184,8 +184,8 @@
             </tr>
             
             <tr>
-                <td >URI for checking cluster connectivity</td>
-                <td>URI to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
+                <td >URI Path for Checking Cluster Connectivity</td>
+                <td>URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
             </tr>
             
             <tr>
@@ -795,6 +795,15 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+    
+    <h3>@PLUGIN_KEY@ 1.1.2</h3>
+    <ul>
+        
+        <li>Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'</li>
+        
+        <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.1</h3>
     <ul>
