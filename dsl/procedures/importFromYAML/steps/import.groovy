@@ -34,7 +34,7 @@ if (envProjectName && environmentName && clusterName) {
         println "Cluster '${clusterName}' does not exist in '${environmentName}' environment!"
         System.exit(-1)
     }
-    if (cluster.pluginKey != 'EC-Kubernetes') {
+    if (cluster.pluginKey != 'EC-Kubernetes' && cluster.pluginKey != 'EC-AzureContainerService') {
         println "Wrong cluster type: ${cluster.pluginKey}"
         println "ElectricFlow cluster '${clusterName}' in '${environmentName}' environment is not backed by a Kubernetes-based cluster."
         System.exit(-1)
