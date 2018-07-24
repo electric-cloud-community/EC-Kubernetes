@@ -803,6 +803,8 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         
         <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
         
+        <li>Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService</li>
+        
     </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.1</h3>
