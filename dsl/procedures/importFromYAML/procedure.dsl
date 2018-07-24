@@ -24,7 +24,7 @@ procedure 'Import Microservices',
             <ul>
                 <li>Environment Project Name: The project containing the ElectricFlow environment where the services will be deployed.</li>
                 <li>Environment Name: The name of the existing environment that contains a cluster where the newly created microservice(s) will be deployed.</li>
-                <li>Cluster Name: The name of an existing EC-Kubernetes backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
+                <li>Cluster Name: The name of an existing EC-Kubernetes (or EC-AzureContainerService) backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
             </ul>
             </li>
         </ol>

@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on July 05, 2018</p>
+    <p>Revised on July 24, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
@@ -632,7 +632,7 @@ definitions retrieved from there.</p>
             <ul>
                 <li>Environment Project Name: The project containing the ElectricFlow environment where the services will be deployed.</li>
                 <li>Environment Name: The name of the existing environment that contains a cluster where the newly created microservice(s) will be deployed.</li>
-                <li>Cluster Name: The name of an existing EC-Kubernetes backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
+                <li>Cluster Name: The name of an existing EC-Kubernetes (or EC-AzureContainerService) backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
             </ul>
             </li>
         </ol>
