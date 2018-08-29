@@ -31,6 +31,10 @@ to the grape root directory configured with ec-groovy.
 use File::Copy::Recursive qw(rcopy);
 use File::Path;
 use ElectricCommander;
+use Digest::MD5 qw(md5_hex);
+use MIME::Base64;
+use File::Temp qw(tempfile tempdir);
+use Archive::Zip;
 
 use warnings;
 use strict;
@@ -40,20 +44,19 @@ $|=1;
 $::gAdditionalArtifactVersion = "$[additionalArtifactVersion]";
 
 sub main() {
-    my $ec = ElectricCommander->new();
+    my $ec = ElectricCommander->new({timeout => 300});
     $ec->abortOnError(1);
 
-    retrieveGrapeDependency($ec, 'com.electriccloud:EC-Kubernetes-Grapes:1.0.2');
-    if ($::gAdditionalArtifactVersion ne '') {
-        my @versions = split(/\s*,\s*/, $::gAdditionalArtifactVersion);
-        for my $version (@versions) {
-            retrieveGrapeDependency($ec, $version);
-        }
-    }
+    parseProperties($ec);
 
     my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
     $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
     print "Grabbed Resource: $resource\n";
+
+    if ($::gAdditionalArtifactVersion ne '') {
+#        For other plugins
+        retrieveGrapeDependency($ec, $::gAdditionalArtifactVersion);
+    }
 }
 
 ########################################################################
@@ -79,7 +82,7 @@ sub retrieveGrapeDependency($){
     my $dataDir = $ENV{COMMANDER_DATA};
     die "ERROR: Data directory not defined!" unless ($dataDir);
 
-    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape/grapes';
+    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape';
     my $dir = $xpath->findvalue("//artifactVersion/cacheDirectory");
 
     mkpath($grapesDir);
@@ -87,6 +90,59 @@ sub retrieveGrapeDependency($){
 
     rcopy( $dir, $grapesDir) or die "Copy failed: $!";
     print "Retrieved and copied grape dependencies from $dir to $grapesDir\n";
+
+    my $resource = $ec->getProperty('/myJobStep/assignedResourceName')->findvalue('//value')->string_value;
+    $ec->setProperty({propertyName => '/myJob/grabbedResource', value => $resource});
+    print "Grabbed Resource: $resource\n";
+
+}
+
+sub retrieveBase64Properties {
+    my $dependenciesProperty = '/projects/@PLUGIN_NAME@/ec_groovyDependencies';
+    my $ec = ElectricCommander->new;
+
+    my $hasNext = 1;
+    my $chunkNumber = 0;
+    my $checksum = $ec->getProperty("$dependenciesProperty/checksum")->findvalue('//value')->string_value;
+    my $base64 = '';
+    while($hasNext) {
+        eval {
+            my $chunk = $ec->getProperty($dependenciesProperty . "/ec_dependencyChunk_" . $chunkNumber)->findvalue('//value')->string_value;
+            $base64 .= $chunk;
+            $chunkNumber ++;
+            print "Found chunk $chunkNumber\n";
+            1;
+        } or do {
+            $hasNext = 0;
+        };
+    }
+
+    if ($checksum ne md5_hex($base64)) {
+        die "Checksums do not match!";
+    }
+    return $base64;
+}
+
+sub parseProperties {
+    my ($commander) = @_;
+
+    my $base64 = retrieveBase64Properties();
+    my $binary = decode_base64($base64);
+    my ($tempFh, $tempFilename) = tempfile(CLEANUP => 1);
+    binmode($tempFh);
+    print $tempFh $binary;
+    close $tempFh;
+
+    my $zip = Archive::Zip->new();
+    unless($zip->read($tempFilename) == Archive::Zip::AZ_OK()) {
+        die "Cannot read .zip dependencies: $!";
+    }
+
+    my $grapesDir = $ENV{COMMANDER_DATA} . '/grape';
+    mkpath($grapesDir);
+
+    $zip->extractTree("lib", $grapesDir . '/' );
+    print "Downloaded and extracted\n";
 }
 
 main();
