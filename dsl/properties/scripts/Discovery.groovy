@@ -496,19 +496,21 @@ public class Discovery extends EFClient {
         if (deployment.spec?.strategy?.rollingUpdate) {
             def rollingUpdate = deployment.spec.strategy.rollingUpdate
             if (rollingUpdate.maxSurge =~ /%/) {
-                efService.serviceMapping.with {
-                    deploymentStrategy = 'rollingDeployment'
-                    maxRunningPercentage = getMaxRunningPercentage(rollingUpdate.maxSurge)
-                }
+                // Uncomment it when deployment strategies are introduced
+                // efService.serviceMapping.with {
+                //     deploymentStrategy = 'rollingDeployment'
+                //     maxRunningPercentage = getMaxRunningPercentage(rollingUpdate.maxSurge)
+                // }
             } else {
                 efService.service.maxCapacity = getMaxCapacity(defaultCapacity, rollingUpdate.maxSurge)
             }
 
             if (rollingUpdate.maxUnavailable =~ /%/) {
-                efService.serviceMapping.with {
-                    minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
-                    deploymentStrategy = 'rollingDeployment'
-                }
+                // Uncomment it when deployment strategies are introduced
+                // efService.serviceMapping.with {
+                //     minAvailabilityPercentage = getMinAvailabilityPercentage(rollingUpdate.maxUnavailable)
+                //     deploymentStrategy = 'rollingDeployment'
+                // }
             } else {
                 efService.service.minCapacity = getMinCapacity(defaultCapacity, rollingUpdate.maxUnavailable)
             }
