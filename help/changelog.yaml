@@ -38,3 +38,4 @@
   -  Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'
   -  Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'
   -  Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService
+  -  "Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'"
