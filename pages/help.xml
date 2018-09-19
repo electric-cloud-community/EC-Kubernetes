@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on July 24, 2018</p>
+    <p>Revised on September 19, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h3>Overview</h3>
@@ -29,7 +29,10 @@
     
     <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
     
+
     <li><a href="#procedures">Plugin Procedures</a></li>
+    
+
     <ul>
         
 
@@ -57,6 +60,8 @@
         <li><a href="#ImportMicroservices">Import Microservices</a></li>
         
     </ul>
+
+    
     
     <li><a href="#usecases">Use Cases</a></li>
     <ul>
@@ -205,6 +210,7 @@
     
     <div id="CheckCluster">
         <h2>Check Cluster</h2>
+        
         <p>Checks that a Kubernetes cluster exists and is reachable. All other entities such as  Pods, services, and replication controllers all run on top of a cluster.</p>
         
         <h3>Check Cluster Parameters</h3>
@@ -230,6 +236,7 @@
     
     <div id="DeployService">
         <h2>Deploy Service</h2>
+        
         <p>Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.</p>
         
         <h3>Deploy Service Parameters</h3>
@@ -295,6 +302,7 @@
     
     <div id="UndeployService">
         <h2>Undeploy Service</h2>
+        
         <p>Undeploys a previously deployed service on the Kubernetes cluster</p>
         
         <h3>Undeploy Service Parameters</h3>
@@ -355,6 +363,7 @@
     
     <div id="Discover">
         <h2>Discover</h2>
+        
         Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
@@ -464,6 +473,7 @@ definitions retrieved from there.</p>
     
     <div id="InvokeKubernetesAPI">
         <h2>Invoke Kubernetes API</h2>
+        
         <p>Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input</p>
         
         <h3>Invoke Kubernetes API Parameters</h3>
@@ -514,6 +524,7 @@ definitions retrieved from there.</p>
     
     <div id="WaitForKubernetesAPI">
         <h2>Wait For Kubernetes API</h2>
+        
         <p>Polls on Kubernetes REST API to check specific field of API response.</p>
         
         <h3>Wait For Kubernetes API Parameters</h3>
@@ -564,6 +575,7 @@ definitions retrieved from there.</p>
     
     <div id="CreateResource">
         <h2>Create Resource (DEPRECATED)</h2>
+        
         <p>[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.</p>
         
         <h3>Create Resource Parameters</h3>
@@ -609,6 +621,7 @@ definitions retrieved from there.</p>
     
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
+        
         
     Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
@@ -804,6 +817,8 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
         
         <li>Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService</li>
+        
+        <li>Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'</li>
         
     </ul>
     
