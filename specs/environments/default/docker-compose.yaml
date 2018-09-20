@@ -1,0 +1,27 @@
+version: '3.4'
+services:
+  electricflow:
+    image: "electricflow/efserver:latest"
+    ports:
+    - "8000:8000"
+    - "8200:8200"
+    - "8443:8443"
+    - "443:443"
+    - "80:80"
+    networks:
+    - internal
+    container_name: electricflow
+    hostname: electricflow
+    tty: true
+    environment:
+    - COMMANDER_SERVER=electricflow
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/rest/v1.0/server/info"]
+      interval: 120s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: always
+networks:
+  internal:
+    driver: bridge

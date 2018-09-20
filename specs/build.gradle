@@ -1,0 +1,114 @@
+plugins {
+    id 'groovy'
+    id 'java'
+    id 'idea'
+    id "io.qameta.allure" version "2.5"
+}
+
+
+ext {
+    allureVersion = '2.7.0'
+    groovyVersion = '2.5.2'
+    testNgVersion = '6.14.3'
+    restAssuredVersion = '3.1.0'
+
+}
+
+
+allure {
+    version = "$allureVersion"
+    autoconfigure = true
+    aspectjweaver = true
+    aspectjVersion = '1.8.10'
+    //resultsDir = file("${rootDir}/build/allure-results")
+    //reportDir = file("${rootDir}/allure-report")
+    useTestNG {
+        version = "${allureVersion}"
+    }
+    downloadLink = "https://github.com/allure-framework/allure2/releases/download/$allureVersion/allure-${allureVersion}.zip"
+}
+
+
+group 'com.electriccloud'
+version '1.0-SNAPSHOT'
+
+repositories {
+    jcenter()
+    mavenCentral()
+}
+
+
+
+dependencies {
+    // Groovy
+    compile "org.codehaus.groovy:groovy-all:$groovyVersion"
+    compile group: 'org.codehaus.groovy.modules.http-builder', name: 'http-builder', version: '0.7.1'
+    // Tests
+    compile "org.testng:testng:$testNgVersion"
+    // Allure
+    compile "io.qameta.allure:allure-testng:$allureVersion"
+    // Logger
+    compile group: 'log4j', name: 'log4j', version: '1.2.17'
+    //compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.25'
+    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.25'
+    // JSON
+    compile group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
+    compile group: 'org.json', name: 'json', version: '20180130'
+    // Kubernetes
+    compile 'io.kubernetes:client-java:1.0.0'
+    // Helper Libraries
+    compile group: 'org.awaitility', name: 'awaitility-groovy', version: '3.1.0'
+    // Rest-Assured
+    compile "io.rest-assured:rest-assured:$restAssuredVersion"
+    compile group: 'io.rest-assured', name: 'spring-mock-mvc', version: "$restAssuredVersion"
+    compile "io.rest-assured:rest-assured:$restAssuredVersion"
+    compile "io.rest-assured:json-path:$restAssuredVersion"
+    compile "io.rest-assured:xml-path:$restAssuredVersion"
+    compile "io.rest-assured:json-schema-validator:$restAssuredVersion"
+}
+
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.7'
+}
+
+
+clean.doFirst {
+    delete "src/main/resources/logs"
+    delete "${rootDir}/out"
+    delete "${rootDir}/build"
+    delete "${rootDir}/scr/commander/resources/config/history"
+    delete "${rootDir}/allure-results"
+    delete "${rootDir}/allure-report"
+
+}
+
+
+import io.qameta.allure.gradle.task.AllureReport
+task allureAggregatedReport(type: AllureReport) {
+    allure.resultsDir
+    // Task: ./gradlew allureServe  - to watch the rgenerated report
+}
+
+
+
+task allureConfiguration(type: Copy){
+    def configDir = "${rootDir}/specs/src/commander/resources/config/allure"
+    from "${configDir}/categories.json", "${configDir}/environment.properties", "${configDir}/executor.json"
+    into "${rootDir}/build/allure-results"
+}
+
+
+test {
+    systemProperty "file.encoding", "utf-8"
+    systemProperty "log4j.configuration", "file:///${rootDir.absolutePath}/src/main/resources/log4j.properties"
+    systemProperty "allure.link.issue.pattern", "http://jira.electric-cloud.com/browse/{}"
+    systemProperty "allure.link.tms.pattern", "https://ecflow.testrail.net/index.php?/cases/view/{}"
+    ignoreFailures = true
+    useTestNG() {
+        suites "${suiteDir}/end2endTests.xml"
+    }
+    testLogging.showStandardStreams = true
+}
+test.finalizedBy allureAggregatedReport
