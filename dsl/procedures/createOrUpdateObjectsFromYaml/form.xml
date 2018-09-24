@@ -1,0 +1,47 @@
+<!--
+
+     Copyright 2016 Electric Cloud, Inc.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+         http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+
+-->
+<editor>
+    <formElement>
+        <type>textarea</type>
+        <label>YAML content:</label>
+        <property>yamlContent</property>
+        <required>1</required>
+        <documentation>Content of the YAML specification from where objects to be parsed in order to create or update them.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Cluster Name:</label>
+        <property>clusterName</property>
+        <required>1</required>
+        <documentation>The name of the cluster in ElectricFlow that encapsulates the Kubernetes cluster on which the service is to be deployed.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Cluster Or Environment Project Name:</label>
+        <property>clusterOrEnvProjectName</property>
+        <required>0</required>
+        <documentation>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</documentation>
+    </formElement>
+    <formElement>
+        <type>entry</type>
+        <label>Environment Name:</label>
+        <property>environmentName</property>
+        <required>0</required>
+        <documentation>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</documentation>
+    </formElement>
+</editor>

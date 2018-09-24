@@ -1403,4 +1403,70 @@ public class KubernetesClient extends BaseClient {
     String makeNameDNS1035Compliant(String name){
         return formatName(name).replaceAll('\\.', '-')
     }
+
+    def createOrUpdateObjectsFromYaml() {
+        def objects = YamlUtils.getYamlObjects(yaml)
+
+        objects.each { object ->
+            test.createOrUpdateObject(object, clusterEndPoint, accessToken)
+        }
+    }
+
+    //todo: improve functionality by handling exception and avoiding failOnErrorCode flag
+    def createOrUpdateObject(
+            def object,
+            String clusterEndPoint,
+            String accessToken
+    ) {
+        def kubernetesObjectInsider = new KubernetesObjectInsider(object)
+
+        // get API resource list
+        def apiResourceList = doHttpGet(
+                clusterEndPoint,
+                kubernetesObjectInsider.getApiGroupVersionInsider().getUriPathRootWithApiVersion(),
+                accessToken,
+                true
+        ).data
+        def apiResourceListInsider = new ApiResourceListInsider(apiResourceList)
+
+        // check if Kubernetes object already created
+        def responseOnGettingObject = doHttpGet(
+                clusterEndPoint,
+                apiResourceListInsider.getUriPathForObjectGet(
+                        kubernetesObjectInsider.getKind(),
+                        kubernetesObjectInsider.getName(),
+                        kubernetesObjectInsider.getNamespace()
+                ),
+                accessToken,
+                false
+        )
+        def isObjectCreated = responseOnGettingObject.status == 200 && responseOnGettingObject.data
+
+        // create or update object
+        if (isObjectCreated) {
+            // update object
+            doHttpRequest(PUT,
+                    clusterEndPoint,
+                    apiResourceListInsider.getUriPathForObjectUpdate(
+                            kubernetesObjectInsider.getKind(),
+                            kubernetesObjectInsider.getName(),
+                            kubernetesObjectInsider.getNamespace()
+                    ),
+                    ['Authorization': accessToken],
+                    true,
+                    kubernetesObjectInsider.getKubernetesObjectJson())
+        } else {
+            // create object
+            doHttpRequest(POST,
+                    clusterEndPoint,
+                    apiResourceListInsider.getUriPathForObjectCreate(
+                            kubernetesObjectInsider.getKind(),
+                            kubernetesObjectInsider.getName(),
+                            kubernetesObjectInsider.getNamespace()
+                    ),
+                    ['Authorization': accessToken],
+                    true,
+                    kubernetesObjectInsider.getKubernetesObjectJson())
+        }
+    }
 }

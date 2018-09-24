@@ -39,6 +39,9 @@ def stepsWithAttachedCredentials = [
 		], [
 				procedureName: 'Discover',
 				stepName: 'discover'
+		], [
+				procedureName: 'Create or Update Objects from YAML',
+				stepName: 'createOrUpdateObjectsFromYaml'
 		]
 ]
 project pluginName, {
