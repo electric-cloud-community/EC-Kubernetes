@@ -1404,14 +1404,6 @@ public class KubernetesClient extends BaseClient {
         return formatName(name).replaceAll('\\.', '-')
     }
 
-    def createOrUpdateObjectsFromYaml() {
-        def objects = YamlUtils.getYamlObjects(yaml)
-
-        objects.each { object ->
-            test.createOrUpdateObject(object, clusterEndPoint, accessToken)
-        }
-    }
-
     //todo: improve functionality by handling exception and avoiding failOnErrorCode flag
     def createOrUpdateObject(
             def object,
