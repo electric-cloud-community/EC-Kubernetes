@@ -12,19 +12,19 @@ class KubernetesObjectInsider {
         kubernetesObject
     }
 
-    def getApiVersion() {
+    String getApiVersion() {
         kubernetesObject.apiVersion
     }
 
-    def getKind() {
+    String getKind() {
         kubernetesObject.kind
     }
 
-    def getName() {
+    String getName() {
         kubernetesObject.metadata.name
     }
 
-    def getNamespace() {
+    String getNamespace() {
         kubernetesObject.metadata.namespace
     }
 
@@ -38,13 +38,13 @@ class KubernetesObjectInsider {
 }
 
 class ApiGroupVersionInsider {
-    def apiGroupVersion
+    String apiGroupVersion
 
-    ApiGroupVersionInsider(def apiGroupVersion) {
+    ApiGroupVersionInsider(String apiGroupVersion) {
         this.apiGroupVersion = apiGroupVersion
     }
 
-    def getApiGroupVersion() {
+    String getApiGroupVersion() {
         return apiGroupVersion
     }
 
@@ -68,15 +68,15 @@ class ApiResourceListInsider {
         this.apiResourceList = apiResourceList
     }
 
-    def getKind() {
+    String getKind() {
         apiResourceList.kind
     }
 
-    def getGroupVersion() {
+    String getGroupVersion() {
         apiResourceList.groupVersion
     }
 
-    def getApiResources() {
+    List getApiResources() {
         apiResourceList.resources
     }
 
@@ -84,7 +84,7 @@ class ApiResourceListInsider {
         return new ApiGroupVersionInsider(getGroupVersion())
     }
 
-    ApiResourceInsider getApiResourceInsiderByObjectKind(def kind) throws NoApiResourceForKubernetesObjectException {
+    ApiResourceInsider getApiResourceInsiderByObjectKind(String kind) throws NoApiResourceForKubernetesObjectException {
         //todo: add some caching here
         def apiResource = getApiResources().find {
             it.kind == kind && it.name != ~"/"
@@ -95,7 +95,7 @@ class ApiResourceListInsider {
         return new ApiResourceInsider(apiResource)
     }
 
-    def getUriPathForObjectGet(def kind, def name, def namespace = null)
+    String getUriPathForObjectGet(String kind, String name, String namespace = null)
             throws NoApiResourceForKubernetesObjectException, ApiOperationIsNotSupportedForKubernetesObjectException {
         ApiResourceInsider apiResourceInsider = getApiResourceInsiderByObjectKind(kind)
         if (apiResourceInsider.canGet()) {
@@ -105,7 +105,7 @@ class ApiResourceListInsider {
         }
     }
 
-    String getUriPathForObjectCreate(def kind, def name, def namespace = null)
+    String getUriPathForObjectCreate(String kind, String name, String namespace = null)
             throws NoApiResourceForKubernetesObjectException, ApiOperationIsNotSupportedForKubernetesObjectException {
         ApiResourceInsider apiResourceInsider = getApiResourceInsiderByObjectKind(kind)
         if (apiResourceInsider.canCreate()) {
@@ -115,7 +115,7 @@ class ApiResourceListInsider {
         }
     }
 
-    String getUriPathForObjectUpdate(def kind, def name, def namespace = null)
+    String getUriPathForObjectUpdate(String kind, String name, String namespace = null)
             throws NoApiResourceForKubernetesObjectException, ApiOperationIsNotSupportedForKubernetesObjectException {
         ApiResourceInsider apiResourceInsider = getApiResourceInsiderByObjectKind(kind)
         if (apiResourceInsider.canUpdate()) {
@@ -125,7 +125,17 @@ class ApiResourceListInsider {
         }
     }
 
-    String getRootUriPathForApiResource(ApiResourceInsider apiResourceInsider, def namespace = null) {
+    String getUriPathForObjectPatch(String kind, String name, String namespace = null)
+            throws NoApiResourceForKubernetesObjectException, ApiOperationIsNotSupportedForKubernetesObjectException {
+        ApiResourceInsider apiResourceInsider = getApiResourceInsiderByObjectKind(kind)
+        if (apiResourceInsider.canPatch()) {
+            return getRootUriPathForApiResource(apiResourceInsider, namespace) + "/$name"
+        } else {
+            throw new ApiOperationIsNotSupportedForKubernetesObjectException("Operation 'patch' is not supported for Kubernetes object kind '$kind'")
+        }
+    }
+
+    String getRootUriPathForApiResource(ApiResourceInsider apiResourceInsider, String namespace = null) {
         def resourceName = apiResourceInsider.getName()
         if (apiResourceInsider.isNamespaced()) {
             namespace = namespace ?: "default"
@@ -147,15 +157,15 @@ class ApiResourceInsider {
         apiResource
     }
 
-    def getName() {
+    String getName() {
         apiResource.name
     }
 
-    def getKind() {
+    String getKind() {
         apiResource.kind
     }
 
-    def isNamespaced() {
+    boolean isNamespaced() {
         apiResource.namespaced
     }
 
@@ -163,16 +173,20 @@ class ApiResourceInsider {
         apiResource.verbs
     }
 
-    def canGet() {
+    boolean canGet() {
         getVerbs().contains("get")
     }
 
-    def canCreate() {
+    boolean canCreate() {
         getVerbs().contains("create")
     }
 
-    def canUpdate() {
+    boolean canUpdate() {
         getVerbs().contains("update")
+    }
+
+    boolean canPatch() {
+        getVerbs().contains("patch")
     }
 }
 

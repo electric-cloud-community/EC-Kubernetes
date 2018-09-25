@@ -1434,19 +1434,34 @@ public class KubernetesClient extends BaseClient {
         )
         def isObjectCreated = responseOnGettingObject.status == 200 && responseOnGettingObject.data
 
-        // create or update object
+        // create, patch or update object
         if (isObjectCreated) {
-            // update object
-            doHttpRequest(PUT,
-                    clusterEndPoint,
-                    apiResourceListInsider.getUriPathForObjectUpdate(
-                            kubernetesObjectInsider.getKind(),
-                            kubernetesObjectInsider.getName(),
-                            kubernetesObjectInsider.getNamespace()
-                    ),
-                    ['Authorization': accessToken],
-                    true,
-                    kubernetesObjectInsider.getKubernetesObjectJson())
+            boolean canPatchObject = apiResourceListInsider
+                    .getApiResourceInsiderByObjectKind(kubernetesObjectInsider.getKind())
+                    .canPatch()
+            if (canPatchObject) {
+                doHttpRequest(PATCH,
+                        clusterEndPoint,
+                        apiResourceListInsider.getUriPathForObjectPatch(
+                                kubernetesObjectInsider.getKind(),
+                                kubernetesObjectInsider.getName(),
+                                kubernetesObjectInsider.getNamespace()
+                        ),
+                        ['Authorization': accessToken, 'Content-Type': 'application/merge-patch+json'],
+                        true,
+                        kubernetesObjectInsider.getKubernetesObjectJson())
+            } else {
+                doHttpRequest(PUT,
+                        clusterEndPoint,
+                        apiResourceListInsider.getUriPathForObjectUpdate(
+                                kubernetesObjectInsider.getKind(),
+                                kubernetesObjectInsider.getName(),
+                                kubernetesObjectInsider.getNamespace()
+                        ),
+                        ['Authorization': accessToken],
+                        true,
+                        kubernetesObjectInsider.getKubernetesObjectJson())
+            }
         } else {
             // create object
             doHttpRequest(POST,
