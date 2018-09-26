@@ -1,5 +1,6 @@
 package com.electriccloud.procedures.configuration
 
+import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
@@ -10,19 +11,21 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
+import static com.electriccloud.helpers.enums.LogLevels.*
+
 
 @Feature('Provsioning')
 class ProvisionTests extends KubernetesTestBase {
 
     @BeforeClass
     void setUpTests(){
+        k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, '', LogLevel.DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
     @AfterClass
     void tearDownTests(){
-        k8sClient.deleteConfiguration(configName)
         k8sClient.client.deleteProject(environmentProjectName)
     }
 

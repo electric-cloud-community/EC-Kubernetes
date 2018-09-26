@@ -29,7 +29,7 @@ class KubernetesClient extends CommanderClient {
     def createConfiguration(configurationName,
                             clusterEndpoint, username, secretToken, clusterVersion,
                             testConnection = true,
-                            testConnectionUri = "",
+                            testConnectionUri = "/apis",
                             LogLevel logLevel = LogLevel.DEBUG) {
         message("creating kubernetes config")
         def json = jsonHelper.configJson(configurationName, clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
@@ -51,7 +51,7 @@ class KubernetesClient extends CommanderClient {
     @Step
     def createEnvironment(configName) {
         message("environment creation")
-        def response = client.dslFile dslPath(plugin, 'environment'), client.encode(jsonHelper.envJson(configName).toString())
+        def response = client.dslFile dslPath(plugin, 'environment'), client.encode(jsonHelper.confJson(configName).toString())
         client.log.info("Environment for project: ${response.json.project.projectName} is created successfully.")
         return response
     }
@@ -61,7 +61,7 @@ class KubernetesClient extends CommanderClient {
                       volumes = [source: null, target: null ],
                       canaryDeploy,
                       ServiceType serviceType = ServiceType.LOAD_BALANCER, namespace = "default",
-                      deploymentTimeout = 120) {
+                      deploymentTimeout = timeout) {
         message("service creation")
         def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
         def response = client.dslFile dslPath(plugin, 'service'), client.encode(json.toString())
@@ -75,7 +75,7 @@ class KubernetesClient extends CommanderClient {
                           canaryDeploy,
                           ServiceType serviceType = ServiceType.LOAD_BALANCER,
                           namespace = "default",
-                          deploymentTimeout = 120) {
+                          deploymentTimeout = timeout) {
         message("application creation")
         def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
         def response = client.dslFile dslPath(plugin, 'application'), client.encode(json.toString())
@@ -89,7 +89,7 @@ class KubernetesClient extends CommanderClient {
                       canaryDeploy,
                       ServiceType serviceType = ServiceType.LOAD_BALANCER,
                       namespace = "default",
-                      deploymentTimeout = 120) {
+                      deploymentTimeout = timeout) {
         message("service update")
         def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
         def response = client.dslFile dslPath(plugin, 'service'), client.encode(json.toString())
@@ -103,7 +103,7 @@ class KubernetesClient extends CommanderClient {
                           canaryDeploy,
                           ServiceType serviceType = ServiceType.LOAD_BALANCER,
                           namespace = "default",
-                          deploymentTimeout = 120) {
+                          deploymentTimeout = timeout) {
         message("service update")
         def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
         def response = client.dslFile dslPath(plugin, 'application'), client.encode(json.toString())

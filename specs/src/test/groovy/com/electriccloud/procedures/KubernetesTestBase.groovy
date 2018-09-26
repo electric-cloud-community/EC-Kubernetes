@@ -23,7 +23,6 @@ import static org.awaitility.Awaitility.setDefaultTimeout
 @Listeners(TestListener.class)
 class KubernetesTestBase implements TopologyMatcher {
 
-    def pluginPath = "./src/main/resources"
     def getHost = { hostValue -> new URL(hostValue).host }
     def req = given().relaxedHTTPSValidation().when()
     def volumes = [ source: '[{"name": "html-content","hostPath": "/var/html"}]',

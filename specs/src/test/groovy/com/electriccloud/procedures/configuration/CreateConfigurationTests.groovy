@@ -29,8 +29,8 @@ class CreateConfigurationTests extends KubernetesTestBase {
     @Test(dataProvider = "clusterVersions")
     @TmsLinks(value = [@TmsLink("324777"), @TmsLink("324778"), @TmsLink("324779"), @TmsLink("324780"), @TmsLink("324781"), @TmsLink("324782")])
     @Story("Create Configuration for all cluster versions")
-    @Description(useJavaDoc = true)
-    void createConfigurationForDifferentVersions(version, message){
+    @Description("Create Configuration for all cluster versions")
+    void createConfigurationForDifferentVersions(version){
         def job = k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, version)
         def logs = k8sClient.client.getJobLogs(job.json.jobId)
         def jobStatus = k8sClient.client.getJobStatus(job.json.jobId).json
