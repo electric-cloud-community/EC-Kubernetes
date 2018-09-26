@@ -127,7 +127,6 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @TmsLink("")
     @Story("Deploy service using NodePort service type")
     @Description("Deploy Project-level Microservice with NodePort service type")
-    @Description(useJavaDoc = true)
     void deployMicroserviceWithNodePort(){
         k8sClient.createService(2, volumes, false, ServiceType.NODE_PORT)
         def jobId = k8sClient.deployService(projectName, serviceName)

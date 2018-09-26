@@ -3,6 +3,7 @@ package com.electriccloud.procedures.configuration
 import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import static com.electriccloud.helpers.enums.LogLevels.*
@@ -10,6 +11,12 @@ import static com.electriccloud.helpers.enums.ServiceTypes.*
 
 @Feature("Configuration")
 class CreateConfigurationTests extends KubernetesTestBase {
+
+
+    @BeforeClass
+    void setUpTests(){
+        k8sClient.deleteConfiguration(configName)
+    }
 
 
     @AfterMethod
