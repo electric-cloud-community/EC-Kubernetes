@@ -39,7 +39,11 @@ class KubernetesClient extends CommanderClient {
     }
 
     @Step("Edit configuration")
-    def editConfiguration(clusterEndpoint, username, secretToken, clusterVersion, testConnection = true, testConnectionUri = "", LogLevel logLevel = LogLevel.DEBUG) {
+    def editConfiguration(clusterEndpoint,
+                          username, secretToken, clusterVersion,
+                          testConnection = true,
+                          testConnectionUri = "",
+                          LogLevel logLevel = LogLevel.DEBUG) {
         message("edit kubernetes config")
         def json = jsonHelper.editConfigJson(clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'editConfig'), client.encode(json.toString()))

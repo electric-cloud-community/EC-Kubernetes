@@ -45,7 +45,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Story("Deploy Microservcice")
     @Description("Deploy Application-level Microservice")
     void deployApplicationLevelMicroservice(){
-        def jobId = k8sClient.deployApplication(projectName, applicationName)
+        def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -85,7 +85,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     void updateApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
         k8sClient.updateApplication(2, volumes, false, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployApplication(projectName, applicationName)
+        def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -127,7 +127,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     void scaleApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
         k8sClient.updateApplication(3, volumes, false, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployApplication(projectName, applicationName)
+        def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -169,7 +169,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     void preformCanaryDeploymentForApplicationLevelMicroservice() {
         k8sClient.deployApplication(projectName, applicationName)
         k8sClient.updateApplication(2, volumes, true, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployApplication(projectName, applicationName)
+        def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -216,7 +216,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Undeploy Application-level Microservice")
     void undeployApplication() {
         k8sClient.deployApplication(projectName, applicationName)
-        def jobId = k8sClient.undeployApplication(projectName, applicationName)
+        def jobId = k8sClient.undeployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         await("Pods size to be: 0").until {
             k8sApi.getPods().json.items.size() == 0
@@ -233,10 +233,9 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     }
 
 
-    /** Undeploy Application-level Microservice after Canary Deploy */
     @Test
     @Story('Undeploy Application after Canary deployment')
-    @Description(useJavaDoc = true)
+    @Description("Undeploy Application-level Microservice after Canary Deploy")
     void undeployApplicationAfterCanaryDeployment() {
         k8sClient.deployApplication(projectName, applicationName)
         k8sClient.updateApplication(2, volumes, true, ServiceType.LOAD_BALANCER)

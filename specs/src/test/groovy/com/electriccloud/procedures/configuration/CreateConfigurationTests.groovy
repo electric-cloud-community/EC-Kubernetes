@@ -8,6 +8,8 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 import static com.electriccloud.helpers.enums.LogLevels.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static org.awaitility.Awaitility.*;
+
 
 @Feature("Configuration")
 class CreateConfigurationTests extends KubernetesTestBase {
@@ -27,7 +29,11 @@ class CreateConfigurationTests extends KubernetesTestBase {
 
 
     @Test(dataProvider = "clusterVersions")
-    @TmsLinks(value = [@TmsLink("324777"), @TmsLink("324778"), @TmsLink("324779"), @TmsLink("324780"), @TmsLink("324781"), @TmsLink("324782")])
+    @TmsLinks(value = [@TmsLink("324777"),
+            @TmsLink("324778"),
+            @TmsLink("324779"),
+            @TmsLink("324780"),
+            @TmsLink("324781"), @TmsLink("324782")])
     @Story("Create Configuration for all cluster versions")
     @Description("Create Configuration for all cluster versions")
     void createConfigurationForDifferentVersions(version){
@@ -109,6 +115,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
             k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion)
         } catch (e){
             def jobId = e.cause.message
+            await().until { k8sClient.client.getJobStatus(jobId).json.status == "completed" }
             def jobStatus = k8sClient.client.getJobStatus(jobId).json
             String logs = k8sClient.client.getJobLogs(jobId)
             assert logs.contains("A configuration named '${configName}' already exists.")
@@ -130,6 +137,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
             k8sClient.createConfiguration(cinfigName, endpoint, username, token, version, testConnection, testConnectionUri, logLevel)
         } catch (e){
             def jobId = e.cause.message
+            await().until { k8sClient.client.getJobStatus(jobId).json.status == "completed" }
             jobStatus = k8sClient.client.getJobStatus(jobId).json
             logs = k8sClient.client.getJobLogs(jobId)
         } finally {

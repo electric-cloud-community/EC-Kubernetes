@@ -48,8 +48,8 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Story("Deploy Microservcice")
     @Description("Deploy Project-Level Microservice")
     void deployProjectLevelMicroservice() {
-        def jobId = k8sClient.deployService(projectName, serviceName)
-        def deploymentLog = acsClient.client.getJobLogs(jobId)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
+        def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
@@ -88,7 +88,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     void updateProjectLevelMicroservice(){
         k8sClient.deployService(projectName, serviceName)
         k8sClient.updateService(2, volumes, false, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -128,7 +128,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     void scaleProjectLevelMicroservice(){
         k8sClient.deployService(projectName, serviceName)
         k8sClient.updateService(3, volumes, false, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -168,7 +168,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     void preformCanaryDeploymentForProjectLevelMicroservice() {
         k8sClient.deployService(projectName, serviceName)
         k8sClient.updateService(2, volumes, true, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -215,7 +215,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Description("Undeploy Project-level Microservice")
     void undeployMicroservice() {
         k8sClient.deployService(projectName, serviceName)
-        def jobId = k8sClient.undeployService(projectName, serviceName)
+        def jobId = k8sClient.undeployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         await("Deployment size to be: 0").until {
             k8sApi.getPods().json.items.size() == 0
@@ -239,7 +239,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
         k8sClient.deployService(projectName, serviceName)
         k8sClient.updateService(2, volumes, true, ServiceType.LOAD_BALANCER)
         k8sClient.deployService(projectName, serviceName)
-        def jobId = k8sClient.undeployService(projectName, serviceName)
+        def jobId = k8sClient.undeployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         await("Pods size to be: 2").until {
             k8sApi.getPods().json.items.size() == 2

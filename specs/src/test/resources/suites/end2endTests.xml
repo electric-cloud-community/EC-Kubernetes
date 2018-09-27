@@ -5,7 +5,7 @@
 
 <suite name = "End-2-End tests" parallel="false" thread-count="3">
 
-    <!--  Need to implement the downloading of the latest version
+     <!-- Need to implement the downloading of the latest version
      <test name="Installation Tests">
          <classes>
              <class name="com.electriccloud.procedures.installation.InstallationTests"/>

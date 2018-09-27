@@ -20,7 +20,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, "/apis", LogLevel.DEBUG)
     }
 
     @BeforeMethod
@@ -44,14 +44,14 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Description(" Deploy Project-level Microservice with LoadBalancer service type")
     void deployMicroserviceWithLoadBalancer(){
         k8sClient.createService(2, volumes, false, ServiceType.LOAD_BALANCER)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
         def endpoints = [
                 req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81"),
-                req.get("${pods.first().status.hostIP}:${services[1].spec.ports[0].nodePort}")
+                req.get("$nodeEndpoint:${services[1].spec.ports[0].nodePort}")
         ]
         assert services.size() == 2
         assert pods.size() == 2
@@ -91,7 +91,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Description("Deploy Project-level Microservice with ClusterIP service type")
     void deployMicroserviceWithClusterIP(){
         k8sClient.createService(2, volumes, false, ServiceType.CLUSTER_IP)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
@@ -129,12 +129,12 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Description("Deploy Project-level Microservice with NodePort service type")
     void deployMicroserviceWithNodePort(){
         k8sClient.createService(2, volumes, false, ServiceType.NODE_PORT)
-        def jobId = k8sClient.deployService(projectName, serviceName)
+        def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
-        def nodeEnd = given().get("${nodeEndpoint}:${services[1].spec.ports[0].nodePort}")
+        def nodeEnd = req.get("${nodeEndpoint}:${services[1].spec.ports[0].nodePort}")
         assert services.size() == 2
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName

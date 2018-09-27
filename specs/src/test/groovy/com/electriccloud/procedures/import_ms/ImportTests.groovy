@@ -17,6 +17,7 @@ class ImportTests extends KubernetesTestBase {
 
     @BeforeClass
     void setUpTests() {
+        k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion, true, 'apis', LogLevel.DEBUG)
         k8sClient.createEnvironment(configName)
     }
@@ -124,7 +125,6 @@ class ImportTests extends KubernetesTestBase {
         assert apps.size() == 1
         assert app.applicationName == applicationName
         assert app.containerCount == "1"
-        assert app.envTemplateTierMapCount == '1'
         assert app.projectName == projectName
         assert container.containerName == containerName
         assert container.imageName == "nginx"

@@ -38,6 +38,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
     @AfterClass
     void tearDownTests(){
+        k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion)
         k8sClient.cleanUpCluster(configName)
         k8sClient.client.deleteProject(projectName)
     }
@@ -58,7 +59,7 @@ class DiscoveryTests extends KubernetesTestBase {
                 'default',
                 null,
                 null,
-                false, null)
+                false, null).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
         def services = k8sClient.client.getServices(projectName).json.service
         def service = k8sClient.client.getService(projectName, serviceName).json.service
@@ -91,16 +92,16 @@ class DiscoveryTests extends KubernetesTestBase {
     void discoverProjectLevelMicroserviceWithEnvironmentGeneration() {
         def jobId = k8sClient.discoverService(projectName,
                 environmentProjectName,
-                'kubernetes-service-env',
+                'my-environment',
                 clusterName,
                 'default',
                 clusterEndpoint,
                 clusterToken,
-                false, null)
+                false, null).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
         def services = k8sClient.client.getServices(projectName).json.service
         def service = k8sClient.client.getService(projectName, serviceName).json.service
-        def environment = k8sClient.client.getEnvironment(projectName, 'kubernetes-service-env').json.environment
+        def environment = k8sClient.client.getEnvironment(projectName, 'my-environment').json.environment
         def container = k8sClient.client.getServiceContainer(projectName, serviceName, containerName).json.container
         def mappings = k8sClient.getServiceMappings(projectName, serviceName)
         def mapping = mappings[0].serviceClusterMappings.serviceClusterMapping[0]
@@ -117,7 +118,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert container.volumeMount == "[{\"name\":\"html-content\",\"mountPath\":\"/usr/share/nginx/html\"}]"
         assert container.environmentVariable.first().environmentVariableName == "NGINX_PORT"
         assert container.environmentVariable.first().value == "8080"
-        assert environment.environmentName == 'kubernetes-service-env'
+        assert environment.environmentName == 'my-environment'
         assert environment.environmentEnabled == '1'
         assert environment.projectName == projectName
         assert mappings.size() == 1
@@ -140,20 +141,19 @@ class DiscoveryTests extends KubernetesTestBase {
                 'default',
                 clusterEndpoint,
                 clusterToken,
-                false, null)
+                false, null).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
-        def applications = k8sClient.client.getApplications(projectName).json.application
-        def application = k8sClient.client.getApplication(projectName, applicationName).json.application
-        def environment = k8sClient.client.getEnvironment('MyProject', environmentName).json.environment
-        def container = k8sClient.client.getApplicationContainer(projectName, applicationName, serviceName, containerName).json.container
+        def service = k8sClient.client.getService(projectName, serviceName).json.service
+        def environment = k8sClient.client.getEnvironment("MyProject", environmentName).json.environment
+        def container = k8sClient.client.getServiceContainer(projectName, serviceName, containerName).json.container
         def mappings = k8sClient.getServiceMappings(projectName, serviceName)
         def mapping = mappings[0].serviceClusterMappings.serviceClusterMapping[0]
-        assert applications.size() == 1
-        assert application.applicationName == applicationName
-        assert application.containerCount == '1'
-        assert application.description == 'Created by EF Discovery'
-        assert application.projectName == projectName
-        assert application.tiermapCount == '1'
+        assert service.serviceName == serviceName
+        assert service.containerCount == '1'
+        assert service.environmentMapCount == '1'
+        assert service.defaultCapacity == '2'
+        assert service.projectName == projectName
+        assert service.volume == "[{\"name\":\"html-content\",\"hostPath\":\"/var/html\"}]"
         assert container.containerName == containerName
         assert container.imageName == "tomaskral/nonroot-nginx"
         assert container.imageVersion == "latest"
@@ -188,7 +188,7 @@ class DiscoveryTests extends KubernetesTestBase {
                 'default',
                 null,
                 null,
-                true, applicationName)
+                true, applicationName).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
         def applications = k8sClient.client.getApplications(projectName).json.application
         def application = k8sClient.client.getApplication(projectName, applicationName).json.application
@@ -220,18 +220,18 @@ class DiscoveryTests extends KubernetesTestBase {
     @TmsLink("")
     @Story("Application discovery")
     @Description("Discover Application-level Microservice with environment generation")
-    void discoverApplicationLevelMicroserviceAndEnvironmentGeneration() {
+    void discoverApplicationLevelMicroserviceWithEnvironmentGeneration() {
         def jobId = k8sClient.discoverService(projectName, projectName,
-                'kubernetes-application-env',
+                'my-environment',
                 clusterName,
                 'default',
                 clusterEndpoint,
                 clusterToken,
-                true, applicationName)
+                true, applicationName).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
         def applications = k8sClient.client.getApplications(projectName).json.application
         def application = k8sClient.client.getApplication(projectName, applicationName).json.application
-        def environment = k8sClient.client.getEnvironment(projectName, 'kubernetes-application-env').json.environment
+        def environment = k8sClient.client.getEnvironment(projectName, 'my-environment').json.environment
         def container = k8sClient.client.getApplicationContainer(projectName, applicationName, serviceName, containerName).json.container
         def mappings = k8sClient.getAppMappings(projectName, applicationName)
         def mapping = mappings[0].serviceClusterMappings.serviceClusterMapping[0]
@@ -247,7 +247,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert container.volumeMount == "[{\"name\":\"html-content\",\"mountPath\":\"/usr/share/nginx/html\"}]"
         assert container.environmentVariable.first().environmentVariableName == "NGINX_PORT"
         assert container.environmentVariable.first().value == "8080"
-        assert environment.environmentName == 'kubernetes-application-env'
+        assert environment.environmentName == 'my-environment'
         assert environment.environmentEnabled == '1'
         assert environment.projectName == projectName
         assert mappings.size() == 1
@@ -270,15 +270,13 @@ class DiscoveryTests extends KubernetesTestBase {
                 'default',
                 clusterEndpoint,
                 clusterToken,
-                true, applicationName)
+                true, applicationName).json.jobId
         def jobLog = k8sClient.client.getJobLogs(jobId)
-        def applications = k8sClient.client.getApplications(projectName).json.application
         def application = k8sClient.client.getApplication(projectName, applicationName).json.application
         def environment = k8sClient.client.getEnvironment('MyProject', environmentName).json.environment
         def container = k8sClient.client.getApplicationContainer(projectName, applicationName, serviceName, containerName).json.container
-        def mappings = k8sClient.getServiceMappings(projectName, serviceName)
+        def mappings = k8sClient.getAppMappings(projectName, applicationName)
         def mapping = mappings[0].serviceClusterMappings.serviceClusterMapping[0]
-        assert applications.size() == 1
         assert application.applicationName == applicationName
         assert application.containerCount == '1'
         assert application.description == 'Created by EF Discovery'
@@ -382,17 +380,17 @@ class DiscoveryTests extends KubernetesTestBase {
     @Story("Invalid Microservice discovery")
     @Description("Unable to discover Project-level Microservice with invalid Namespace ")
     void unableToDiscoverMicroserviceWithInvalidNamespace(){
-        def resp =  k8sClient.discoverService(projectName,
+        def jobId = k8sClient.discoverService(projectName,
                 environmentProjectName,
                 environmentName,
                 clusterName,
-                'default',
+                'my-namespace',
                 clusterEndpoint,
                 clusterToken,
-                false, null).json
-        await('Job to be completed').until { k8sClient.client.getJobStatus(resp.jobId).json.status == "completed" }
-        def jobStatus = k8sClient.client.getJobStatus(resp.jobId).json
-        def jobLog = k8sClient.client.getJobLogs(resp.jobId)
+                false, null).json.jobId
+        await('Job to be completed').until { k8sClient.client.getJobStatus(jobId).json.status == "completed" }
+        def jobStatus = k8sClient.client.getJobStatus(jobId).json
+        def jobLog = k8sClient.client.getJobLogs(jobId)
         assert jobStatus.outcome == "warning"
         assert jobStatus.status == "completed"
         assert jobLog.contains("No services found on the cluster ${clusterEndpoint}")
@@ -460,6 +458,7 @@ class DiscoveryTests extends KubernetesTestBase {
     }
 
 
+
     @DataProvider(name = 'invalidDiscoveryData')
     def getDiscoveryData(){
         def data = [
@@ -472,6 +471,7 @@ class DiscoveryTests extends KubernetesTestBase {
         ]
         return data as Object[][]
     }
+
 
 
 

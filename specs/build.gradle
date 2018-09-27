@@ -20,8 +20,8 @@ allure {
     autoconfigure = true
     aspectjweaver = true
     aspectjVersion = '1.8.10'
-    //resultsDir = file("${rootDir}/build/allure-results")
-    //reportDir = file("${rootDir}/allure-report")
+    resultsDir = file("${rootDir}/build/allure-results")
+    reportDir = file("${rootDir}/build/reports/allure-report")
     useTestNG {
         version = "${allureVersion}"
     }
@@ -110,5 +110,13 @@ test {
         suites "${suiteDir}/end2endTests.xml"
     }
     testLogging.showStandardStreams = true
+
+    def destination = findProperty('reportDestination') ?: "${rootDir}/build/reports"
+    if (destination) {
+        reports {
+            html.destination = "$destination/allure-report"
+        }
+    }
+
 }
 test.finalizedBy allureAggregatedReport
