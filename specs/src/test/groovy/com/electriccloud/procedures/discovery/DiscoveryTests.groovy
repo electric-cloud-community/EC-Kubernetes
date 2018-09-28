@@ -46,7 +46,6 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-
     @Test(testName = "Discover Project-level Microservice")
     @TmsLink("")
     @Story("Microservice discovery")
