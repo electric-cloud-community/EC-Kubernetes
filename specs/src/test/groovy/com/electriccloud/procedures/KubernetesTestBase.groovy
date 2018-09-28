@@ -24,7 +24,7 @@ import static org.awaitility.Awaitility.setDefaultTimeout
 class KubernetesTestBase implements TopologyMatcher {
 
     def getHost = { hostValue -> new URL(hostValue).host }
-    def req = given().relaxedHTTPSValidation().when()
+    def req = given().relaxedHTTPSValidation().log().all().when()
     def volumes = [ source: '[{"name": "html-content","hostPath": "/var/html"}]',
                     target: '[{"name": "html-content","mountPath": "/usr/share/nginx/html"}]' ]
 
