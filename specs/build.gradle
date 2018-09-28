@@ -111,10 +111,10 @@ test {
     }
     testLogging.showStandardStreams = true
 
-    def destination = findProperty('reportDestination') ?: "${rootDir}/build/reports"
+    def destination = findProperty('reportDestination') ?: "${rootDir}/build/reports/allure-report"
     if (destination) {
         reports {
-            html.destination = "$destination/allure-report"
+            html.destination = "$destination"
         }
     }
 
