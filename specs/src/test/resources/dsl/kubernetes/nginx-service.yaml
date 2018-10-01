@@ -1,0 +1,64 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx-service
+  namespace: default
+  selfLink: /api/v1/namespaces/default/services/nginx-service
+  labels:
+    ec-svc: nginx-service
+    ec-track: stable
+spec:
+  ports:
+  - name: servicehttpnginx-container123456789
+    protocol: TCP
+    port: 81
+    targetPort: http
+    nodePort: 32375
+  selector:
+    ec-svc: nginx-service
+  type: LoadBalancer
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: nginx-service
+  namespace: default
+  selfLink: /apis/extensions/v1beta1/namespaces/default/deployments/nginx-service
+  generation: 1
+  labels:
+    ec-svc: nginx-service
+    ec-track: stable
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      ec-svc: nginx-service
+  template:
+    metadata:
+      name: nginx-service
+      labels:
+        ec-svc: nginx-service
+        ec-track: stable
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:stable
+        ports:
+        - protocol: TCP
+          containerPort: 80
+          name: http
+        resources:
+          limits:
+            cpu: 2
+            memory: 255M
+          requests:
+            cpu: 0.1
+            memory: 128M
+        volumeMounts:
+        - name: html
+          mountPath: /usr/share/nginx/html
+      volumes:
+      - name: html
+        hostPath:
+          path: /var/html
+          type: Directory
