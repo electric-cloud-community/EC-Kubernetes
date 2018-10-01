@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+
+
+<suite name = "End-2-End tests" parallel="false" thread-count="3">
+
+     <!-- Need to implement the downloading of the latest version
+     <test name="Installation Tests">
+         <classes>
+             <class name="com.electriccloud.procedures.installation.InstallationTests"/>
+         </classes>
+     </test> -->
+    <test name="Configuration Tests">
+        <classes>
+            <class name="com.electriccloud.procedures.configuration.CreateConfigurationTests"/>
+            <class name="com.electriccloud.procedures.configuration.ProvisionTests"/>
+        </classes>
+    </test>
+    <test name="Deployment Tests">
+        <classes>
+            <class name="com.electriccloud.procedures.deployment.MicroserviceDeploymentTests"/>
+            <class name="com.electriccloud.procedures.deployment.ApplicationDeploymentTests"/>
+            <class name="com.electriccloud.procedures.deployment.ServiceTypeDeploymentTests"/>
+        </classes>
+    </test>
+    <test name="Import Tests">
+        <classes>
+            <class name="com.electriccloud.procedures.import_ms.ImportTests"/>
+        </classes>
+    </test>
+    <test name="Discovery Tests">
+        <classes>
+            <class name="com.electriccloud.procedures.discovery.DiscoveryTests"/>
+        </classes>
+    </test>
+    <test name="Topology Tests">
+        <classes>
+            <class name="com.electriccloud.procedures.topology.DoActionOnRealtimeCluster"/>
+            <class name="com.electriccloud.procedures.topology.GetDeployTopology"/>
+            <class name="com.electriccloud.procedures.topology.GetRealtimeClusterDetails"/>
+            <class name="com.electriccloud.procedures.topology.GetRealtimeClusterTopology"/>
+            <class name="com.electriccloud.procedures.topology.GetRealtimeClusterTopologyValidation"/>
+        </classes>
+    </test>
+
+</suite>
