@@ -46,8 +46,18 @@ sub main() {
     my $pluginName = eval {
         $ec->getProperty('additionalPluginName')->findvalue('//value')->string_value
     };
+    my $projectName;
+    if ($pluginName) {
+        # This is a new one
+        $projectName = $ec->getPlugin($pluginName)->findvalue('//projectName')->string_value;
+    }
 
-    retrieveDependencies($ec, '$[/myProject/projectName]');
+    my @projects = ();
+    push @projects, '$[/myProject/projectName]';
+    if ($projectName) {
+        push @projects, $projectName;
+    }
+    retrieveDependencies($ec, @projects);
 
     # This part remains as is
     if ($::gAdditionalArtifactVersion ne '') {
@@ -57,21 +67,17 @@ sub main() {
         }
     }
 
-    if ($pluginName) {
-        # This is a new one
-        my $projectName = $ec->getPlugin($pluginName)->findvalue('//projectName')->string_value;
-        retrieveDependencies($ec, $projectName);
-    }
+
 }
 
 
 sub retrieveDependencies {
-    my ($ec, $projectName) = @_;
+    my ($ec, @projects) = @_;
 
     my $dep = EC::DependencyManager->new($ec);
     $dep->grabResource();
     eval {
-        $dep->sendDependencies($projectName);
+        $dep->sendDependencies(@projects);
     };
     if ($@) {
         my $err = $@;
@@ -225,22 +231,26 @@ sub getPluginsFolder {
 }
 
 sub sendDependencies {
-    my ($self, $projectName) = @_;
+    my ($self, @projects) = @_;
 
     my $serverResource = $self->getLocalResource();
     my $currentResource = '$[/myResource/resourceName]';
     if ($serverResource eq $currentResource) {
-        return $self->copyDependencies($projectName);
+        for my $projectName (@projects) {
+            $self->copyDependencies($projectName);
+        }
+        return;
     }
 
     my $grapeFolder = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape');
     my $windows = $^O =~ /win32/;
 
     my $channel = int rand 9999999;
-    my $pluginFolder = eval {
-        my $pluginsFolder = $self->getPluginsFolder();
-        $pluginsFolder . '/' . $projectName;
-    };
+
+    my $pluginsFolder = $self->getPluginsFolder;
+    my @folders = map {
+        $pluginsFolder . '/' . $_;
+    } @projects;
 
     my $sendStep = q{
 use strict;
@@ -249,26 +259,28 @@ use ElectricCommander;
 use JSON qw(encode_json);
 use Data::Dumper;
 
-my $pluginFolder = '#pluginFolder#';
-my $delimeter = '#delimeter#';
+my $pluginFolders = '#pluginFolders#';
+my @folders = split(';', $pluginFolders);
 
 my $ec = ElectricCommander->new;
-
-my $folder = File::Spec->catfile($pluginFolder, 'lib');
-unless(-d $folder) {
-    handleError("Folder $folder does not exist");
-}
-
-my @files = scanFiles($folder);
-
-my %mapping = ();
 my $channel = '#channel#';
 print "Channel: $channel\n";
 
-for my $file (@files) {
-    my $relPath = File::Spec->abs2rel($file, $folder);
-    my $destPath = "grape/$relPath";
-    $mapping{$file} = $destPath;
+my %mapping = ();
+for my $folder (@folders) {
+    $folder = File::Spec->catfile($folder, 'lib');
+    print "$folder\n";
+    unless(-d $folder) {
+        handleError("Folder $folder does not exist");
+    }
+    my @files = scanFiles($folder);
+
+
+    for my $file (@files) {
+        my $relPath = File::Spec->abs2rel($file, $folder);
+        my $destPath = "grape/$relPath";
+        $mapping{$file} = $destPath;
+    }
 }
 
 my $response = $ec->putFiles($ENV{COMMANDER_JOBID}, \%mapping, {channel => $channel});
@@ -281,8 +293,6 @@ sub handleError {
     $ec->setProperty('/myJobStep/summary', $error);
     exit 1;
 }
-
-
 
 sub scanFiles {
     my ($dir) = @_;
@@ -305,7 +315,8 @@ sub scanFiles {
 
     };
 
-    $sendStep =~ s/\#pluginFolder\#/$pluginFolder/;
+    my $pluginFolders = join(';', @folders);
+    $sendStep =~ s/\#pluginFolders\#/$pluginFolders/;
     $sendStep =~ s/\#channel\#/$channel/;
 
     my $xpath = $self->ec->createJobStep({
