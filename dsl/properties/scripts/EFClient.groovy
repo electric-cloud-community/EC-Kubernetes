@@ -6,7 +6,7 @@ public class EFClient extends BaseClient {
 
     def getServerUrl() {
         def commanderServer = System.getenv('COMMANDER_SERVER')
-        def secure = Integer.getInteger("COMMANDER_SECURE", 0).intValue()
+        def secure = Integer.getInteger("COMMANDER_SECURE", 1).intValue()
         def protocol = secure ? "https" : "http"
         def commanderPort = secure ? System.getenv("COMMANDER_HTTPS_PORT") : System.getenv("COMMANDER_PORT")
         def url = "$protocol://$commanderServer:$commanderPort"
