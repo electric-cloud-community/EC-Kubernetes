@@ -45,6 +45,19 @@ sub upgradeAction { shift->{upgradeAction} }
 sub pluginName { shift->{pluginName} }
 sub otherPluginName { shift->{otherPluginName} }
 
+sub removeArtifact {
+    my ($self, $artifactName, $artifactVersion, $fromDirectory) = @_;
+
+    $artifactName or die 'Artifact name should be provided!';
+    $artifactVersion or die 'Artifact version should be provided!';
+    $fromDirectory or die 'fromDirectory should be provided!';
+
+    # This is here because we cannot do publishArtifactVersion in dsl today
+    # delete artifact if it exists first
+    my $commander = $self->commander;
+    $commander->deleteArtifact("com.electriccloud:$artifactName");
+}
+
 sub publishArtifact {
     my ($self, $artifactName, $artifactVersion, $fromDirectory) = @_;
 
@@ -194,7 +207,7 @@ sub promotePlugin {
     if ( !$errorMessage ) {
         if ($dependencies) {
             for my $dependency (@$dependencies) {
-                $logfile .= $self->publishArtifact($dependency->{artifactName}, $dependency->{artifactVersion}, $dependency->{fromDirectory});
+                $logfile .= $self->removeArtifact($dependency->{artifactName}, $dependency->{artifactVersion}, $dependency->{fromDirectory});
             }
         }
     }
