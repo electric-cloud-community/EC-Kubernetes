@@ -39,3 +39,4 @@
   -  Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'
   -  Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService
   -  "Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'"
+  - Default port for ElectricFlow client has been changed from insecure (8000 by default) to secure (8443 by default). If COMMANDER_SECURE property is not populated, secure port and HTTPS will be used.
