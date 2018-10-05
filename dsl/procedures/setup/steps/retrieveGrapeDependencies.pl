@@ -214,9 +214,18 @@ sub copyDependencies {
 
     my $source = $self->getPluginsFolder() . "/$projectName/lib";
     my $dest = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape');
+    unless(-d $source) {
+        die "Folder $source does not exist, please try to reinstall the plugin."
+    }
+
+    unless(-d $dest) {
+        mkdir($dest);
+    }
+
     unless( -w $dest) {
         die "$dest is not writable. Please allow agent user to write to this directory."
     }
+
     my $filesCopied = rcopy($source, $dest);
     if ($filesCopied == 0) {
         die "Copy failed, no files were copied from $source to $dest, please check permissions for $dest";
@@ -359,6 +368,11 @@ sub scanFiles {
             die "The file $dest was not received\n";
         }
     }
+
+    unless(-d $grapeFolder) {
+        mkdir $grapeFolder;
+    }
+
     unless( -w $grapeFolder) {
         die "$grapeFolder is not writable. Please allow agent user to write to this directory."
     }
