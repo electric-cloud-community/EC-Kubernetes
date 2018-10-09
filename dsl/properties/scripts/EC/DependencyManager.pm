@@ -6,6 +6,8 @@ use File::Spec;
 use JSON qw(decode_json);
 use File::Copy::Recursive qw(rcopy rmove);
 
+our $VERSION = '1.0.0';
+
 sub new {
     my ($class, $ec) = @_;
 
