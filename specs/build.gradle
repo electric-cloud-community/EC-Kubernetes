@@ -120,28 +120,6 @@ task allureConfiguration(type: Copy){
 
 
 
-
-
-test {
-    systemProperty 'com.athaydes.spockframework.report.showCodeBlocks', true
-
-    def server = findProperty('server') ?: findProperty('COMMANDER_SERVER') ?: findProperty('commanderServer') ?: 'localhost'
-    systemProperties['COMMANDER_SERVER'] = server
-    systemProperties["COMMANDER_SECURE"] = '1'
-
-    testLogging {
-        showStandardStreams = true
-    }
-    outputs.upToDateWhen { false }
-    systemProperties['EC_SPECS_CLI'] = true
-
-    def destination = findProperty('reportDestination') ?: "spec-report"
-    if (destination) {
-        systemProperty 'com.athaydes.spockframework.report.outputDir', destination
-    }
-}
-
-
 task systemTest(type: Test){
 
     systemProperty "file.encoding", "utf-8"
@@ -163,5 +141,28 @@ task systemTest(type: Test){
 
 }
 systemTest.finalizedBy allureAggregatedReport
+
+
+
+test {
+    systemProperty 'com.athaydes.spockframework.report.showCodeBlocks', true
+
+    def server = findProperty('server') ?: findProperty('COMMANDER_SERVER') ?: findProperty('commanderServer') ?: 'localhost'
+    systemProperties['COMMANDER_SERVER'] = server
+    systemProperties["COMMANDER_SECURE"] = '1'
+
+    testLogging {
+        showStandardStreams = true
+    }
+    outputs.upToDateWhen { false }
+    systemProperties['EC_SPECS_CLI'] = true
+
+    def destination = findProperty('reportDestination') ?: "spec-report"
+    if (destination) {
+        systemProperty 'com.athaydes.spockframework.report.outputDir', destination
+    }
+}.finalizedBy systemTest
+
+
 
 

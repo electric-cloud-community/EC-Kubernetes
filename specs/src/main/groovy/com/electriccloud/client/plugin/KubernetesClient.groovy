@@ -64,7 +64,7 @@ class KubernetesClient extends CommanderClient {
     def createService(replicaNum,
                       volumes = [source: null, target: null ],
                       canaryDeploy,
-                      ServiceType serviceType = ServiceType.LOAD_BALANCER,
+                      serviceType = ServiceType.LOAD_BALANCER,
                       namespace = "default",
                       deploymentTimeout = timeout) {
         message("service creation")
@@ -78,7 +78,7 @@ class KubernetesClient extends CommanderClient {
     def createApplication(replicaNum,
                           volumes = [source: null, target: null ],
                           canaryDeploy,
-                          ServiceType serviceType = ServiceType.LOAD_BALANCER,
+                          serviceType = ServiceType.LOAD_BALANCER,
                           namespace = "default",
                           deploymentTimeout = timeout) {
         message("application creation")
@@ -92,7 +92,7 @@ class KubernetesClient extends CommanderClient {
     def updateService(replicaNum,
                       volumes = [source: null, target: null ],
                       canaryDeploy,
-                      ServiceType serviceType = ServiceType.LOAD_BALANCER,
+                      serviceType = ServiceType.LOAD_BALANCER,
                       namespace = "default",
                       deploymentTimeout = timeout) {
         message("service update")
@@ -106,7 +106,7 @@ class KubernetesClient extends CommanderClient {
     def updateApplication(replicaNum,
                           volumes = [source: null, target: null ],
                           canaryDeploy,
-                          ServiceType serviceType = ServiceType.LOAD_BALANCER,
+                          serviceType = ServiceType.LOAD_BALANCER,
                           namespace = "default",
                           deploymentTimeout = timeout) {
         message("service update")

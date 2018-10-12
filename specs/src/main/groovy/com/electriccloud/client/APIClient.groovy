@@ -121,7 +121,7 @@ class APIClient extends HttpClient {
         return this
     }
 
-    def createCredential(projectName, Credential cred){
+    def createCredential(projectName, cred){
         message('creating credential')
         def uri = "projects/${projectName}/credentials?credentialName=${cred.credName}&description=${cred.description}&password=${cred.password}&passwordRecoveryAllowed=true&userName=${cred.userName}"
         request(baseUri, uri , POST, null, defaultHeaders(), null , false)
