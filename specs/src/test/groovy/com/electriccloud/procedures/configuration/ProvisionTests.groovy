@@ -59,7 +59,7 @@ class ProvisionTests extends KubernetesTestBase {
     @DataProvider(name = 'invalidData')
     def getProvisionData(){
         def data = [
-                ["test", environmentName, clusterName, "NoSuchProject: Project 'test' does not exist"],
+                ["test", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'test'"],
                 ["Default", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'Default'"],
                 [projectName, "test", clusterName, "NoSuchEnvironment: Environment 'test' does not exist in project '${projectName}'"],
                 [projectName, environmentName, "test-cluster", "NoSuchCluster: Cluster 'test-cluster' does not exist in environment '${environmentName}'"],

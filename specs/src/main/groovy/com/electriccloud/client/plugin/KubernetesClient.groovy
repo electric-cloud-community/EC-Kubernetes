@@ -64,7 +64,8 @@ class KubernetesClient extends CommanderClient {
     def createService(replicaNum,
                       volumes = [source: null, target: null ],
                       canaryDeploy,
-                      ServiceType serviceType = ServiceType.LOAD_BALANCER, namespace = "default",
+                      ServiceType serviceType = ServiceType.LOAD_BALANCER,
+                      namespace = "default",
                       deploymentTimeout = timeout) {
         message("service creation")
         def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())

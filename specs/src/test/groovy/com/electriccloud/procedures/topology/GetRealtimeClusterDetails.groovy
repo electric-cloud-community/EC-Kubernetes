@@ -5,6 +5,7 @@ import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 import static com.electriccloud.helpers.enums.LogLevels.*
@@ -20,6 +21,10 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
         setTopology()
     }
 
+    @BeforeMethod
+    void backendAuthorization(){
+        ectoolApi.ectoolLogin()
+    }
 
     @AfterClass(alwaysRun = true)
     void tearDown() {
@@ -224,7 +229,8 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
         assert topologyOutcome == "ectool error [NoSuchConfiguration]: No plugin configuration '$configName' " +
                 "found at 'ec_plugin_cfgs' for '$pluginName-$pluginVersion'"
 
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, 'qe', clusterToken, clusterVersion)
+
     }
 
 

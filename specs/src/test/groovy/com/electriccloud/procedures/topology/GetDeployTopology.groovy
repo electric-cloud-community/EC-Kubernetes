@@ -5,12 +5,19 @@ import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterMethod
+import org.testng.annotations.BeforeClass
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
 
 @Feature("Topology")
 class GetDeployTopology extends KubernetesTestBase {
 
+
+    @BeforeMethod
+    void backendAuthorization(){
+        ectoolApi.ectoolLogin()
+    }
 
     @AfterMethod
     void tearDownTests() {

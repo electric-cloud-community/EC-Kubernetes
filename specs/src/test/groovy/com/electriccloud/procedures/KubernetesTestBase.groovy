@@ -8,6 +8,8 @@ import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.helpers.enums.ServiceTypes
 import com.electriccloud.listeners.TestListener
 import io.qameta.allure.Story
+import io.restassured.filter.log.RequestLoggingFilter
+import io.restassured.filter.log.ResponseLoggingFilter
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Listeners
 
@@ -24,7 +26,11 @@ import static org.awaitility.Awaitility.setDefaultTimeout
 class KubernetesTestBase implements TopologyMatcher {
 
     def getHost = { hostValue -> new URL(hostValue).host }
-    def req = given().relaxedHTTPSValidation().log().all().when()
+
+    def req = given().relaxedHTTPSValidation()
+            .filters(new RequestLoggingFilter(), new ResponseLoggingFilter())
+            .when()
+
     def volumes = [ source: '[{"name": "html-content","hostPath": "/var/html"}]',
                     target: '[{"name": "html-content","mountPath": "/usr/share/nginx/html"}]' ]
 
@@ -44,10 +50,10 @@ class KubernetesTestBase implements TopologyMatcher {
         pluginName          = System.getenv("PLUGIN_NAME")
         pluginVersion       = System.getenv("PLUGIN_BUILD_VERSION")
         pluginLegacyVersion = System.getenv("PLUGIN_LEGACY_VERSION")
-        clusterEndpoint     = System.getenv("KUBE_CLUSTER_ENDPOINT")
-        nodeEndpoint        = System.getenv("KUBE_CKUSTER_NODE_ENDPOINT")
-        clusterToken        = System.getenv("KUBE_CLUSTER_TOKEN")
-        clusterVersion      = System.getenv("KUBE_CLUSTER_VERSION")
+        clusterEndpoint     = System.getenv("KUBE_ENDPOINT")
+        nodeEndpoint        = System.getenv("KUBE_NODE_ENDPOINT")
+        clusterToken        = System.getenv("KUBE_TOKEN")
+        clusterVersion      = System.getenv("KUBE_VERSION")
 
         ectoolApi = new EctoolApi(true)
         k8sClient = new KubernetesClient()

@@ -121,8 +121,6 @@ task allureConfiguration(type: Copy){
 
 
 
-// ****** TEST TASKS **********
-
 
 test {
     systemProperty 'com.athaydes.spockframework.report.showCodeBlocks', true
