@@ -4,6 +4,7 @@ import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
+import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 import static com.electriccloud.helpers.enums.LogLevels.*
 
@@ -17,6 +18,11 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
     void createAndDeployProjectLevelMicroservice() {
         createAndDeployService(false)
         setTopology()
+    }
+
+    @BeforeMethod
+    void backendAuthorization(){
+        ectoolApi.ectoolLogin()
     }
 
     @AfterClass(alwaysRun = true)

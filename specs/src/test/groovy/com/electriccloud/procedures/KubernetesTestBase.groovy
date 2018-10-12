@@ -8,6 +8,8 @@ import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.helpers.enums.ServiceTypes
 import com.electriccloud.listeners.TestListener
 import io.qameta.allure.Story
+import io.restassured.filter.log.RequestLoggingFilter
+import io.restassured.filter.log.ResponseLoggingFilter
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Listeners
 
@@ -24,7 +26,11 @@ import static org.awaitility.Awaitility.setDefaultTimeout
 class KubernetesTestBase implements TopologyMatcher {
 
     def getHost = { hostValue -> new URL(hostValue).host }
-    def req = given().relaxedHTTPSValidation().log().all().when()
+
+    def req = given().relaxedHTTPSValidation()
+            .filters(new RequestLoggingFilter(), new ResponseLoggingFilter())
+            .when()
+
     def volumes = [ source: '[{"name": "html-content","hostPath": "/var/html"}]',
                     target: '[{"name": "html-content","mountPath": "/usr/share/nginx/html"}]' ]
 

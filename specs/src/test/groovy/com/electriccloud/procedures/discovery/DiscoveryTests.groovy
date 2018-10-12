@@ -19,7 +19,7 @@ class DiscoveryTests extends KubernetesTestBase {
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion)
         k8sClient.createEnvironment(configName)
-        k8sClient.createService(2, volumes, getHost(clusterEndpoint))
+        k8sClient.createService(2, volumes, false)
         k8sClient.deployService(projectName, serviceName)
     }
 
@@ -38,6 +38,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
     @AfterClass
     void tearDownTests(){
+        k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion)
         k8sClient.cleanUpCluster(configName)
         k8sClient.client.deleteProject(projectName)
