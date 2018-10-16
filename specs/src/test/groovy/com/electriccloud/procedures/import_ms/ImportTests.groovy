@@ -1,6 +1,7 @@
 package com.electriccloud.procedures.import_ms
 
 import com.electriccloud.procedures.KubernetesTestBase
+import com.electriccloud.test_data.ImportData
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
@@ -18,7 +19,7 @@ class ImportTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests() {
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion, true, 'apis', LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', LogLevel.DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
@@ -245,15 +246,20 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(dataProvider = 'importData', testName = "Import with invalid data")
-    @TmsLinks([ @TmsLink("363509"),
+    @Test(dataProvider = 'invalidImportData', dataProviderClass = ImportData.class,
+            testName = "Import with invalid data")
+    @TmsLinks([
+            @TmsLink("363509"),
             @TmsLink("363508"),
             @TmsLink("363507"),
             @TmsLink("363474"),
             @TmsLink("363473"),
             @TmsLink("279011"),
             @TmsLink("279010"),
-            @TmsLink("279008"), @TmsLink("279013"), @TmsLink("279003")])
+            @TmsLink("279008"),
+            @TmsLink("279013"),
+            @TmsLink("279003")
+    ])
     @Story('Import with invalid parameter')
     @Description("Unable to import Microservice with invalid data")
     void invalidServiceImport(yamlFile, project, envName, clusterName, isApp, appName, errorMessage){
@@ -269,27 +275,6 @@ class ImportTests extends KubernetesTestBase {
         }
     }
 
-
-
-    @DataProvider(name = "importData")
-    Object[][] getImportData(){
-        def data = [
-                [serviceName, projectName, environmentName, "", false, null, "Either specify all the parameters required to identify the Kubernetes-backed ElectricFlow cluster"],
-                [serviceName, projectName, environmentName, "my-cluster", false, null, "Cluster \'my-cluster\' does not exist in \'${environmentName}\' environment!"],
-                [serviceName, projectName, "", clusterName, false, null,  "Either specify all the parameters required to identify the Kubernetes-backed ElectricFlow cluster"],
-                [serviceName, projectName, "my-environment", clusterName, false, null, "Environment \'my-environment\' does not exist in project \'${projectName}\'"],
-                [serviceName, "Default", environmentName, clusterName,  false, null,  "Environment \'${environmentName}\' does not exist in project \'Default\'"],
-                ["nginx-service-invalid", projectName, environmentName, clusterName, false, null,  "ERROR: Failed to read the Docker Compose file contents"],
-                [applicationName,projectName, environmentName, "",  true, applicationName,  "Either specify all the parameters required to identify the Kubernetes-backed ElectricFlow cluster"],
-                [applicationName,projectName, environmentName, "my-cluster",  true, applicationName,  "Cluster \'my-cluster\' does not exist in \'${environmentName}\' environment!"],
-                [applicationName, projectName, "", clusterName,  true, applicationName,  "Either specify all the parameters required to identify the Kubernetes-backed ElectricFlow cluster"],
-                [applicationName, projectName, "my-environment", clusterName, true, applicationName,  "Environment \'my-environment\' does not exist in project \'${projectName}\'"],
-                [applicationName, "Default", environmentName, clusterName, true, applicationName,  "Environment \'${environmentName}\' does not exist in project \'Default\'"],
-                ["nginx-service-invalid", projectName, environmentName, clusterName, true, applicationName,  "ERROR: Failed to read the Docker Compose file contents"],
-                [applicationName, projectName, environmentName, clusterName, true, "", "Application name is required for creating application-scoped microservices"]
-        ]
-        return data as Object[][]
-    }
 
 
 }

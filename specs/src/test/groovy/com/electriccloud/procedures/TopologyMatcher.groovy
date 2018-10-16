@@ -1,13 +1,53 @@
-package com.electriccloud
+package com.electriccloud.procedures
 
 
 
 import com.electriccloud.helpers.config.ConfigHelper
+import org.apache.commons.lang.RandomStringUtils
 import org.apache.log4j.Logger
 
+import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 
-trait TopologyMatcher extends NamingTestBase {
+abstract class TopologyMatcher {
+
+
+    def topologyOutcome
+
+    // Parametrized names
+
+    // Naming Helpers
+
+    String unique(objectName) {
+//        new SimpleDateFormat("${objectName}yyyyMMddHHmmssSSS".toString()).format(new Date())
+        objectName + (new SimpleDateFormat("yyyyMMddHHmmssSSS").format(new Date()))
+    }
+
+    String characters(objectName, num) {
+        num = num as Integer
+        def _num
+        if(num != 0) {
+            _num = RandomStringUtils.random(num).next()
+            return "${objectName}${_num}".toString()
+        } else {
+            return ''
+        }
+    }
+
+    String characters(num) {
+        characters('', num)
+    }
+
+
+
+
+
+
+
+
+
+
+
 
     public static Logger log = Logger.getLogger("appLogger")
 

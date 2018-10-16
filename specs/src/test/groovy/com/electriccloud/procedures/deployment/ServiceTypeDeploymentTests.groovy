@@ -20,7 +20,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, "/apis", LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/apis", LogLevel.DEBUG)
     }
 
     @BeforeMethod

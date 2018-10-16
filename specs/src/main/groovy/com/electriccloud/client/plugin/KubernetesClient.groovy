@@ -18,19 +18,13 @@ class KubernetesClient extends CommanderClient {
         this.plugin = 'kubernetes'
     }
 
-    KubernetesClient(serverUri, username, password) {
-        super(serverUri, username, password)
-        this.timeout = 240
-        this.plugin = 'kubernetes'
-    }
-
 
     @Step("Create configuration: {configurationName}, {clusterEndpoint}")
     def createConfiguration(configurationName,
                             clusterEndpoint, username, secretToken, clusterVersion,
                             testConnection = true,
                             testConnectionUri = "/apis",
-                            LogLevel logLevel = LogLevel.DEBUG) {
+                            logLevel = LogLevel.DEBUG) {
         message("creating kubernetes config")
         def json = jsonHelper.configJson(configurationName, clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'config'), client.encode(json.toString()))
@@ -43,7 +37,7 @@ class KubernetesClient extends CommanderClient {
                           username, secretToken, clusterVersion,
                           testConnection = true,
                           testConnectionUri = "",
-                          LogLevel logLevel = LogLevel.DEBUG) {
+                          logLevel = LogLevel.DEBUG) {
         message("edit kubernetes config")
         def json = jsonHelper.editConfigJson(clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'editConfig'), client.encode(json.toString()))
@@ -126,7 +120,14 @@ class KubernetesClient extends CommanderClient {
 
 
     @Step("Discover {cluster} on {endpoint}")
-    def discoverService(project, envProject, envName, cluster, namespace = 'default', endpoint, token, importApp = false, appName = null) {
+    def discoverService(project,
+                        envProject,
+                        envName,
+                        cluster,
+                        namespace = 'default',
+                        endpoint, token,
+                        importApp = false,
+                        appName = null) {
         message("service discovery")
         def json = jsonHelper.discoveryJson(project, envProject, envName, namespace, cluster,  endpoint, token, importApp.toString(), appName)
         def response = client.dslFile dslPath(plugin, 'discover'), client.encode(json.toString())

@@ -21,7 +21,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @BeforeClass
     void setUpDeployment() {
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
     @AfterClass

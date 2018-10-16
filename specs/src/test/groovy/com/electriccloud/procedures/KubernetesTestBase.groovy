@@ -1,11 +1,8 @@
 package com.electriccloud.procedures
 
-import com.electriccloud.TopologyMatcher
 import com.electriccloud.client.api.KubernetesApi
 import com.electriccloud.client.ectool.EctoolApi
 import com.electriccloud.client.plugin.KubernetesClient
-import com.electriccloud.helpers.enums.LogLevels
-import com.electriccloud.helpers.enums.ServiceTypes
 import com.electriccloud.listeners.TestListener
 import io.qameta.allure.Story
 import io.restassured.filter.log.RequestLoggingFilter
@@ -14,16 +11,35 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.Listeners
 
 import java.util.concurrent.TimeUnit
-
-import static com.electriccloud.helpers.enums.ServiceTypes.*
 import static io.restassured.RestAssured.given
 import static org.awaitility.Awaitility.await
 import static org.awaitility.Awaitility.setDefaultTimeout
 
-
 @Story("EC-Kubernetes")
 @Listeners(TestListener.class)
-class KubernetesTestBase implements TopologyMatcher {
+class KubernetesTestBase extends TopologyMatcher {
+
+
+    public String configName
+    public String projectName
+    public String environmentProjectName
+    public String environmentName
+    public String clusterName
+    public String serviceName
+    public String applicationName
+    public String containerName
+    public String pluginName
+    public String pluginVersion
+    public String pluginLegacyVersion
+    public String clusterEndpoint
+    public String nodeEndpoint
+    public String clusterToken
+    public String clusterVersion
+    public String pluginProjectName
+    public String adminAccount
+    KubernetesClient k8sClient
+    KubernetesApi k8sApi
+    EctoolApi ectoolApi
 
     def getHost = { hostValue -> new URL(hostValue).host }
 
@@ -46,6 +62,7 @@ class KubernetesTestBase implements TopologyMatcher {
         serviceName     = 'nginx-service'
         applicationName = 'nginx-application'
         containerName   = "nginx-container"
+        adminAccount    = "flowqe"
 
         pluginName          = System.getenv("PLUGIN_NAME")
         pluginVersion       = System.getenv("PLUGIN_BUILD_VERSION")
@@ -62,6 +79,27 @@ class KubernetesTestBase implements TopologyMatcher {
         ectoolApi.ectoolLogin()
     }
 
+
+
+
+    public String ecpNamespaceId
+    public String ecpClusterId
+    public String ecpClusterName
+    public String ecpServiceId
+    public String ecpServiceName
+    public String ecpContainerId
+    public String ecpContainerName
+    public String ecpNamespaceName
+    public String ecpPodName
+    public String ecpPodId
+    public String environmentId
+    public String applicationId
+    public String serviceId
+    public String appServiceId
+    public String clusterId
+    public String topologyOutcome
+    public String description
+    public String endpoint
 
 
     def createAndDeployService(appLevel = false){

@@ -2,6 +2,7 @@ package com.electriccloud.procedures.configuration
 
 import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.procedures.KubernetesTestBase
+import com.electriccloud.test_data.ConfigurationData
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
@@ -20,7 +21,7 @@ class ProvisionTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, '', LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', LogLevel.DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
@@ -30,7 +31,6 @@ class ProvisionTests extends KubernetesTestBase {
     }
 
     @Test
-    @TmsLink("")
     @Story("Provisioning of kubernetes environment")
     @Description("Provision exsting Kubernetes cluster")
     void provisionCluster(){
@@ -43,8 +43,8 @@ class ProvisionTests extends KubernetesTestBase {
 
     }
 
-    @Test(dataProvider = 'invalidData')
-    @TmsLink('')
+
+    @Test(dataProvider = 'invalidProvisionData', dataProviderClass = ConfigurationData.class)
     @Story('Provisioning with invalid data')
     @Description("Provision Kubernetes cluster with invalid data")
     void invalidClusterProvisioning(project, environment, cluster, message){
@@ -56,16 +56,7 @@ class ProvisionTests extends KubernetesTestBase {
     }
 
 
-    @DataProvider(name = 'invalidData')
-    def getProvisionData(){
-        def data = [
-                ["test", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'test'"],
-                ["Default", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'Default'"],
-                [projectName, "test", clusterName, "NoSuchEnvironment: Environment 'test' does not exist in project '${projectName}'"],
-                [projectName, environmentName, "test-cluster", "NoSuchCluster: Cluster 'test-cluster' does not exist in environment '${environmentName}'"],
-        ]
-        return data as Object[][]
-    }
+
 
 
 

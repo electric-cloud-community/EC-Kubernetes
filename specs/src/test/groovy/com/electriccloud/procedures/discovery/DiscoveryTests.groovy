@@ -1,6 +1,7 @@
 package com.electriccloud.procedures.discovery
 
 import com.electriccloud.procedures.KubernetesTestBase
+import com.electriccloud.test_data.DiscoveryData
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
@@ -17,7 +18,7 @@ class DiscoveryTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
         k8sClient.createEnvironment(configName)
         k8sClient.createService(2, volumes, false)
         k8sClient.deployService(projectName, serviceName)
@@ -39,7 +40,7 @@ class DiscoveryTests extends KubernetesTestBase {
     @AfterClass
     void tearDownTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'ecloud', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
         k8sClient.cleanUpCluster(configName)
         k8sClient.client.deleteProject(projectName)
     }
@@ -433,7 +434,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(dataProvider = 'invalidDiscoveryData')
+    @Test(dataProvider = 'invalidDiscoveryData', dataProviderClass = DiscoveryData.class)
     @Story('Preform invalid discovery')
     void invalidDiscoveryProcedure(project, envProject, envName, clusterName, namespace, endpoint, token, errorMessage){
         try {
@@ -458,19 +459,6 @@ class DiscoveryTests extends KubernetesTestBase {
     }
 
 
-
-    @DataProvider(name = 'invalidDiscoveryData')
-    def getDiscoveryData(){
-        def data = [
-                [ '', projectName, environmentName, clusterName, 'default', clusterEndpoint, clusterToken, 'One or more arguments are missing. Please provide the following arguments: projectName' ],
-                [ projectName, '', environmentName, clusterName, 'default', clusterEndpoint, clusterToken, 'One or more arguments are missing. Please provide the following arguments: projectName' ],
-                [ projectName, projectName, '', clusterName, 'default', clusterEndpoint, clusterToken, '\'environmentName\' must be between 1 and 255 characters' ],
-                [ projectName, projectName, environmentName, '', 'default', clusterEndpoint, clusterToken, 'Please provide the following arguments: clusterName' ],
-                [ projectName, projectName, environmentName, clusterName, '', clusterEndpoint, clusterToken, '\'serviceName\' is required and must be between 1 and 253 alphanumeric' ],
-                [ 'MyTestProject', projectName, environmentName, clusterName, 'default', clusterEndpoint, clusterToken, 'Project \'MyTestProject\' does not exist' ]
-        ]
-        return data as Object[][]
-    }
 
 
 

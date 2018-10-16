@@ -1,6 +1,7 @@
 package com.electriccloud.procedures.configuration
 
 import com.electriccloud.procedures.KubernetesTestBase
+import com.electriccloud.test_data.ConfigurationData
 import io.qameta.allure.*
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
@@ -17,7 +18,7 @@ class EditConfigurationTests extends KubernetesTestBase {
 
     @BeforeClass
     void setUpTests(){
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
     @AfterClass
@@ -72,9 +73,15 @@ class EditConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "invalidData")
+    @Test(dataProvider = "invalidEditConfigData", dataProviderClass = ConfigurationData.class)
     @Issue("ECKUBE-180")
-    @TmsLinks(value = [@TmsLink("324799"), @TmsLink("324800"), @TmsLink("324801"), @TmsLink("324802"), @TmsLink("324803")])
+    @TmsLinks(value = [
+            @TmsLink("324799"),
+            @TmsLink("324800"),
+            @TmsLink("324801"),
+            @TmsLink("324802"),
+            @TmsLink("324803")
+    ])
     @Story("Invalid configuration")
     @Description("Unable to Edit Configuration invalid data")
     void unnableEditConfigurationWithInvalidData(endpoint, username, token, version, testConnection, testConnectionUri, logLevel, errorMessage){
@@ -94,16 +101,6 @@ class EditConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @DataProvider(name = "invalidData")
-    def getInvalidData(){
-        return [
-                [clusterEndpoint, "flowqe", clusterToken, clusterVersion, true, "/api/v1/test", LogLevel.DEBUG, "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/test failed with HTTP/1.1 404 Not Found"],
-                ["", "flowqe", clusterToken, clusterVersion, true, '/api/v1/namespaces', LogLevel.DEBUG, 'java.lang.IllegalStateException: Target host is null'],
-                ["https://35.188.101.83", "flowqe", clusterToken, clusterVersion, true, '/api/v1/namespaces', LogLevel.DEBUG, 'java.net.ConnectException: Connection timed out (Connection timed out)'],
-                [clusterEndpoint, "", "", clusterVersion, true, '/api/v1/namespaces', LogLevel.DEBUG, "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/namespaces failed with HTTP/1.1 403 Forbidden"],
-                [clusterEndpoint, "flowqe", "test", clusterVersion, true, '/api/v1/namespaces', LogLevel.DEBUG, "Kubernetes cluster at ${clusterEndpoint} was not reachable."]
-        ] as Object[][]
-    }
 
 
 
