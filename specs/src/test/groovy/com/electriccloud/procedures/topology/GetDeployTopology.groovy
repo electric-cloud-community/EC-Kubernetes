@@ -246,7 +246,7 @@ environmentTier('$envTier2', projectName: '$projectName', environmentName: '$env
         assert topologyOutcome == "ectool error [NoSuchConfiguration]: No plugin configuration \'$configName\' " +
                 "found at \'ec_plugin_cfgs\' for \'$pluginProjectName\'"
 
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'qe', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
 

@@ -100,7 +100,7 @@ clean.doFirst {
     delete "${rootDir}/scr/commander/resources/config/history"
     delete "${rootDir}/allure-results"
     delete "${rootDir}/allure-report"
-
+    delete "${rootDir}/.ecsession"
 }
 
 

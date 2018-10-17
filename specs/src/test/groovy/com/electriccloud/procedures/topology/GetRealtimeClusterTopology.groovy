@@ -33,7 +33,6 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
     }
 
 
-
     @Test
     @TmsLink("")
     @Story("Get Realtime Cluster Topology positive")
@@ -115,7 +114,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
         assert topologyOutcome == "ectool error [NoSuchConfiguration]: No plugin configuration '$configName' " +
                 "found at 'ec_plugin_cfgs' for '$pluginName-$pluginVersion'"
 
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
 

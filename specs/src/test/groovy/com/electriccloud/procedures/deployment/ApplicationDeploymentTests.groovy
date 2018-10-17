@@ -10,6 +10,7 @@ import org.testng.annotations.*
 
 import static com.electriccloud.helpers.enums.LogLevels.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
 import static org.awaitility.Awaitility.await
 
 @Feature('Deployment')
@@ -29,7 +30,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @BeforeMethod
     void setUpTest(){
         k8sClient.createEnvironment(configName)
-        k8sClient.createApplication(2, volumes, false, ServiceType.LOAD_BALANCER)
+        k8sClient.createApplication(2, volumes, false, LOAD_BALANCER)
     }
 
     @AfterMethod
@@ -55,7 +56,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert deployments.size() == 1
         assert deployments[0].metadata.name == serviceName
@@ -84,7 +85,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Update Application-level Microservice")
     void updateApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, false, ServiceType.LOAD_BALANCER)
+        k8sClient.updateApplication(2, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -95,7 +96,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert deployments.size() == 1
         assert deployments[0].metadata.name == serviceName
@@ -126,7 +127,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Scale Application-level Microservice")
     void scaleApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(3, volumes, false, ServiceType.LOAD_BALANCER)
+        k8sClient.updateApplication(3, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -137,7 +138,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 3
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert deployments.size() == 1
         assert deployments[0].metadata.name == serviceName
@@ -168,7 +169,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Canary Deploy for Application-level Microservice")
     void preformCanaryDeploymentForApplicationLevelMicroservice() {
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, true, ServiceType.LOAD_BALANCER)
+        k8sClient.updateApplication(2, volumes, true, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -180,7 +181,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 4
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert deployments[0].metadata.name == serviceName
         assert deployments[1].metadata.name == "nginx-service-canary"
@@ -238,7 +239,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Undeploy Application-level Microservice after Canary Deploy")
     void undeployApplicationAfterCanaryDeployment() {
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, true, ServiceType.LOAD_BALANCER)
+        k8sClient.updateApplication(2, volumes, true, LOAD_BALANCER)
         k8sClient.deployApplication(projectName, applicationName)
         def jobId = k8sClient.undeployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
@@ -254,7 +255,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert deployments[0].metadata.name == serviceName
         assert deployments[0].metadata.labels."ec-track" == "stable"

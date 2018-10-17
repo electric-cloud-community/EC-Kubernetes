@@ -3,6 +3,7 @@ package com.electriccloud.procedures
 import com.electriccloud.client.api.KubernetesApi
 import com.electriccloud.client.ectool.EctoolApi
 import com.electriccloud.client.plugin.KubernetesClient
+import com.electriccloud.helpers.enums.ServiceTypes
 import com.electriccloud.listeners.TestListener
 import io.qameta.allure.Story
 import io.restassured.filter.log.RequestLoggingFilter
@@ -11,6 +12,8 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.Listeners
 
 import java.util.concurrent.TimeUnit
+
+import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
 import static io.restassured.RestAssured.given
 import static org.awaitility.Awaitility.await
 import static org.awaitility.Awaitility.setDefaultTimeout
@@ -20,26 +23,26 @@ import static org.awaitility.Awaitility.setDefaultTimeout
 class KubernetesTestBase extends TopologyMatcher {
 
 
-    public String configName
-    public String projectName
-    public String environmentProjectName
-    public String environmentName
-    public String clusterName
-    public String serviceName
-    public String applicationName
-    public String containerName
-    public String pluginName
-    public String pluginVersion
-    public String pluginLegacyVersion
-    public String clusterEndpoint
-    public String nodeEndpoint
-    public String clusterToken
-    public String clusterVersion
-    public String pluginProjectName
-    public String adminAccount
-    KubernetesClient k8sClient
-    KubernetesApi k8sApi
-    EctoolApi ectoolApi
+    public static String configName
+    public static String projectName
+    public static String environmentProjectName
+    public static String environmentName
+    public static String clusterName
+    public static String serviceName
+    public static String applicationName
+    public static String containerName
+    public static String pluginName
+    public static String pluginVersion
+    public static String pluginLegacyVersion
+    public static String clusterEndpoint
+    public static String nodeEndpoint
+    public static String clusterToken
+    public static String clusterVersion
+    public static String pluginProjectName
+    public static String adminAccount
+    public KubernetesClient k8sClient
+    public KubernetesApi k8sApi
+    public EctoolApi ectoolApi
 
     def getHost = { hostValue -> new URL(hostValue).host }
 
@@ -54,15 +57,15 @@ class KubernetesTestBase extends TopologyMatcher {
     @BeforeClass
     void setUpData(){
         setDefaultTimeout(200, TimeUnit.SECONDS)
-        configName      = 'k8sConfig'
-        projectName     = 'k8sProj'
-        environmentProjectName = 'k8sProj'
-        environmentName = "k8s-environment"
-        clusterName     = "k8s-cluster"
-        serviceName     = 'nginx-service'
-        applicationName = 'nginx-application'
-        containerName   = "nginx-container"
-        adminAccount    = "flowqe"
+        configName          = "k8sConfig"
+        projectName         = "k8sProj"
+        environmentProjectName = "k8sProj"
+        environmentName     = "k8s-environment"
+        clusterName         = "k8s-cluster"
+        serviceName         = "nginx-service"
+        applicationName     = "nginx-application"
+        containerName       = "nginx-container"
+        adminAccount        = "flowqe"
 
         pluginName          = System.getenv("PLUGIN_NAME")
         pluginVersion       = System.getenv("PLUGIN_BUILD_VERSION")
@@ -82,24 +85,24 @@ class KubernetesTestBase extends TopologyMatcher {
 
 
 
-    public String ecpNamespaceId
-    public String ecpClusterId
-    public String ecpClusterName
-    public String ecpServiceId
-    public String ecpServiceName
-    public String ecpContainerId
-    public String ecpContainerName
-    public String ecpNamespaceName
-    public String ecpPodName
-    public String ecpPodId
-    public String environmentId
-    public String applicationId
-    public String serviceId
-    public String appServiceId
-    public String clusterId
-    public String topologyOutcome
-    public String description
-    public String endpoint
+    public static String ecpNamespaceId
+    public static String ecpClusterId
+    public static String ecpClusterName
+    public static String ecpServiceId
+    public static String ecpServiceName
+    public static String ecpContainerId
+    public static String ecpContainerName
+    public static String ecpNamespaceName = "default"
+    public static String ecpPodName = ""
+    public static String ecpPodId = ""
+    public static String environmentId
+    public static String applicationId
+    public static String serviceId
+    public static String appServiceId
+    public static String clusterId
+    public static String topologyOutcome
+    public static String description
+    public static String endpoint
 
 
     def createAndDeployService(appLevel = false){
@@ -108,10 +111,10 @@ class KubernetesTestBase extends TopologyMatcher {
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/api/v1/namespaces')
         k8sClient.createEnvironment(configName)
         if (appLevel){
-            k8sClient.createApplication(2, volumes, false, ServiceType.LOAD_BALANCER, "default", 200)
+            k8sClient.createApplication(2, volumes, false, LOAD_BALANCER, "default", 200)
             k8sClient.deployApplication(projectName, applicationName)
         } else {
-            k8sClient.createService(2, volumes, false, ServiceType.LOAD_BALANCER)
+            k8sClient.createService(2, volumes, false, LOAD_BALANCER)
             k8sClient.deployService(projectName, serviceName)
         }
         await().until { k8sApi.getPods().json.items.last().status.phase == 'Running' }

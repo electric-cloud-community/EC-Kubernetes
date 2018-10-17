@@ -10,7 +10,9 @@ import org.testng.annotations.*
 import java.util.concurrent.TimeUnit
 
 import static com.electriccloud.helpers.enums.LogLevels.*
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
 import static org.awaitility.Awaitility.await
 
 @Feature("Deployment")
@@ -20,7 +22,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/apis", LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/apis", DEBUG)
     }
 
     @BeforeMethod
@@ -43,7 +45,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Story("Deploy service using LoadBalancer service type")
     @Description(" Deploy Project-level Microservice with LoadBalancer service type")
     void deployMicroserviceWithLoadBalancer(){
-        k8sClient.createService(2, volumes, false, ServiceType.LOAD_BALANCER)
+        k8sClient.createService(2, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -57,7 +59,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.LOAD_BALANCER.value
+        assert services[1].spec.type == LOAD_BALANCER.value
         assert services[1].spec.ports.first().port == 81
         assert services[1].spec.ports[0].nodePort != null
         assert services[1].status.loadBalancer.ingress[0].ip != null
@@ -90,7 +92,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Story("Deploy service using ClusterIP service type")
     @Description("Deploy Project-level Microservice with ClusterIP service type")
     void deployMicroserviceWithClusterIP(){
-        k8sClient.createService(2, volumes, false, ServiceType.CLUSTER_IP)
+        k8sClient.createService(2, volumes, false, CLUSTER_IP)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -100,7 +102,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.CLUSTER_IP.value
+        assert services[1].spec.type == CLUSTER_IP.value
         assert services[1].status.loadBalancer.ingress == null
         assert services[1].spec.ports[0].nodePort == null
         assert services[1].spec.ports.first().port == 81
@@ -128,7 +130,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     @Story("Deploy service using NodePort service type")
     @Description("Deploy Project-level Microservice with NodePort service type")
     void deployMicroserviceWithNodePort(){
-        k8sClient.createService(2, volumes, false, ServiceType.NODE_PORT)
+        k8sClient.createService(2, volumes, false, NODE_PORT)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -139,7 +141,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
         assert services[1].metadata.namespace == "default"
-        assert services[1].spec.type == ServiceType.NODE_PORT.value
+        assert services[1].spec.type == NODE_PORT.value
         assert services[1].spec.ports.first().port == 81
         assert services[1].status.loadBalancer.ingress == null
         assert services[1].spec.ports[0].nodePort != null

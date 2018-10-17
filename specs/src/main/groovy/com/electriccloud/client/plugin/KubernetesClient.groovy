@@ -6,9 +6,12 @@ import com.electriccloud.helpers.enums.LogLevels.LogLevel
 import com.electriccloud.client.commander.CommanderClient
 import static com.electriccloud.helpers.config.ConfigHelper.message
 import static com.electriccloud.helpers.config.ConfigHelper.dslPath
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
 
 import io.qameta.allure.Step
+
+import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
 
 class KubernetesClient extends CommanderClient {
 
@@ -24,7 +27,7 @@ class KubernetesClient extends CommanderClient {
                             clusterEndpoint, username, secretToken, clusterVersion,
                             testConnection = true,
                             testConnectionUri = "/apis",
-                            logLevel = LogLevel.DEBUG) {
+                            logLevel = DEBUG) {
         message("creating kubernetes config")
         def json = jsonHelper.configJson(configurationName, clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'config'), client.encode(json.toString()))
@@ -37,7 +40,7 @@ class KubernetesClient extends CommanderClient {
                           username, secretToken, clusterVersion,
                           testConnection = true,
                           testConnectionUri = "",
-                          logLevel = LogLevel.DEBUG) {
+                          logLevel = DEBUG) {
         message("edit kubernetes config")
         def json = jsonHelper.editConfigJson(clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'editConfig'), client.encode(json.toString()))
@@ -58,7 +61,7 @@ class KubernetesClient extends CommanderClient {
     def createService(replicaNum,
                       volumes = [source: null, target: null ],
                       canaryDeploy,
-                      serviceType = ServiceType.LOAD_BALANCER,
+                      serviceType = LOAD_BALANCER,
                       namespace = "default",
                       deploymentTimeout = timeout) {
         message("service creation")
@@ -72,7 +75,7 @@ class KubernetesClient extends CommanderClient {
     def createApplication(replicaNum,
                           volumes = [source: null, target: null ],
                           canaryDeploy,
-                          serviceType = ServiceType.LOAD_BALANCER,
+                          serviceType = LOAD_BALANCER,
                           namespace = "default",
                           deploymentTimeout = timeout) {
         message("application creation")
@@ -86,7 +89,7 @@ class KubernetesClient extends CommanderClient {
     def updateService(replicaNum,
                       volumes = [source: null, target: null ],
                       canaryDeploy,
-                      serviceType = ServiceType.LOAD_BALANCER,
+                      serviceType = LOAD_BALANCER,
                       namespace = "default",
                       deploymentTimeout = timeout) {
         message("service update")
@@ -100,7 +103,7 @@ class KubernetesClient extends CommanderClient {
     def updateApplication(replicaNum,
                           volumes = [source: null, target: null ],
                           canaryDeploy,
-                          serviceType = ServiceType.LOAD_BALANCER,
+                          serviceType = LOAD_BALANCER,
                           namespace = "default",
                           deploymentTimeout = timeout) {
         message("service update")

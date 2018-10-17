@@ -5,12 +5,9 @@ import com.electriccloud.test_data.ConfigurationData
 import io.qameta.allure.*
 import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeClass
-import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-import static com.electriccloud.helpers.enums.LogLevels.*
-import static com.electriccloud.helpers.enums.ServiceTypes.*
-import static org.awaitility.Awaitility.*;
-
+import static org.awaitility.Awaitility.*
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 
 @Feature("Configuration")
 class CreateConfigurationTests extends KubernetesTestBase {
@@ -147,11 +144,11 @@ class CreateConfigurationTests extends KubernetesTestBase {
     ])
     @Story("Invalid configuration")
     @Description("Unable to configure with invalid data")
-    void unableToConfigureWithInvalidData(configName, endpoint, username, token, version, testConnection, testConnectionUri, logLevel, errorMessage){
+    void unableToConfigureWithInvalidData(configName, endpoint, username, token, version, testConnectionUri, errorMessage){
         def jobStatus = null
         String logs = " "
         try {
-            k8sClient.createConfiguration(configName, endpoint, username, token, version, testConnection, testConnectionUri, logLevel)
+            k8sClient.createConfiguration(configName, endpoint, username, token, version, true, testConnectionUri, DEBUG)
         } catch (e){
             def jobId = e.cause.message
             await().until { k8sClient.client.getJobStatus(jobId).json.status == "completed" }

@@ -229,7 +229,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
         assert topologyOutcome == "ectool error [NoSuchConfiguration]: No plugin configuration '$configName' " +
                 "found at 'ec_plugin_cfgs' for '$pluginName-$pluginVersion'"
 
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'qe', clusterToken, clusterVersion)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
 
     }
 

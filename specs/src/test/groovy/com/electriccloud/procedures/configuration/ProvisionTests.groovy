@@ -1,18 +1,15 @@
 package com.electriccloud.procedures.configuration
 
-import com.electriccloud.helpers.enums.LogLevels
 import com.electriccloud.procedures.KubernetesTestBase
 import com.electriccloud.test_data.ConfigurationData
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
-import io.qameta.allure.TmsLink
+import org.testng.Assert
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
-import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-
-import static com.electriccloud.helpers.enums.LogLevels.*
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 
 
 @Feature('Provsioning')
@@ -21,7 +18,7 @@ class ProvisionTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
@@ -39,7 +36,7 @@ class ProvisionTests extends KubernetesTestBase {
         def jobLogs = k8sClient.client.getJobLogs(resp.jobId)
         assert jobStatus.json.outcome == "success"
         assert jobStatus.json.status == "completed"
-        assert jobLogs.contains("The service is reachable at ${clusterEndpoint}. Health check at ${clusterEndpoint}.")
+        assert jobLogs.contains("The service is reachable at ${clusterEndpoint}. Health check at ${clusterEndpoint}/apis.")
 
     }
 

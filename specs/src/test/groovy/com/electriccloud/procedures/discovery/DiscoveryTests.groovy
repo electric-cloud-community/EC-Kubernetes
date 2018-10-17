@@ -9,6 +9,7 @@ import io.qameta.allure.TmsLink
 import org.testng.annotations.*
 import static com.electriccloud.helpers.enums.LogLevels.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
 import static org.awaitility.Awaitility.await
 
 
@@ -80,7 +81,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert container.environmentVariable.first().environmentVariableName == "NGINX_PORT"
         assert container.environmentVariable.first().value == "8080"
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
     }
 
@@ -125,7 +126,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert mappings.size() == 1
         assert mappings[0].environmentName == "my-environment"
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
     }
 
@@ -167,7 +168,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert mappings.size() == 1
         assert mappings[0].environmentName == environmentName
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
     }
 
@@ -208,7 +209,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert container.environmentVariable.first().environmentVariableName == "NGINX_PORT"
         assert container.environmentVariable.first().value == "8080"
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
 
     }
@@ -254,7 +255,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert mappings.size() == 1
         assert mappings[0].environmentName == "my-environment"
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
     }
 
@@ -295,7 +296,7 @@ class DiscoveryTests extends KubernetesTestBase {
         assert mappings.size() == 1
         assert mappings[0].environmentName == environmentName
         assert mapping.actualParameters.parameterDetail[0].parameterName == "serviceType"
-        assert mapping.actualParameters.parameterDetail[0].parameterValue == ServiceType.LOAD_BALANCER.value
+        assert mapping.actualParameters.parameterDetail[0].parameterValue == LOAD_BALANCER.value
         assert !jobLog.contains(clusterToken)
     }
 
@@ -436,14 +437,14 @@ class DiscoveryTests extends KubernetesTestBase {
 
     @Test(dataProvider = 'invalidDiscoveryData', dataProviderClass = DiscoveryData.class)
     @Story('Preform invalid discovery')
-    void invalidDiscoveryProcedure(project, envProject, envName, clusterName, namespace, endpoint, token, errorMessage){
+    void invalidDiscoveryProcedure(project, envProject, envName, clusterName, namespace, errorMessage){
         try {
             k8sClient.discoverService(project, envProject,
                     envName,
                     clusterName,
                     namespace,
-                    endpoint,
-                    token,
+                    clusterEndpoint,
+                    clusterToken,
                     false, null)
         } catch (e){
             def jobId = e.cause.message

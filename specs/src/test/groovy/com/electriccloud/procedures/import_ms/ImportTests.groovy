@@ -10,6 +10,7 @@ import io.qameta.allure.TmsLinks
 import org.testng.annotations.*
 
 import static com.electriccloud.helpers.enums.LogLevels.*
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 
 
 @Feature('Import')
@@ -19,7 +20,7 @@ class ImportTests extends KubernetesTestBase {
     @BeforeClass
     void setUpTests() {
         k8sClient.deleteConfiguration(configName)
-        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', LogLevel.DEBUG)
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', DEBUG)
         k8sClient.createEnvironment(configName)
     }
 

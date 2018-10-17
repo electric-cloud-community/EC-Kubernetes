@@ -87,7 +87,7 @@ class DoActionOnRealtimeCluster extends KubernetesTestBase {
         assert topologyOutcome == "ectool error [NoSuchConfiguration]: No plugin configuration '$configName' " +
                 "found at 'ec_plugin_cfgs' for '$pluginProjectName'"
 
-        k8sClient.createConfiguration(configName, clusterEndpoint, 'qe', clusterToken, '1.8')
+        k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
 

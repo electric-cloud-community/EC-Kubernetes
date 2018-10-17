@@ -1,11 +1,11 @@
 package com.electriccloud.test_data;
 
 import com.electriccloud.helpers.enums.LogLevels;
-import com.electriccloud.procedures.KubernetesTestBase;
 import org.testng.annotations.DataProvider;
 import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*;
+import static com.electriccloud.procedures.KubernetesTestBase.*;
 
-public class ConfigurationData extends KubernetesTestBase {
+public class ConfigurationData {
 
 
     @DataProvider(name = "logLevels")
@@ -35,32 +35,25 @@ public class ConfigurationData extends KubernetesTestBase {
     public Object[][] invalidConfigurationData(){
         return new Object[][]{
                 {
-                    " ", clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "configuration credential: \'credentialName\' is required and must be between 1 and 255 characters"
+                    " ", clusterEndpoint, adminAccount, clusterToken, clusterVersion, "/api/v1/namespaces", "Error creating configuration credential: 'credentialName' is required and must be between 1 and 255 characters"
                 },
                 {
-                    configName, " ", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "java.lang.IllegalStateException: Target host is null"
+                    configName, " ", adminAccount, clusterToken, clusterVersion, "/api/v1/namespaces", "java.lang.IllegalStateException: Target host is null"
                 },
                 {
-                    configName, clusterEndpoint, "", "", clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/namespaces failed with HTTP/1.1 403 Forbidden"
+                    configName, clusterEndpoint, "", "", clusterVersion,  "/api/v1/namespaces", "Kubernetes cluster at " + clusterEndpoint + " was not reachable."
                 },
                 {
-                    clusterToken, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "Error creating configuration credential: \'credentialName\' is required and must be between 1 and 255 characters"
+                    clusterToken, clusterEndpoint, adminAccount, clusterToken, clusterVersion,  "/api/v1/namespaces", "Error creating configuration credential: 'credentialName' is required and must be between 1 and 255 characters"
                 },
                 {
-                    configName, "https://35.188.101.83", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "java.net.ConnectException: Connection timed out (Connection timed out)"
+                    configName, "https://35.188.101.83", adminAccount, clusterToken, clusterVersion, "/api/v1/namespaces", "java.net.ConnectException: Connection timed out (Connection timed out)"
                 },
                 {
-                    configName, clusterEndpoint, adminAccount, "test", clusterVersion, true, "/api/v1/namespaces", DEBUG,
-                        "Kubernetes cluster at ${clusterEndpoint} was not reachable."
+                    configName, clusterEndpoint, adminAccount, "test", clusterVersion, "/api/v1/namespaces", "Kubernetes cluster at " + clusterEndpoint + " was not reachable."
                 },
                 {
-                    configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/api/v1/test", DEBUG,
-                        "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/test failed with HTTP/1.1 404 Not Found"
+                    configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, "/api/v1/test",  "Kubernetes cluster at " + clusterEndpoint + " was not reachable."
                 }
         };
     }
@@ -72,24 +65,19 @@ public class ConfigurationData extends KubernetesTestBase {
     public Object[][] getInvalidData(){
         return new Object[][]{
                 {
-                    clusterEndpoint,  adminAccount, clusterToken, clusterVersion, true, "/api/v1/test", LogLevels.LogLevel.DEBUG,
-                        "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/test failed with HTTP/1.1 404 Not Found"
+                    clusterEndpoint,  adminAccount, clusterToken, clusterVersion, true, "/api/v1/test", LogLevels.LogLevel.DEBUG, "ERROR: Kubernetes cluster at " + clusterEndpoint + " was not reachable. Health check (#2) at " + clusterEndpoint + "/api/v1/test failed with HTTP/1.1 404 Not Found"
                 },
                 {
-                    "", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG,
-                        "java.lang.IllegalStateException: Target host is null"
+                    "", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG, "java.lang.IllegalStateException: Target host is null"
                 },
                 {
-                    "https://35.188.101.83", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG,
-                        "java.net.ConnectException: Connection timed out (Connection timed out)"
+                    "https://35.188.101.83", adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG, "java.net.ConnectException: Connection timed out (Connection timed out)"
                 },
                 {
-                    clusterEndpoint, "", "", clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG,
-                        "ERROR: Kubernetes cluster at ${clusterEndpoint} was not reachable. Health check (#2) at ${clusterEndpoint}/api/v1/namespaces failed with HTTP/1.1 403 Forbidden"
+                    clusterEndpoint, "", "", clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG, "ERROR: Kubernetes cluster at " + clusterEndpoint + " was not reachable. Health check (#2) at " + clusterEndpoint + "/api/v1/namespaces failed with HTTP/1.1 403 Forbidden"
                 },
                 {
-                    clusterEndpoint, adminAccount, "test", clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG,
-                        "Kubernetes cluster at ${clusterEndpoint} was not reachable."
+                    clusterEndpoint, adminAccount, "test", clusterVersion, true, "/api/v1/namespaces", LogLevels.LogLevel.DEBUG, "Kubernetes cluster at " + clusterEndpoint + " was not reachable."
                 }
         };
     }
@@ -99,16 +87,16 @@ public class ConfigurationData extends KubernetesTestBase {
     public Object[][] ivalidProvisioningData(){
         return new Object[][]{
                 {
-                        "test", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'test'"
+                        "test", environmentName, clusterName, "NoSuchEnvironment: Environment '" + environmentName +"' does not exist in project 'test'"
                 },
                 {
-                        "Default", environmentName, clusterName, "NoSuchEnvironment: Environment '${environmentName}' does not exist in project 'Default'"
+                        "Default", environmentName, clusterName, "NoSuchEnvironment: Environment '" + environmentName + "' does not exist in project 'Default'"
                 },
                 {
-                        projectName, "test", clusterName, "NoSuchEnvironment: Environment 'test' does not exist in project '${projectName}'"
+                        projectName, "test", clusterName, "NoSuchEnvironment: Environment 'test' does not exist in project '" + projectName + "'"
                 },
                 {
-                        projectName, environmentName, "test-cluster", "NoSuchCluster: Cluster 'test-cluster' does not exist in environment '${environmentName}'"
+                        projectName, environmentName, "test-cluster", "NoSuchCluster: Cluster 'test-cluster' does not exist in environment '" + environmentName + "'"
                 }
         };
     }
