@@ -46,17 +46,18 @@ sub main() {
     my $pluginName = eval {
         $ec->getProperty('additionalPluginName')->findvalue('//value')->string_value
     };
-    my $projectName;
-    if ($pluginName) {
-        # This is a new one
-        $projectName = $ec->getPlugin($pluginName)->findvalue('//projectName')->string_value;
-    }
-
     my @projects = ();
     push @projects, '$[/myProject/projectName]';
-    if ($projectName) {
-        push @projects, $projectName;
+
+    if ($pluginName) {
+        # This is a new one
+        my @names = split(/\s*,\s*/, $pluginName);
+        for my $name (@names) {
+            my $projectName = $ec->getPlugin($pluginName)->findvalue('//projectName')->string_value;
+            push @projects, $projectName;
+        }
     }
+
     retrieveDependencies($ec, @projects);
 
     # This part remains as is
