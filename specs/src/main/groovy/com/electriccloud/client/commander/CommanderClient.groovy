@@ -26,12 +26,6 @@ class CommanderClient {
         this.jsonHelper = new JsonHelper()
     }
 
-    CommanderClient(serverUri, username, password){
-        this.client = new APIClient(serverUri, username, password)
-        this.json = new JsonBuilder()
-        this.jsonHelper = new JsonHelper()
-    }
-
 
     @Step
     def createConfiguration(dslFile) {

@@ -1,41 +1,29 @@
 package com.electriccloud.client
 
 
-import groovy.json.JsonBuilder
-import org.awaitility.Awaitility
-
 import java.nio.file.Paths
 import java.util.concurrent.TimeoutException
 import static groovyx.net.http.Method.*
-import static com.electriccloud.helpers.enums.Credentials.*
 import static com.electriccloud.helpers.config.ConfigHelper.message
 
 
 class APIClient extends HttpClient {
 
     def sessionId
-    def baseUri
-    def ecUsername
-    def ecPassword
+    def baseUri = "${System.getenv("COMMANDER_HOST")}/rest/v1.0"
+    def ecUsername = System.getenv("COMMANDER_LOGIN")
+    def ecPassword = System.getenv("COMMANDER_PASSWORD")
+    def ecWorkspace = System.getenv("COMMANDER_WORKSPACE")
 
     def encode = {text -> URLEncoder.encode(text, "UTF-8") }
     def defaultHeaders() { [Cookie: "sessionId=$sessionId;", Accept: "application/json"] }
 
+
     APIClient() {
-        this.baseUri     = "${System.getenv("COMMANDER_HOST")}/rest/v1.0"
-        this.ecUsername  = System.getenv("COMMANDER_LOGIN")
-        this.ecPassword  = System.getenv("COMMANDER_PASSWORD")
         log.info("Connected to '$baseUri'")
         this.sessionId   = login(ecUsername, ecPassword).json.sessionId
     }
 
-    APIClient(url, username, password) {
-        this.baseUri    = "${url}/rest/v1.0"
-        this.ecUsername = username
-        this.ecPassword = password
-        log.info("Connected to '$baseUri'")
-        this.sessionId  = login(ecUsername, ecPassword).json.sessionId
-    }
 
     // Login
 
@@ -110,9 +98,7 @@ class APIClient extends HttpClient {
 
 
 
-    /**
-     * Project
-     */
+    // Project
 
     def deleteProject(projectName) {
         message('removing project')
@@ -143,12 +129,8 @@ class APIClient extends HttpClient {
         return this
     }
 
+    // Services
 
-
-
-    /**
-     * Services
-     */
 
     def deleteService(projectName, serviceName) {
         message('removing service')
@@ -194,10 +176,8 @@ class APIClient extends HttpClient {
         response
     }
 
+    // Applications
 
-    /**
-     * Applications
-     */
 
     def deleteApplication(projectName, applicationName) {
         message('removing application')
@@ -248,10 +228,7 @@ class APIClient extends HttpClient {
     }
 
 
-
-    /**
-     * Environments
-     */
+    // Environments
 
     def deleteEnvironment(projectName, environmentName) {
         message('removing environment')
@@ -283,14 +260,6 @@ class APIClient extends HttpClient {
     }
 
 
-
-
-    /**
-     * Job Logs
-     */
-
-
-
     def getJobLogs(jobId, workspace) {
         def job = getJobSummary(jobId).json.job.jobStep.last()
         dsl("""new File("${Paths.get(workspace, job.jobName, job.logFileName).toString()}").text""").json.value.toString()
@@ -303,7 +272,7 @@ class APIClient extends HttpClient {
 
                 def logs = []
 
-                def dir = new File("${System.getenv("COMMANDER_WORKSPACE")}/$job.jobName")
+                def dir = new File("${ecWorkspace}/$job.jobName")
                 dir.eachFileMatch (FileType.FILES, ~/.*log/) { file ->
                     logs << file.text
                 }
@@ -318,39 +287,6 @@ class APIClient extends HttpClient {
     }
 
 
-
-    def readJobLogs(jobId, resourceName = null) {
-        dslFile "readJobLogs.dsl"
-        def result = dsl """
-            runProcedure(
-                projectName: 'EC-Spec Helper',
-                procedureName: 'ReadJobLogs',
-                actualParameter: [
-                    readJobId: '$jobId',
-                    resName: '${resourceName ? resourceName : ""}'
-                ]
-            )
-        """
-        Awaitility.await().until {
-            getJobStatus(result.jobId).json.status == 'completed'
-        }
-
-        assert getJobStatus(result.jobId).outcome == 'success'
-
-        def logs = dsl """
-            getProperty(
-                propertyName: '/myJob/ec_logs',
-                jobId: '${result.jobId}',
-                expand: 0
-            )
-        """
-        log.debug(new JsonBuilder(logs))
-        logs?.property?.value
-    }
-
-
-
-
     def getJobSteps(jobId){
         message('job steps')
         def resp = request(baseUri, "jobSteps?request=findJobSteps&jobId=${jobId}", GET, null, defaultHeaders(), null, true)
@@ -358,10 +294,7 @@ class APIClient extends HttpClient {
     }
 
 
-    /**
-     * Artifacts
-     */
-
+    // Artifacts
 
     def getArtifactVersions(artifactName){
         def resp = request(baseUri, "artifactVersions?artifactName=$artifactName", GET, null, defaultHeaders(), null, true)

@@ -1,16 +1,15 @@
 package com.electriccloud.client
 
-import com.electriccloud.helpers.config.ConfigHelper
 import groovy.json.JsonBuilder
 import groovyx.net.http.HTTPBuilder
 import org.apache.log4j.Logger
-
 import static groovyx.net.http.ContentType.JSON
+
+
 
 class HttpClient {
 
-    protected static ConfigHelper configHelper = new ConfigHelper()
-    public static Logger log                   = Logger.getLogger("appLogger")
+    public static Logger log = Logger.getLogger("appLogger")
 
     HTTPBuilder http
 
