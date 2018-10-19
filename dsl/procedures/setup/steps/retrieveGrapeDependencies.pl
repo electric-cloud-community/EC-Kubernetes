@@ -125,17 +125,20 @@ main();
 1;
 
 
-# File Version: Wed Oct 17 15:24:07 2018
 
 package EC::DependencyManager;
 use strict;
 use warnings;
 
 use File::Spec;
-use JSON qw(decode_json);
+use JSON qw(decode_json encode_json);
+use File::Find;
 use File::Copy::Recursive qw(rcopy rmove);
+use Digest::MD5;
 
 our $VERSION = '1.0.0';
+
+use constant DEPENDENCIES_PROPERTY => '/myProject/ec_dependencies';
 
 sub new {
     my ($class, $ec) = @_;
@@ -227,6 +230,7 @@ sub copyDependencies {
         die "$dest is not writable. Please allow agent user to write to this directory."
     }
 
+    $self->saveDependenciesList($source);
     my $filesCopied = rcopy($source, $dest);
     if ($filesCopied == 0) {
         die "Copy failed, no files were copied from $source to $dest, please check permissions for $dest";
@@ -242,6 +246,12 @@ sub getPluginsFolder {
 
 sub sendDependencies {
     my ($self, @projects) = @_;
+
+
+    if ($self->checkDependencies) {
+        print "Dependencies are already retrieved\n";
+        return;
+    }
 
     my $serverResource = $self->getLocalResource();
     my $currentResource = '$[/myResource/resourceName]';
@@ -377,10 +387,67 @@ sub scanFiles {
     unless( -w $grapeFolder) {
         die "$grapeFolder is not writable. Please allow agent user to write to this directory."
     }
+    $self->saveDependenciesList('grape');
     my $filesCopied = rmove('grape', $grapeFolder);
     if ($filesCopied == 0) {
         die "Copy failed, no files were copied to $grapeFolder, please check permissions for the directory $grapeFolder";
     }
+}
+
+
+sub saveDependenciesList {
+    my ($self, $folder) = @_;
+
+    my @listOfFiles = ();
+
+    my $digest = Digest::MD5->new;
+    my $dependencies = {};
+    find({wanted => sub {
+        my $name = $_;
+
+        my $filename = File::Spec->abs2rel($File::Find::name, $folder);
+        if (-f $name) {
+            open my $fh, $name or die "Cannot open $name: $!";
+            binmode $fh;
+            $digest->addfile($fh);
+            push @{$dependencies->{files}}, $filename;
+        }
+    }, no_chdir => 1}, $folder);
+    $dependencies->{checksum} = $digest->hexdigest;
+    $self->ec->setProperty(DEPENDENCIES_PROPERTY, encode_json($dependencies));
+    print "Saved dependencies list\n";
+}
+
+
+sub checkDependencies {
+    my ($self) = @_;
+
+    my $deps = eval {
+        my $val = $self->ec->getProperty(DEPENDENCIES_PROPERTY)->findvalue('//value')->string_value;
+        decode_json($val);
+    };
+
+    return 0 unless $deps;
+    my $digest = Digest::MD5->new;
+    return 0 unless $deps->{files};
+
+    for my $file (@{$deps->{files}}) {
+        my $file_path = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape', $file);
+        unless(-e $file_path) {
+            print "File $file_path is not found, reloading dependencies\n";
+            return 0;
+        }
+        open my $fh, $file_path or return 0;
+        binmode $fh;
+        $digest->addfile($fh);
+    }
+
+    if ($digest->hexdigest ne $deps->{checksum}) {
+        print "Checksums are different for dependencies, reloading dependencies\n";
+        return 0;
+    }
+
+    return 1;
 }
 
 1;
