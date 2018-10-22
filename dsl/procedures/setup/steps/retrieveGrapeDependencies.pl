@@ -125,27 +125,68 @@ main();
 1;
 
 
-# File Version: Wed Oct 17 15:24:07 2018
-
 package EC::DependencyManager;
 use strict;
 use warnings;
 
 use File::Spec;
-use JSON qw(decode_json);
+use JSON qw(decode_json encode_json);
 use File::Copy::Recursive qw(rcopy rmove);
+use File::Find;
+use Digest::MD5;
+use Data::Dumper;
+use subs qw(info debug);
 
-our $VERSION = '1.0.0';
+our $saveChecksumSub;
 
 sub new {
-    my ($class, $ec) = @_;
+    my ($class, $ec, %options) = @_;
 
     my $self = { ec => $ec };
+    $self->{dest} = $options{destination} || "$ENV{COMMANDER_DATA}/grape";
+
+    # Rather strange way of declaring the subroutine, it has to be accessible from the spawned step and from the main code
+    $saveChecksumSub = q{
+
+sub doSaveChecksum {
+    my ($ec, $folder, $project) = @_;
+
+    my $digest = Digest::MD5->new;
+    my @files = ();
+    find({wanted => sub {
+        if (-f $File::Find::name) {
+            push @files, File::Spec->abs2rel($File::Find::name, $folder);
+        }
+    }, no_chdir => 1}, $folder);
+
+    @files = sort @files;
+    for my $file (@files) {
+        my $filename = File::Spec->catfile($folder, $file);
+        next if $filename =~ /ivydata/;
+        open my $fh, $filename or die "Cannot open $filename: $!";
+        binmode $fh;
+        my $content = join('', <$fh>);
+        close $fh;
+        $digest->add($content);
+    }
+
+    # Relative to grape/ folder
+    my $checksums = {files => \@files, checksum => $digest->hexdigest};
+    $ec->setProperty("/projects/$project/ec_dependencies", encode_json($checksums), {description => 'List of dependencies files and checksum'});
+}
+
+    };
+
     return bless $self, $class;
 }
 
+
 sub ec {
     return shift->{ec};
+}
+
+sub destination {
+    return shift->{dest};
 }
 
 sub grabResource {
@@ -156,6 +197,11 @@ sub grabResource {
     print "Grabbed Resource: $resName\n";
 }
 
+
+
+
+
+# Getting the name of the server ("local") resource either from server settings or looking for it in resources
 sub getLocalResource {
     my ($self) = @_;
 
@@ -190,7 +236,6 @@ sub getLocalResource {
                             "operator" => "equals",
                             "operand1" => "local"});
 
-
     my $result = $self->ec->findObjects('resource',
             {filter => [
          { operator => 'or',
@@ -209,12 +254,12 @@ sub getLocalResource {
     return $resourceName;
 }
 
-
 sub copyDependencies {
     my ($self, $projectName) = @_;
 
     my $source = $self->getPluginsFolder() . "/$projectName/lib";
-    my $dest = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape');
+    $self->saveChecksum($source, $projectName);
+    my $dest = $self->destination;
     unless(-d $source) {
         die "Folder $source does not exist, please try to reinstall the plugin."
     }
@@ -233,7 +278,6 @@ sub copyDependencies {
     }
 }
 
-
 sub getPluginsFolder {
     my ($self) = @_;
 
@@ -242,6 +286,19 @@ sub getPluginsFolder {
 
 sub sendDependencies {
     my ($self, @projects) = @_;
+
+    my $checksumsOk = 1;
+    for my $project (@projects) {
+        unless($self->checkChecksums($project)) {
+            $checksumsOk = 0;
+        }
+    }
+
+    if ($checksumsOk) {
+        info "Dependencies cache is ok, no dependency transfer is required";
+        $self->setSummary("Dependencies will be taken from the local cache");
+        return 0;
+    }
 
     my $serverResource = $self->getLocalResource();
     my $currentResource = '$[/myResource/resourceName]';
@@ -252,8 +309,8 @@ sub sendDependencies {
         return;
     }
 
-    my $grapeFolder = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape');
-    my $windows = $^O =~ /win32/;
+    my $grapeFolder = $self->destination;
+    my $windows = $^O =~ /win32/i;
 
     my $channel = int rand 9999999;
 
@@ -268,6 +325,9 @@ use warnings;
 use ElectricCommander;
 use JSON qw(encode_json);
 use Data::Dumper;
+use File::Find;
+use Digest::MD5;
+use File::Basename qw(basename);
 
 my $pluginFolders = '#pluginFolders#';
 my @folders = split(';', $pluginFolders);
@@ -276,10 +336,12 @@ my $ec = ElectricCommander->new;
 my $channel = '#channel#';
 print "Channel: $channel\n";
 
+checkStompPort();
+
 my %mapping = ();
 for my $folder (@folders) {
+    my $project = basename($folder);
     $folder = File::Spec->catfile($folder, 'lib');
-    print "$folder\n";
     unless(-d $folder) {
         handleError("Folder $folder does not exist");
     }
@@ -291,6 +353,7 @@ for my $folder (@folders) {
         my $destPath = "grape/$relPath";
         $mapping{$file} = $destPath;
     }
+    doSaveChecksum($ec, $folder, $project);
 }
 
 my $response = $ec->putFiles($ENV{COMMANDER_JOBID}, \%mapping, {channel => $channel});
@@ -323,11 +386,37 @@ sub scanFiles {
     return @files;
 }
 
+#saveChecksum#
+
+sub checkStompPort {
+    my $stomp = $ec->getServerInfo()->findvalue('//stompClientUri')->string_value;
+    my $failed = 0;
+
+    my ($host, $port) = $stomp =~ m/:\/\/([\w+.-]+):(\d+)/;
+    require IO::Socket::INET;
+    my $checkport = IO::Socket::INET->new(
+              PeerAddr => "$host",
+              PeerPort => "$port",
+              Proto => 'tcp',
+              Timeout => '0')
+    or $failed = 1;
+
+    if ($failed) {
+        print "[WARNING] cannot connect to STOMP server at $host:$port\n";
+    }
+    else {
+        print "STOMP server is accessible at $host:$port\n";
+    }
+
+}
     };
 
     my $pluginFolders = join(';', @folders);
     $sendStep =~ s/\#pluginFolders\#/$pluginFolders/;
     $sendStep =~ s/\#channel\#/$channel/;
+    $sendStep =~ s/\#saveChecksum\#/$saveChecksumSub/;
+
+    $self->checkStomp;
 
     my $xpath = $self->ec->createJobStep({
         jobStepName => 'Grab Dependencies',
@@ -337,7 +426,7 @@ sub scanFiles {
     });
 
     my $jobStepId = $xpath->findvalue('//jobStepId')->string_value;
-    print "Job Step ID: $jobStepId\n";
+    info "Spawned job step for collecting dependencies: $jobStepId";
     my $completed = 0;
     while(!$completed) {
         my $status = $self->ec->getJobStepStatus($jobStepId)->findvalue('//status')->string_value;
@@ -356,7 +445,7 @@ sub scanFiles {
         $self->ec->getProperty('/myJob/ec_dependencies_files')->findvalue('//value')->string_value;
     };
     if ($@) {
-        die "Cannot get property ec_dependencies_files from the job: $@";
+        die "Cannot get property ec_dependencies_files from the job: $@, please try to rerun the job";
     }
 
     my $mapping = decode_json($files);
@@ -366,7 +455,7 @@ sub scanFiles {
 
         }
         else {
-            die "The file $dest was not received\n";
+            die "The dependency file $dest was sent but not received, please try to rerun the job\n";
         }
     }
 
@@ -381,6 +470,97 @@ sub scanFiles {
     if ($filesCopied == 0) {
         die "Copy failed, no files were copied to $grapeFolder, please check permissions for the directory $grapeFolder";
     }
+    info "Received dependencies";
+}
+
+sub printLog {
+    my ($marker, @messages) = @_;
+
+    for my $message (@messages) {
+        if (ref $message) {
+            $message = Dumper($message);
+        }
+        print "$marker $message\n";
+    }
+}
+
+
+sub debug {
+    my @messages = @_;
+
+    if ($ENV{DEPENDENCIES_DEBUG}) {
+        printLog('[DEBUG]', @messages);
+    }
+}
+
+
+sub info {
+    my @messages = @_;
+
+    printLog('[INFO]', @messages);
+}
+
+
+sub checkChecksums {
+    my ($self, $project) = @_;
+
+    my $deps = eval {
+        my $string = $self->ec->getProperty("/projects/$project/ec_dependencies")->findvalue('//value')->string_value;
+        decode_json($string);
+    };
+
+    return 0 unless $deps;
+    return 0 unless $deps->{files};
+    return 0 unless $deps->{checksum};
+
+    my $digest = Digest::MD5->new;
+
+    for my $file (@{$deps->{files}}) {
+        my $filename = File::Spec->catfile($self->destination, $file);
+        next if $filename =~ /ivydata/; # this one changes
+        open my $fh, $filename or return 0;
+        binmode $fh;
+        my $content = join('', <$fh>);
+        close $fh;
+        $digest->add($content);
+    }
+
+    my $checksum = $digest->hexdigest;
+    if ($checksum ne $deps->{checksum}) {
+        info "Checksums do not match: $deps->{checksum} and $checksum\n";
+        return 0;
+    }
+    return 1;
+}
+
+
+sub saveChecksum {
+    my ($self, $folder, $project) = @_;
+
+    no warnings 'redefine';
+
+    eval $saveChecksumSub;
+    if (@$) {
+        info "Cannot call saveChecksum: $@";
+        return;
+    }
+    # Declared in the variable
+    # This was done to remove duplicates
+    doSaveChecksum($self->ec, $folder, $project);
+}
+
+sub setSummary {
+    my ($self, $summary) = @_;
+
+    $self->ec->setProperty('/myJobStep/summary', $summary);
+}
+
+
+sub checkStomp {
+    my ($self) = @_;
+
+    my $uri = $self->ec->getServerInfo()->findvalue('//stompClientUri')->string_value;
+    info "STOMP URI is $uri, it should be accessible from the agent machine";
 }
 
 1;
