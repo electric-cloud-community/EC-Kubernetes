@@ -7,8 +7,9 @@ my $setup = ECSetup->new(
     promoteAction => $promoteAction,
 );
 $setup->promotePlugin([
-    {artifactName => '@PLUGIN_KEY@-Grapes', artifactVersion => '1.0.2', fromDirectory => 'lib/grapes'}
+    {artifactName => '@PLUGIN_KEY@-Grapes', artifactVersion => '1.0.0', fromDirectory => 'lib/grapes'}
 ]);
+
 
 # ec_setup.pl shared code
 #####################################
@@ -16,6 +17,8 @@ package ECSetup;
 
 use strict;
 use warnings;
+
+no warnings 'redefine';
 
 use File::Spec;
 use Archive::Zip;
@@ -55,7 +58,13 @@ sub removeArtifact {
     # This is here because we cannot do publishArtifactVersion in dsl today
     # delete artifact if it exists first
     my $commander = $self->commander;
-    $commander->deleteArtifact("com.electriccloud:$artifactName");
+    eval {
+        $commander->deleteArtifact("com.electriccloud:$artifactName");
+    };
+    if ($@) {
+        # It may fail to connect to the repository. No worries though.
+        warn "Warning: failed to remove old dependency artifact $artifactName: $@";
+    }
 }
 
 sub publishArtifact {
@@ -200,9 +209,7 @@ sub promotePlugin {
         },
     );
 
-
     $logfile .= $dslReponse->findnodes_as_string("/");
-
     my $errorMessage = $commander->getError();
     if ( !$errorMessage ) {
         if ($dependencies) {
