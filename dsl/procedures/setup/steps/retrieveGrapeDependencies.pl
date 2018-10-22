@@ -13,7 +13,6 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 #
-# File Version: Wed Oct 17 15:14:57 2018
 
 =head1 NAME
 
