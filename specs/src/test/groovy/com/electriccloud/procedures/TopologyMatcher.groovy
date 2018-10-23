@@ -9,8 +9,7 @@ import org.apache.log4j.Logger
 import java.text.SimpleDateFormat
 import java.util.regex.Pattern
 
-abstract class TopologyMatcher {
-
+abstract class TopologyMatcher extends NamingTestBase {
 
     def topologyOutcome
 
