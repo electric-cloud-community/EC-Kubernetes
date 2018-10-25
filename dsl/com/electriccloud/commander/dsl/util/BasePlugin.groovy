@@ -1,3 +1,4 @@
+// Version: Thu Oct 25 16:10:18 2018
 package com.electriccloud.commander.dsl.util
 
 import groovy.io.FileType
@@ -42,7 +43,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 				//Store the list of steps that require credentials to be attached as a procedure property
 				procedure proc.procedureName, {
 					property 'ec_stepsWithAttachedCredentials', value: JsonOutput.toJson(stepsWithAttachedCredentials)
-		}
+		        }
 			}
 		}
 		// configure the plugin icon if is exists
@@ -195,6 +196,10 @@ abstract class BasePlugin extends DslDelegatingScript {
 		return script.run();
 	}
 
+	def nullIfEmpty(def value) {
+		value == '' ? null : value 
+	}
+	
 	def buildFormalParametersFromFormXml(def proc, File formXml) {
 
 		def formElements = new XmlSlurper().parseText(formXml.text)
@@ -208,8 +213,8 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 				formalParameter "$formElement.property",
 						defaultValue: formElement.value,
-						required: formElement.required,
-						description: formElement.description,
+						required: nullIfEmpty(formElement.condition) ? 0 : ( nullIfEmpty(formElement.required) ?: 0 ),
+						description: formElement.documentation,
 						type: formElement.type,
 						label: formElement.label,
 						expansionDeferred: expansionDeferred
