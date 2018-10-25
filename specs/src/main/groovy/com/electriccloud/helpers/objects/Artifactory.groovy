@@ -1,26 +1,24 @@
 package com.electriccloud.helpers.objects
 
 
-import static com.electriccloud.helpers.enums.RepoTypes.RepoType
-
 class Artifactory {
 
-    def artifactoryConfig
-    def artifactoryRepoType
-    def artifactoryRepoKey
-    def artifactoryOrgPath
-    def artifactoryArtifactName
-    def artifactoryArtifactVersion
-    def artifactoryArtifactExtension
+    def config
+    def repoType
+    def repoKey
+    def orgPath
+    def artifactName
+    def artifactVersion
+    def artifactExtension
 
-    Artifactory(artifactoryConfig, RepoType repoType, artifactoryRepoKey, artifactoryOrgPath, artifactoryArtifactName, artifactoryArtifactVersion, artifactoryArtifactExtension) {
-        this.artifactoryConfig = artifactoryConfig
-        this.artifactoryRepoType = repoType.getName()
-        this.artifactoryRepoKey = artifactoryRepoKey
-        this.artifactoryOrgPath = artifactoryOrgPath
-        this.artifactoryArtifactName = artifactoryArtifactName
-        this.artifactoryArtifactVersion = artifactoryArtifactVersion
-        this.artifactoryArtifactExtension = artifactoryArtifactExtension
+    Artifactory(config, repoType, repoKey, orgPath, artifactName, artifactVersion, artifactExtension) {
+        this.config = config
+        this.repoType = repoType.getName()
+        this.repoKey = repoKey
+        this.orgPath = orgPath
+        this.artifactName = artifactName
+        this.artifactVersion = artifactVersion
+        this.artifactExtension = artifactExtension
     }
 }
 
