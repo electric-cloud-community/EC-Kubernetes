@@ -1,12 +1,11 @@
 package com.electriccloud.spec
 
 import spock.lang.*
-import com.electriccloud.spec.*
 
 class ContainerHelper extends PluginSpockTestSupport {
 
     def deployService(projectName, serviceName) {
-        def processName = 'com.electriccloud.spec.Deploy'
+        def processName = 'Deploy'
         def map = getEnvMap(projectName, serviceName)
         def envName = map.environmentName
         def envProjectName = map.environmentProjectName
@@ -22,8 +21,8 @@ class ContainerHelper extends PluginSpockTestSupport {
                 processName: '$processName',
             )
         """
-        com.electriccloud.spec.SpockTestSupport.logger.debug(com.electriccloud.spec.PluginSpockTestSupport.objectToJson(result))
-        com.electriccloud.spec.SpockTestSupport.logger.debug("Polling job")
+        SpockTestSupport.logger.debug(PluginSpockTestSupport.objectToJson(result))
+        SpockTestSupport.logger.debug("Polling job")
         def timeout = 400
         def time = 0
         def delay = 30
@@ -78,9 +77,9 @@ class ContainerHelper extends PluginSpockTestSupport {
             getJobDetails(jobId: '$jobId')
         """
         def workspace = details?.job?.workspace
-        com.electriccloud.spec.SpockTestSupport.logger.debug(com.electriccloud.spec.PluginSpockTestSupport.objectToJson(workspace))
+        SpockTestSupport.logger.debug(PluginSpockTestSupport.objectToJson(workspace))
         def path = workspace.unix[0]
-        com.electriccloud.spec.SpockTestSupport.logger.debug(com.electriccloud.spec.PluginSpockTestSupport.objectToJson(path))
+        SpockTestSupport.logger.debug(PluginSpockTestSupport.objectToJson(path))
 
         dsl """
             project 'Container Spec Helper', {
@@ -148,7 +147,7 @@ class ContainerHelper extends PluginSpockTestSupport {
                 expand: 0
             )
         """
-        com.electriccloud.spec.SpockTestSupport.logger.debug(com.electriccloud.spec.PluginSpockTestSupport.objectToJson(logs))
+        SpockTestSupport.logger.debug(PluginSpockTestSupport.objectToJson(logs))
         logs?.property?.value
     }
 
@@ -181,9 +180,9 @@ class ContainerHelper extends PluginSpockTestSupport {
         }
         def logs = readJobLogs(result.jobId)
         def outcome = jobStatus(result.jobId).outcome
-        com.electriccloud.spec.SpockTestSupport.logger.debug("DSL: $dslString")
-        com.electriccloud.spec.SpockTestSupport.logger.debug("Logs: $logs")
-        com.electriccloud.spec.SpockTestSupport.logger.debug("Outcome: $outcome")
+        SpockTestSupport.logger.debug("DSL: $dslString")
+        SpockTestSupport.logger.debug("Logs: $logs")
+        SpockTestSupport.logger.debug("Outcome: $outcome")
         [logs: logs, outcome: outcome, jobId: result.jobId]
     }
 
