@@ -1,10 +1,10 @@
 package com.electriccloud.spec
 
 import spock.lang.*
-import com.electriccloud.spec.*
+
 
 class Deploy extends KubeHelper {
-    static def projectName = 'EC-Kubernetes Specs com.electriccloud.spec.Deploy'
+    static def projectName = 'EC-Kubernetes Specs Deploy'
     static def clusterName = 'Kube Spec Cluster'
     static def envName = 'Kube Spec Env'
     static def configName = 'Kube Spec Config'
@@ -18,8 +18,8 @@ class Deploy extends KubeHelper {
     @Unroll
     def "deploy service #imageName, #imageVersion, capacity #defaultCapacity, #containerPort:#listenerPort"() {
         given:
-        def serviceName = 'Kube com.electriccloud.spec.Deploy Spec'
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        def serviceName = 'Kube Deploy Spec'
+        dslFile "dsl/Deploy.dsl", [
             serviceName    : serviceName,
             projectName    : projectName,
             clusterName    : clusterName,
@@ -84,8 +84,8 @@ class Deploy extends KubeHelper {
 
     def "deploy canary"() {
         given: "first-time deploy runs"
-        def serviceName = 'Kube com.electriccloud.spec.Deploy Spec Canary'
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        def serviceName = 'Kube Deploy Spec Canary'
+        dslFile "dsl/Deploy.dsl", [
             serviceName    : serviceName,
             projectName    : projectName,
             clusterName    : clusterName,
@@ -99,7 +99,7 @@ class Deploy extends KubeHelper {
         def result = deployService(projectName, serviceName)
         assert result.outcome == 'success'
         when: "canary deploy runs"
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        dslFile "dsl/Deploy.dsl", [
             serviceName: serviceName,
             projectName: projectName,
             clusterName: clusterName,
@@ -118,7 +118,7 @@ class Deploy extends KubeHelper {
         assert canaryDeployment.status.replicas == 1
         assert result.outcome == 'success'
         cleanup:
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        dslFile "dsl/Deploy.dsl", [
             serviceName: serviceName,
             projectName: projectName,
             clusterName: clusterName,
@@ -183,7 +183,7 @@ class Deploy extends KubeHelper {
 
         createDeployment(getEndpoint(), getToken(), deployment)
         createService(getEndpoint(), getToken(), service)
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        dslFile "dsl/Deploy.dsl", [
             serviceName    : serviceName,
             projectName    : projectName,
             clusterName    : clusterName,
@@ -217,11 +217,11 @@ class Deploy extends KubeHelper {
 
     @Unroll
     @Ignore("Until deploy strategies are implemented")
-    def "Rolling com.electriccloud.spec.Deploy #minAvailabilityPercentage%:#minAvailabilityCount #maxRunningPercentage%:#maxRunningCount"() {
+    def "Rolling Deploy #minAvailabilityPercentage%:#minAvailabilityCount #maxRunningPercentage%:#maxRunningCount"() {
         given:
-        def serviceName = 'Kube com.electriccloud.spec.Deploy Spec'
+        def serviceName = 'Kube Deploy Spec'
         def imageName = 'imagostorm/hello-world'
-        dslFile "dsl/com.electriccloud.spec.Deploy.dsl", [
+        dslFile "dsl/Deploy.dsl", [
             serviceName             : serviceName,
             projectName             : projectName,
             clusterName             : clusterName,

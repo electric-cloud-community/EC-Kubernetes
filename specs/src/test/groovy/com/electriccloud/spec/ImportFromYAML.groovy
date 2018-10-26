@@ -1,7 +1,5 @@
 package com.electriccloud.spec
 
-import spock.lang.*
-import com.electriccloud.spec.*
 
 class ImportFromYAML extends KubeHelper {
     static def kubeYAMLFile
@@ -16,7 +14,7 @@ class ImportFromYAML extends KubeHelper {
     def doSetupSpec() {
         configName = 'Kube Spec Config'
         createCluster(projectName, envName, clusterName, configName)
-        dslFile 'dsl/com.electriccloud.spec.ImportFromYAML.dsl', [
+        dslFile 'dsl/ImportFromYAML.dsl', [
             projectName: projectName,
             params: [
                 kubeYAMLFile:       '',

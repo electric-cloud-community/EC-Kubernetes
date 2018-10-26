@@ -1,7 +1,7 @@
 package com.electriccloud.spec
 
 import spock.lang.*
-import com.electriccloud.spec.*
+
 
 @Ignore
 // EF Image lacks EC-Docker installed
@@ -9,7 +9,7 @@ class DiscoverValidation extends KubeHelper {
     static def projectName = 'EC-Kubernetes Validate Spec'
 
     def doSetupSpec() {
-        dslFile 'dsl/com.electriccloud.spec.Discover.dsl', [
+        dslFile 'dsl/Discover.dsl', [
             projectName: projectName,
             params: [
                 envName: '',
@@ -46,7 +46,7 @@ class DiscoverValidation extends KubeHelper {
             def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',

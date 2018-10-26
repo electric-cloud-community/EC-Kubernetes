@@ -1,11 +1,11 @@
 package com.electriccloud.spec
 
 import groovy.json.JsonSlurper
-import spock.lang.*
-import com.electriccloud.spec.*
+
+
 
 class Discover extends KubeHelper {
-    static def projectName = 'EC-Kubernetes Specs com.electriccloud.spec.Discover'
+    static def projectName = 'EC-Kubernetes Specs Discover'
     static def clusterName = 'Kube Spec Cluster'
     static def envName = 'Kube Spec Env'
     static def serviceName = 'kube-spec-discovery-test'
@@ -15,7 +15,7 @@ class Discover extends KubeHelper {
     def doSetupSpec() {
         configName = 'Kube Spec Config'
         createCluster(projectName, envName, clusterName, configName)
-        dslFile 'dsl/com.electriccloud.spec.Discover.dsl', [
+        dslFile 'dsl/Discover.dsl', [
             projectName: projectName,
             params     : [
                 envName                         : '',
@@ -48,7 +48,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
             runProcedure(
                 projectName: '$projectName',
-                procedureName: 'com.electriccloud.spec.Discover',
+                procedureName: 'Discover',
                 actualParameter: [
                     clusterName: '$clusterName',
                     namespace: 'default',
@@ -86,7 +86,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
             runProcedure(
                 projectName: '$projectName',
-                procedureName: 'com.electriccloud.spec.Discover',
+                procedureName: 'Discover',
                 actualParameter: [
                     clusterName: 'Created Cluster',
                     namespace: 'default',
@@ -117,7 +117,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',
@@ -175,7 +175,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',
@@ -210,7 +210,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',
@@ -245,7 +245,7 @@ class Discover extends KubeHelper {
         cleanupService(serviceName)
     }
 
-    def "com.electriccloud.spec.Discover secrets"() {
+    def "Discover secrets"() {
         given:
         cleanupService(serviceName)
         secretName = deployWithSecret(serviceName)
@@ -253,7 +253,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',
@@ -288,7 +288,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',
@@ -324,7 +324,7 @@ class Discover extends KubeHelper {
         def result = runProcedureDsl """
                 runProcedure(
                     projectName: '$projectName',
-                    procedureName: 'com.electriccloud.spec.Discover',
+                    procedureName: 'Discover',
                     actualParameter: [
                         clusterName: '$clusterName',
                         namespace: 'default',

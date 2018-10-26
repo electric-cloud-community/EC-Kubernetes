@@ -1,7 +1,6 @@
 package com.electriccloud.spec
 
 import spock.lang.*
-import com.electriccloud.spec.*
 import groovyx.net.http.RESTClient
 import groovy.json.JsonBuilder
 import static groovyx.net.http.ContentType.JSON
