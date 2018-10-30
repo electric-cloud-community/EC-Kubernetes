@@ -14,18 +14,18 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on September 19, 2018</p>
+    <p>Revised on October 30, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
-    <h3>Overview</h3>
-    <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
-<p>You need to have a Kubernetes cluster available for using this plugin.</p>
-</p>
-    
     <h1>Contents</h1>
     <ul>
     <li><a href="#overview">Overview</a></li>
     
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    
+
+    
+
     
     <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
     
@@ -79,7 +79,34 @@
     
     <li><a href="#releaseNotes">Release Notes</a></li>
 </ul>
+    <h3>Overview</h3>
+    <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
+<p>You need to have a Kubernetes cluster available for using this plugin.</p>
+</p>
     
+    
+    <div id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>Binary dependencies (Grapes) are loaded from ElectricFlow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
+<p>ElectricFlow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
+<p>In case the plugin procedures are running on a different from local resource, local resource should be available in the system. It can be set through server properties:</p>
+<pre><code>ectool setProperty /server/settings/localResourceName &lt;my local resource name&gt;
+</code></pre>
+<p>In case the local resource is not set, the dependency handling subprocedure will try to find local resource by the following criterias:</p>
+<ul>
+<li>It has a name &quot;local&quot;</li>
+<li>Or its hostname is one of the following: localhost, 127.0.0.1 or &lt;server hostname&gt;.</li>
+</ul>
+<p>If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.</p>
+<p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
+<a href="https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers" target="_blank">https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers</a>
+ for the instructions.</p>
+
+    </div>
+    
+
+    
+    <!--TODO custom blocks-->
 
     
     <div id="CreateConfiguration">
@@ -206,12 +233,15 @@
 
     <h1 id="procedures">Plugin Procedures</h1>
     
+    
 
     
     <div id="CheckCluster">
         <h2>Check Cluster</h2>
         
+        
         <p>Checks that a Kubernetes cluster exists and is reachable. All other entities such as  Pods, services, and replication controllers all run on top of a cluster.</p>
+        
         
         <h3>Check Cluster Parameters</h3>
         <table class="grid">
@@ -237,7 +267,9 @@
     <div id="DeployService">
         <h2>Deploy Service</h2>
         
+        
         <p>Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.</p>
+        
         
         <h3>Deploy Service Parameters</h3>
         <table class="grid">
@@ -303,7 +335,9 @@
     <div id="UndeployService">
         <h2>Undeploy Service</h2>
         
+        
         <p>Undeploys a previously deployed service on the Kubernetes cluster</p>
+        
         
         <h3>Undeploy Service Parameters</h3>
         <table class="grid">
@@ -364,6 +398,7 @@
     <div id="Discover">
         <h2>Discover</h2>
         
+        
         Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
@@ -401,6 +436,7 @@
     </ol>
 </div>
 
+        
         
             <p>Procedure looks for services and deployments on Kubernetes
 cluster and transfers data into ElectricFlow. Services found
@@ -474,7 +510,9 @@ definitions retrieved from there.</p>
     <div id="InvokeKubernetesAPI">
         <h2>Invoke Kubernetes API</h2>
         
+        
         <p>Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input</p>
+        
         
         <h3>Invoke Kubernetes API Parameters</h3>
         <table class="grid">
@@ -525,7 +563,9 @@ definitions retrieved from there.</p>
     <div id="WaitForKubernetesAPI">
         <h2>Wait For Kubernetes API</h2>
         
+        
         <p>Polls on Kubernetes REST API to check specific field of API response.</p>
+        
         
         <h3>Wait For Kubernetes API Parameters</h3>
         <table class="grid">
@@ -576,7 +616,9 @@ definitions retrieved from there.</p>
     <div id="CreateResource">
         <h2>Create Resource (DEPRECATED)</h2>
         
+        
         <p>[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.</p>
+        
         
         <h3>Create Resource Parameters</h3>
         <table class="grid">
@@ -623,6 +665,7 @@ definitions retrieved from there.</p>
         <h2>Import Microservices</h2>
         
         
+        
     Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
         <ol>
@@ -651,6 +694,7 @@ definitions retrieved from there.</p>
         </ol>
     </div>
     
+        
         
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
@@ -809,6 +853,13 @@ If the object with the provided name already exists in the ElectricFlow, this ob
 
     <h1 id="releaseNotes">Release Notes</h1>
     
+    <h3>@PLUGIN_KEY@ 1.2.0</h3>
+    <ul>
+        
+        <li>Changed the way of storing and loading dependencies: the Repository is not required anymore. Now the depencencies and loaded through STOMP.</li>
+        
+    </ul>
+    
     <h3>@PLUGIN_KEY@ 1.1.2</h3>
     <ul>
         
@@ -819,6 +870,8 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <li>Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService</li>
         
         <li>Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'</li>
+        
+        <li>Default port for ElectricFlow client has been changed from insecure (8000 by default) to secure (8443 by default). If COMMANDER_SECURE property is not populated, secure port and HTTPS will be used.</li>
         
     </ul>
     
