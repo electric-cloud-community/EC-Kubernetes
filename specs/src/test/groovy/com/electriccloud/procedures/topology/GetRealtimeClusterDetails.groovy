@@ -15,13 +15,13 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void createAndDeployProjectLevelMicroservice() {
         createAndDeployService(false)
         setTopology()
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void backendAuthorization(){
         ectoolApi.ectoolLogin()
     }
@@ -34,7 +34,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get a Response with correct fields for 'ecp-container' objectType in Topology")
     void getAResponseWithCorrectFieldsForEcpContainerObjectTypeInTopology() {
@@ -100,7 +100,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get a Response with correct fields for 'ecp-cluster' objectType in Topology")
     void getAResponseWithCorrectFieldsForEcpClusterObjectTypeInTopology() {
@@ -119,7 +119,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get a Response with correct fields for 'ecp-namespace' objectType in Topology")
     void getAResponseWithCorrectFieldsForEcpNamespaceObjectTypeInTopology() {
@@ -138,7 +138,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get a Response with correct fields for 'ecp-pod' objectType in Topology")
     void getAResponseWithCorrectFieldsForEcpPodObjectTypeInTopology() {
@@ -162,7 +162,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get a Response with correct fields for 'ecp-service' objectType in Topology")
     void getAResponseWithCorrectFieldsForEcpServiceObjectTypeInTopology() {
@@ -183,7 +183,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Description("Get Realtime Cluster Details using DSL")
     void getRealtimeClusterDetailsUsingDSL() {
@@ -216,7 +216,7 @@ class GetRealtimeClusterDetails extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Negative")
     @TmsLink("")
     @Description("Unable to Get Realtime Cluster Details for non-existing Configuration")
     void unableToGetRealtimeClusterDetailsForNonExistingConfiguration() {

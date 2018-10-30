@@ -19,18 +19,18 @@ import static org.awaitility.Awaitility.await
 class ServiceTypeDeploymentTests extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/apis", DEBUG)
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         k8sClient.createEnvironment(configName)
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest() {
         k8sClient.cleanUpCluster(configName)
         await().atMost(50, TimeUnit.SECONDS).until { k8sApi.getPods().json.items.size() == 0 }
@@ -40,8 +40,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Deploy Microservice with LoadBalancer")
-    @TmsLink("")
+    @Test(groups = "Positive", testName = "Deploy Microservice with LoadBalancer")
     @Story("Deploy service using LoadBalancer service type")
     @Description(" Deploy Project-level Microservice with LoadBalancer service type")
     void deployMicroserviceWithLoadBalancer(){
@@ -87,8 +86,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Deploy Microservice with ClusterIP")
-    @TmsLink("")
+    @Test(groups = "Positive", testName = "Deploy Microservice with ClusterIP")
     @Story("Deploy service using ClusterIP service type")
     @Description("Deploy Project-level Microservice with ClusterIP service type")
     void deployMicroserviceWithClusterIP(){
@@ -125,8 +123,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Deploy Microservice with NodePort")
-    @TmsLink("")
+    @Test(groups = "Positive", testName = "Deploy Microservice with NodePort")
     @Story("Deploy service using NodePort service type")
     @Description("Deploy Project-level Microservice with NodePort service type")
     void deployMicroserviceWithNodePort(){

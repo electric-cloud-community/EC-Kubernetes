@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd" >
+
+<suite name = "Sanity tests" parallel="false" thread-count="3">
+
+    <test name="Configuration Tests">
+        <groups>
+            <run>
+                <include name="Positive">
+                    <classes>
+                        <class name="com.electriccloud.procedures.configuration.CreateConfigurationTests"/>
+                        <class name="com.electriccloud.procedures.configuration.EditConfigurationTests"/>
+                        <class name="com.electriccloud.procedures.configuration.ProvisionTests"/>
+                    </classes>
+                </include>
+            </run>
+        </groups>
+    </test>
+
+    <test name="Deployment Tests">
+        <groups>
+            <run>
+                <include name="Positive">
+                    <classes>
+                        <class name="com.electriccloud.procedures.deployment.MicroserviceDeploymentTests"/>
+                        <class name="com.electriccloud.procedures.deployment.ApplicationDeploymentTests"/>
+                        <class name="com.electriccloud.procedures.deployment.ServiceTypeDeploymentTests"/>
+                    </classes>
+                </include>
+            </run>
+        </groups>
+    </test>
+
+    <test name="Discovery Tests">
+        <groups>
+            <run>
+                <include name="Positive">
+                    <classes>
+                        <class name="com.electriccloud.procedures.discovery.DiscoveryTests"/>
+                    </classes>
+                </include>
+            </run>
+        </groups>
+    </test>
+
+    <test name="Import Tests">
+        <groups>
+            <run>
+                <include name="Positive">
+                    <classes>
+                        <class name="com.electriccloud.procedures.import_ms.ImportTests"/>
+                    </classes>
+                </include>
+            </run>
+        </groups>
+    </test>
+
+    <test name="Topology Tests">
+        <groups>
+            <run>
+                <include name="Positive">
+                    <classes>
+                        <class name="com.electriccloud.procedures.topology.DoActionOnRealtimeCluster"/>
+                        <class name="com.electriccloud.procedures.topology.GetDeployTopology"/>
+                        <class name="com.electriccloud.procedures.topology.GetRealtimeClusterDetails"/>
+                        <class name="com.electriccloud.procedures.topology.GetRealtimeClusterTopology"/>
+                    </classes>
+                </include>
+            </run>
+        </groups>
+    </test>
+
+
+
+</suite>

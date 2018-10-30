@@ -14,13 +14,13 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
 
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void createAndDeployProjectLevelMicroservice() {
         createAndDeployService(false)
         setTopology()
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void backendAuthorization(){
         ectoolApi.ectoolLogin()
     }
@@ -33,7 +33,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Realtime Cluster Topology positive")
     @Description("Get a Response with correct fields for all Node Types in Topology")
@@ -66,7 +66,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
 
 
 
-    @Test(enabled = true)
+    @Test(groups = "Positive", enabled = true)
     @TmsLink("")
     @Story("Get Realtime Cluster Topology positive")
     @Description("Get a Response with correct fields for all Node Types in Topology after Deploy Imported Microservice")
@@ -100,7 +100,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
 
 
 
-    @Test(enabled = true)
+    @Test(groups = "Negative", enabled = true)
     @TmsLink("")
     @Story("Get Realtime Cluster Topology negative")
     @Description("Unable to Get Realtime Cluster Topology for non-existing Configuration")
@@ -118,7 +118,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Postive")
     @TmsLink("")
     @Story("Get Realtime Cluster Topology positive")
     @Description("Get Realtime Cluster Topology using DSL")
@@ -153,7 +153,7 @@ class GetRealtimeClusterTopology extends KubernetesTestBase {
 
     // Implement in the future!
 
-    @Test(enabled = false)
+    @Test(groups = "Negative", enabled = false)
     @TmsLink("")
     @Story("Get Realtime Cluster Topology negative")
     @Description("Unable to Get Realtime Cluster Topology for stopped Cluster ")

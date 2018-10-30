@@ -33,7 +33,7 @@ class KubernetesTestBase extends TopologyMatcher {
                     target: '[{"name": "html-content","mountPath": "/usr/share/nginx/html"}]' ]
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpData(){
         setDefaultTimeout(200, TimeUnit.SECONDS)
         configName          = "k8sConfig"
@@ -44,7 +44,7 @@ class KubernetesTestBase extends TopologyMatcher {
         serviceName         = "nginx-service"
         applicationName     = "nginx-application"
         containerName       = "nginx-container"
-        adminAccount        = "flowqe"
+        adminAccount        = "ecadmin"
 
         pluginName          = System.getenv("PLUGIN_NAME")
         pluginVersion       = System.getenv("PLUGIN_BUILD_VERSION")

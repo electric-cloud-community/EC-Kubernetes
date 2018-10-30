@@ -11,13 +11,13 @@ import org.testng.annotations.Test
 @Feature("Topology")
 class GetRealtimeClusterTopologyValidation extends KubernetesTestBase {
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void createAndDeployProjectLevelMicroservice() {
         createAndDeployService(false)
         setTopology()
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         ectoolApi.ectoolLogin()
         ecpPodName = k8sApi.getPods().json.items.last().metadata.name
@@ -34,7 +34,7 @@ class GetRealtimeClusterTopologyValidation extends KubernetesTestBase {
 
 
 
-    @Test(dataProvider = "projectNames", enabled = true)
+    @Test(groups = "Negative", dataProvider = "projectNames", enabled = true)
     @TmsLink("")
     @Story("Topology validation")
     @Description("getRealtimeClusterTopology validation (projectName)")
@@ -47,7 +47,7 @@ class GetRealtimeClusterTopologyValidation extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "clusterNames", enabled = true)
+    @Test(groups = "Negative", dataProvider = "clusterNames", enabled = true)
     @Issue("")
     @TmsLink("")
     @Story("Topology validation")
@@ -61,7 +61,7 @@ class GetRealtimeClusterTopologyValidation extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "environmentNames", enabled = true)
+    @Test(groups = "Negative", dataProvider = "environmentNames", enabled = true)
     @TmsLink("")
     @Story("Topology validation")
     @Description("getRealtimeClusterTopology validation (environmentName)")
@@ -74,7 +74,7 @@ class GetRealtimeClusterTopologyValidation extends KubernetesTestBase {
     }
 
 
-    @Test(enabled = true)
+    @Test(groups = "Negative", enabled = true)
     @TmsLink("")
     @Story("Topology validation")
     @Description("getRealtimeClusterTopology validation (empty names for all fields)")

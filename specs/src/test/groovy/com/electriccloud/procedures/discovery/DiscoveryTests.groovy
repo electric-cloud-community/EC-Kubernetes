@@ -16,7 +16,7 @@ import static org.awaitility.Awaitility.await
 @Feature('Discovery')
 class DiscoveryTests extends KubernetesTestBase {
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
@@ -25,20 +25,20 @@ class DiscoveryTests extends KubernetesTestBase {
         k8sClient.deployService(projectName, serviceName)
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         k8sClient.client.deleteService(projectName, serviceName)
         k8sClient.client.deleteApplication(projectName, applicationName)
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest(){
         k8sClient.client.deleteService(projectName, serviceName).deleteApplication(projectName, applicationName)
         k8sClient.client.deleteProject('MyProject')
     }
 
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests(){
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
@@ -49,7 +49,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Project-level Microservice")
+    @Test(groups = "Positive", testName = "Discover Project-level Microservice")
     @TmsLink("")
     @Story("Microservice discovery")
     @Description("Discover Project-level Microservice")
@@ -87,7 +87,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Microservice with new environment")
+    @Test(groups = "Positive", testName = "Discover Microservice with new environment")
     @TmsLink("")
     @Story("Microservice discovery")
     @Description("Discover Project-level Microservice with environment generation")
@@ -132,7 +132,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Microservice with new project")
+    @Test(groups = "Positive", testName = "Discover Microservice with new project")
     @TmsLink("")
     @Story("Microservice discovery")
     @Description("Discover Project-level Microservice with project generation ")
@@ -178,7 +178,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Application-level Microservice")
+    @Test(groups = "Positive", testName = "Discover Application-level Microservice")
     @TmsLink("")
     @Story("Application discovery")
     @Description("Discover Application-level Microservice")
@@ -218,7 +218,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Application with new environment")
+    @Test(groups = "Positive", testName = "Discover Application with new environment")
     @TmsLink("")
     @Story("Application discovery")
     @Description("Discover Application-level Microservice with environment generation")
@@ -261,7 +261,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover Application with new project")
+    @Test(groups = "Positive", testName = "Discover Application with new project")
     @TmsLink("363540")
     @Story("Microservice discovery")
     @Description(" Discover Application-level Microservice with project generation")
@@ -304,7 +304,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Discover existing Project-level Microservice")
+    @Test(groups = "Nagative", testName = "Discover existing Project-level Microservice")
     @TmsLink("")
     @Story("Invalid Microservice discovery")
     @Description("Unable to discover Project-level Microservice that already exist")
@@ -340,7 +340,7 @@ class DiscoveryTests extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Negative")
     @TmsLink("324444")
     @Story("Invalid Application discovery")
     @Description("Unable to Discover Application-level Microservice that already exist")
@@ -377,7 +377,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Unable to Discover with invalid namespace")
+    @Test(groups = "Negative", testName = "Unable to Discover with invalid namespace")
     @TmsLink("")
     @Story("Invalid Microservice discovery")
     @Description("Unable to discover Project-level Microservice with invalid Namespace ")
@@ -402,7 +402,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(priority = 1, testName = "Discover Microservice with invalid data")
+    @Test(groups = "Negative", priority = 1, testName = "Discover Microservice with invalid data")
     @TmsLink("")
     @Story("Invalid Microservice discovery")
     @Description("Unable to Discover Microservice without plugin configuration")
@@ -435,7 +435,7 @@ class DiscoveryTests extends KubernetesTestBase {
 
 
 
-    @Test(dataProvider = 'invalidDiscoveryData', dataProviderClass = DiscoveryData.class)
+    @Test(groups = "Negative", dataProvider = 'invalidDiscoveryData', dataProviderClass = DiscoveryData.class)
     @Story('Preform invalid discovery')
     void invalidDiscoveryProcedure(project, envProject, envName, clusterName, namespace, errorMessage){
         try {

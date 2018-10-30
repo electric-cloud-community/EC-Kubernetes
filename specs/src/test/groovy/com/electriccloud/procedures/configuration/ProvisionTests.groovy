@@ -15,19 +15,19 @@ import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 @Feature('Provsioning')
 class ProvisionTests extends KubernetesTestBase {
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests(){
         k8sClient.client.deleteProject(environmentProjectName)
     }
 
-    @Test
+    @Test(groups = "Positive")
     @Story("Provisioning of kubernetes environment")
     @Description("Provision exsting Kubernetes cluster")
     void provisionCluster(){
@@ -41,7 +41,7 @@ class ProvisionTests extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = 'invalidProvisionData', dataProviderClass = ConfigurationData.class)
+    @Test(groups = "Negative", dataProvider = 'invalidProvisionData', dataProviderClass = ConfigurationData.class)
     @Story('Provisioning with invalid data')
     @Description("Provision Kubernetes cluster with invalid data")
     void invalidClusterProvisioning(project, environment, cluster, message){

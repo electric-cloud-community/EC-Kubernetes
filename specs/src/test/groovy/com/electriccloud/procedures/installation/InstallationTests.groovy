@@ -11,26 +11,26 @@ import org.testng.annotations.Test
 class InstallationTests extends KubernetesTestBase {
 
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownClass(){
         def plugin = ectoolApi.installPlugin(pluginPath, pluginName).plugin
         ectoolApi.promotePlugin(plugin.pluginName).plugin
     }
 
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void stUpTest(){
         ectoolApi.deletePlugin(pluginName, pluginVersion)
     }
 
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest(){
         ectoolApi.deletePlugin(pluginName, pluginVersion)
     }
 
 
-    @Test
+    @Test(alwaysRun = true)
     @Story('Install plugin')
     void installPlugin(){
         def r = ectoolApi.installPlugin(pluginPath, pluginName).plugin
@@ -40,7 +40,7 @@ class InstallationTests extends KubernetesTestBase {
         assert r.lastModifiedBy == "admin"
     }
 
-    @Test
+    @Test(alwaysRun = true)
     @Story('Promote plugin')
     void promotePlugin(){
         def plugin = ectoolApi.installPlugin(pluginPath, pluginName).plugin
@@ -51,7 +51,7 @@ class InstallationTests extends KubernetesTestBase {
         assert r.lastModifiedBy == "admin"
     }
 
-    @Test
+    @Test(alwaysRun = true)
     @Story('Uninstall plugin')
     void uninstallPlugin(){
         def plugin = ectoolApi.installPlugin(pluginPath, pluginName).plugin

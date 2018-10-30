@@ -87,7 +87,7 @@ public class ConfigurationData {
     public Object[][] ivalidProvisioningData(){
         return new Object[][]{
                 {
-                        "test", environmentName, clusterName, "NoSuchProject: Project 'test' does not exist"
+                        "test", environmentName, clusterName, "NoSuchEnvironment: Environment '" + environmentName + "' does not exist in project 'test'"
                 },
                 {
                         "Default", environmentName, clusterName, "NoSuchEnvironment: Environment '" + environmentName + "' does not exist in project 'Default'"

@@ -19,24 +19,24 @@ import static org.awaitility.Awaitility.await
 class MicroserviceDeploymentTests extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpDeployment() {
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests() {
         k8sClient.deleteConfiguration(configName)
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         k8sClient.createEnvironment(configName)
         k8sClient.createService(2, volumes, false)
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest() {
         k8sClient.cleanUpCluster(configName)
         await().atMost(50, TimeUnit.SECONDS).until { k8sApi.getPods().json.items.size() == 0 }
@@ -44,7 +44,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Deploy Project-Level Microservice")
+    @Test(groups = "Positive", testName = "Deploy Project-Level Microservice")
     @TmsLink("")
     @Story("Deploy Microservcice")
     @Description("Deploy Project-Level Microservice")
@@ -82,7 +82,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
 
     }
 
-    @Test(testName = "Update Project-Level Microservice"/*, invocationCount = 2*/)
+    @Test(groups = "Negative", testName = "Update Project-Level Microservice"/*, invocationCount = 2*/)
     @TmsLink("")
     @Story('Update Microservice')
     @Description("Update Project-level Microservice with the same data")
@@ -122,7 +122,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Scale Project-Level Microservice")
+    @Test(groups = "Positive", testName = "Scale Project-Level Microservice")
     @TmsLink("")
     @Story("Update Microservice")
     @Description("Update Project-level Microservice")
@@ -162,7 +162,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Deploy Canary Project-Level Microservice")
+    @Test(groups = "Positive", testName = "Deploy Canary Project-Level Microservice")
     @TmsLink("")
     @Story('Canary deploy of Microservice')
     @Description("Canary Deploy for Project-level Microservice")
@@ -210,7 +210,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Undeploy Project-Level Microservice")
+    @Test(groups = "Positive", testName = "Undeploy Project-Level Microservice")
     @TmsLink("")
     @Story('Undeploy Microservice')
     @Description("Undeploy Project-level Microservice")
@@ -231,7 +231,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
         assert !deploymentLog.contains(clusterToken)
     }
 
-    @Test(testName = "Undeploy Canary Project-Level Microservice")
+    @Test(groups = "Positive", testName = "Undeploy Canary Project-Level Microservice")
     @Flaky
     @TmsLink("")
     @Story('Undeploy Microservice after Canary deployment')

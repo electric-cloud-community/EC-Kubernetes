@@ -19,13 +19,13 @@ import static org.awaitility.Awaitility.await
 class DoActionOnRealtimeCluster extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void createAndDeployProjectLevelMicroservice() {
         createAndDeployService(false)
         setTopology()
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void backendAuthorization(){
         ectoolApi.ectoolLogin()
     }
@@ -38,7 +38,7 @@ class DoActionOnRealtimeCluster extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Do actions on Topology positive")
     @Description("View Logs for 'ecp-container' objectType in Topology")
@@ -51,7 +51,7 @@ class DoActionOnRealtimeCluster extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Do actions on Topology positive")
     @Description("Skip actionParameter if it is not implemented for objectType in Topology")
@@ -69,7 +69,7 @@ class DoActionOnRealtimeCluster extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Negative")
     @TmsLink("")
     @Story("Do actions on Topology negative")
     @Description("Unable to Get Realtime Cluster Details for non-existing Configuration")
@@ -91,7 +91,7 @@ class DoActionOnRealtimeCluster extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Do actions on Topology positive")
     @Description("Perform Action on Realtime Cluster using DSL")

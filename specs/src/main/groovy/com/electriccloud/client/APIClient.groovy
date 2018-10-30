@@ -69,7 +69,7 @@ class APIClient extends HttpClient {
     def writeJobLog = { job -> log.info("\n${".".multiply(80)} \nJOB LOG: \n${getJobLogs(job)}${".".multiply(80)}") }
 
 
-    def waitForJobToComplete(jobId, seconds = 10, periodSec = 1, message = "Job status: COMPLETED.") {
+    def waitForJobToComplete(jobId, seconds = 10, periodSec = 1, message = "Job status: COMPLETED.", debug = true) {
         def step = 0
         def periodTime = periodSec
         while (getJobStatus(jobId).json.status != "completed") {
@@ -79,7 +79,9 @@ class APIClient extends HttpClient {
             log.info("Job status: pending; waiting for: ${periodTime * (step)} sec.")
 
             if (getJobStatus(jobId).json.outcome == "error") {
-                writeJobLog(jobId)
+                if (debug){
+                    writeJobLog(jobId)
+                }
                 log.info("JOB STATUS: FAILED!")
                 throw new RuntimeException("Job status: FAILED: \n ${getJobStatus(jobId).json} \n JOB ERROR LOG: \n${getJobLogs(jobId)}",
                         new Throwable("${getJobStatus(jobId).json.jobId}"))
@@ -92,7 +94,9 @@ class APIClient extends HttpClient {
 
         }
         sleep(periodTime * 1000)
-        writeJobLog(jobId)
+        if (debug){
+            writeJobLog(jobId)
+        }
         log.info(message)
     }
 

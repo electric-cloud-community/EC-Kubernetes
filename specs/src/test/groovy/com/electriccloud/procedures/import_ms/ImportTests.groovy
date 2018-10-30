@@ -17,21 +17,21 @@ import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 class ImportTests extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests() {
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/apis', DEBUG)
         k8sClient.createEnvironment(configName)
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests() {
         k8sClient.client.deleteProject(projectName)
         k8sClient.deleteConfiguration(configName)
     }
 
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         k8sClient.client.deleteApplication(projectName, applicationName)
         k8sClient.client.deleteService(projectName, serviceName)
@@ -39,7 +39,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest() {
         k8sClient.client.deleteApplication(projectName, applicationName)
         k8sClient.client.deleteService(projectName, serviceName)
@@ -47,7 +47,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Import Project-level Microservice")
+    @Test(groups = "Positive", testName = "Import Project-level Microservice")
     @TmsLink("")
     @Story('Import microservice')
     @Description("Import Project-level Microservice")
@@ -79,7 +79,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Import Project-level Microservice without mapping")
+    @Test(groups = "Positive", testName = "Import Project-level Microservice without mapping")
     @TmsLink("")
     @Story('Import microservice')
     @Description("Import Project-level Microservice without environment mapping")
@@ -109,7 +109,7 @@ class ImportTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Import Application-level Microservice")
+    @Test(groups = "Positive", testName = "Import Application-level Microservice")
     @TmsLink("363503")
     @Story('Import microservice')
     @Description("Import Application-level Microservice")
@@ -138,7 +138,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Import Application-level Microservice without mapping")
+    @Test(groups = "Positive", testName = "Import Application-level Microservice without mapping")
     @TmsLink("")
     @Story('Import microservice')
     @Description("Import Application-level Microservice without environment mapping")
@@ -168,7 +168,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Import existing Project-level Microservice")
+    @Test(groups = "Negative", testName = "Import existing Project-level Microservice")
     @TmsLink("363471")
     @Story('Import with invalid data')
     @Description("Unable to import Project-level Microservice that already exist")
@@ -208,7 +208,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Import existing Application-level Microservice")
+    @Test(groups = "Negative", testName = "Import existing Application-level Microservice")
     @TmsLink("363472")
     @Story('Import with invalid data')
     @Description("Unable to import Application-level Microservice that already exist")
@@ -247,8 +247,7 @@ class ImportTests extends KubernetesTestBase {
 
 
 
-    @Test(dataProvider = 'invalidImportData', dataProviderClass = ImportData.class,
-            testName = "Import with invalid data")
+    @Test(groups = "Negative", dataProvider = 'invalidImportData', dataProviderClass = ImportData.class)
     @TmsLinks([
             @TmsLink("363509"),
             @TmsLink("363508"),

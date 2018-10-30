@@ -128,7 +128,7 @@ task systemTest(type: Test){
     systemProperty "allure.link.tms.pattern", "https://ecflow.testrail.net/index.php?/cases/view/{}"
     ignoreFailures = true
     useTestNG() {
-        suites "${suiteDir}/end2endTests.xml"
+        suites "${suiteDir}/regressionTests.xml"
     }
     testLogging.showStandardStreams = true
 

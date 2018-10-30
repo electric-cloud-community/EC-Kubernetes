@@ -44,7 +44,7 @@ class KubernetesClient extends CommanderClient {
         message("edit kubernetes config")
         def json = jsonHelper.editConfigJson(clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
         def response = client.dslFile(dslPath(plugin, 'editConfig'), client.encode(json.toString()))
-        client.waitForJobToComplete(response.json.jobId, timeout, 2, "Configuration is successfully changed.")
+        client.waitForJobToComplete(response.json.jobId, timeout, 2, "Configuration is successfully changed.", false)
         return response
     }
 

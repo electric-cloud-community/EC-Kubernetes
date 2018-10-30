@@ -14,12 +14,12 @@ import org.testng.annotations.Test
 class GetDeployTopology extends KubernetesTestBase {
 
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void backendAuthorization(){
         ectoolApi.ectoolLogin()
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTests() {
         k8sClient.cleanUpCluster(configName)
         k8sClient.client.deleteProject(projectName)
@@ -27,7 +27,7 @@ class GetDeployTopology extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology for Project-level Microservice")
@@ -55,7 +55,7 @@ class GetDeployTopology extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology for Application")
@@ -86,7 +86,7 @@ class GetDeployTopology extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology for Environment")
@@ -114,7 +114,7 @@ class GetDeployTopology extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology for Cluster")
@@ -144,7 +144,7 @@ class GetDeployTopology extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology for Application with Mapping to Environment Tiers and Resources")
@@ -200,7 +200,7 @@ environmentTier('$envTier2', projectName: '$projectName', environmentName: '$env
         }
     }
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("")
     @Story("Get Topology positive")
     @Description("Get Deploy Topology using DSL")
@@ -229,7 +229,7 @@ environmentTier('$envTier2', projectName: '$projectName', environmentName: '$env
 
 
 
-    @Test
+    @Test(groups = "Negative")
     @TmsLink("")
     @Story("Get Topology negative")
     @Description("Unable to Get Realtime Cluster Details for non-existing Configuration")

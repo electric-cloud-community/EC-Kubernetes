@@ -13,20 +13,20 @@ import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 class CreateConfigurationTests extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests(){
         k8sClient.deleteConfiguration(configName)
     }
 
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest(){
         k8sClient.deleteConfiguration(configName)
         k8sClient.client.deleteProject(projectName)
     }
 
 
-    @Test(dataProvider = "clusterVersions", dataProviderClass = ConfigurationData.class)
+    @Test(groups = "Negative", dataProvider = "clusterVersions", dataProviderClass = ConfigurationData.class)
     @TmsLinks(value = [
             @TmsLink("324777"),
             @TmsLink("324778"),
@@ -49,7 +49,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("324783")
     @Story("Create Configuration without test connection")
     @Description("Create configuration without cluster test connection ")
@@ -68,7 +68,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
 
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("324783")
     @Story("Create Configuration with test connection")
     @Description("Create Configuration with cluster test connection")
@@ -86,7 +86,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "logLevels", dataProviderClass = ConfigurationData.class)
+    @Test(groups = "Negative", dataProvider = "logLevels", dataProviderClass = ConfigurationData.class)
     @TmsLinks(value = [
             @TmsLink("324785"),
             @TmsLink("324786"),
@@ -111,7 +111,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Negative")
     @TmsLink("324796")
     @Story("Invalid configuration")
     @Description("Unable to create configuration that already exist")
@@ -131,7 +131,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "invalidConfigData", dataProviderClass = ConfigurationData.class)
+    @Test(groups = "Negative", dataProvider = "invalidConfigData", dataProviderClass = ConfigurationData.class)
     @Issue("ECKUBE-180")
     @TmsLinks(value = [
             @TmsLink("324789"),

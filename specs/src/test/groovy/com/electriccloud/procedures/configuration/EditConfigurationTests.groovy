@@ -9,6 +9,7 @@ import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
 
 import static com.electriccloud.helpers.enums.LogLevels.*
+import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
 
 
@@ -16,12 +17,12 @@ import static com.electriccloud.helpers.enums.ServiceTypes.*
 class EditConfigurationTests extends KubernetesTestBase {
 
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpTests(){
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests(){
         k8sClient.deleteConfiguration(configName)
     }
@@ -32,7 +33,7 @@ class EditConfigurationTests extends KubernetesTestBase {
     @Story("Edit Configuration")
     @Description("Edit Configuration description, endpoint, token, debug level, version")
     void editConfiguration(){
-        def resp = k8sClient.editConfiguration(clusterEndpoint, 'ecadmin', clusterToken, clusterVersion, true, "/api/v1/namespaces", LogLevel.DEBUG)
+        def resp = k8sClient.editConfiguration(clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, "/api/v1/namespaces", DEBUG)
         String logs = k8sClient.client.getJobLogs(resp.json.jobId)
         def jobStatus = k8sClient.client.getJobStatus(resp.json.jobId).json
         assert jobStatus.outcome == "success"
@@ -41,12 +42,12 @@ class EditConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("324804")
     @Story("Edit Configuration")
     @Description("Edit Configuration without cluster test connection")
     void editConfigurationWithoutTestConnection(){
-        def resp = k8sClient.editConfiguration(clusterEndpoint, 'ecadmin', clusterToken, clusterVersion, false, "", LogLevel.DEBUG)
+        def resp = k8sClient.editConfiguration(clusterEndpoint, adminAccount, clusterToken, clusterVersion, false)
         def jobStatus = k8sClient.client.getJobStatus(resp.json.jobId).json
         def jobSteps = k8sClient.client.getJobSteps(resp.json.jobId).json.object
         assert jobStatus.outcome == "success"
@@ -56,12 +57,12 @@ class EditConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @TmsLink("324798")
     @Story("Edit Configuration")
     @Description("Edit Configuration with test cluster connection")
     void editConfigurationWithTestConnection(){
-        def resp = k8sClient.editConfiguration(clusterEndpoint, 'ecadmin', clusterToken, clusterVersion, true, '/api/v1/namespaces', LogLevel.DEBUG)
+        def resp = k8sClient.editConfiguration(clusterEndpoint, 'ecadmin', clusterToken, clusterVersion, true, '/api/v1/namespaces', DEBUG)
         String logs = k8sClient.client.getJobLogs(resp.json.jobId)
         def jobStatus = k8sClient.client.getJobStatus(resp.json.jobId).json
         def jobSteps = k8sClient.client.getJobSteps(resp.json.jobId).json.object
@@ -73,7 +74,7 @@ class EditConfigurationTests extends KubernetesTestBase {
     }
 
 
-    @Test(dataProvider = "invalidEditConfigData", dataProviderClass = ConfigurationData.class)
+    @Test(groups = "Negative", dataProvider = "invalidEditConfigData", dataProviderClass = ConfigurationData.class)
     @Issue("ECKUBE-180")
     @TmsLinks(value = [
             @TmsLink("324799"),

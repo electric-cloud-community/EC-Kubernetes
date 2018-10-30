@@ -16,24 +16,24 @@ import static org.awaitility.Awaitility.await
 @Feature('Deployment')
 class ApplicationDeploymentTests extends KubernetesTestBase {
 
-    @BeforeClass
+    @BeforeClass(alwaysRun = true)
     void setUpDeployment() {
         k8sClient.deleteConfiguration(configName)
         k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion)
     }
 
-    @AfterClass
+    @AfterClass(alwaysRun = true)
     void tearDownTests() {
         k8sClient.deleteConfiguration(configName)
     }
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     void setUpTest(){
         k8sClient.createEnvironment(configName)
         k8sClient.createApplication(2, volumes, false, LOAD_BALANCER)
     }
 
-    @AfterMethod
+    @AfterMethod(alwaysRun = true)
     void tearDownTest() {
         k8sClient.cleanUpCluster(configName)
         k8sClient.client.deleteProject(projectName)
@@ -41,7 +41,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Deploy Application-Level Microservice")
+    @Test(groups = "Positive", testName = "Deploy Application-Level Microservice")
     @TmsLink("")
     @Story("Deploy Microservcice")
     @Description("Deploy Application-level Microservice")
@@ -79,7 +79,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Update Application-Level Microservice")
+    @Test(groups = "Negative", testName = "Update Application-Level Microservice")
     @TmsLink("")
     @Story('Update Microservice')
     @Description("Update Application-level Microservice")
@@ -121,7 +121,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Scale Application-Level Microservice ")
+    @Test(groups = "Positive", testName = "Scale Application-Level Microservice ")
     @TmsLink("")
     @Story('Update Microservice')
     @Description("Scale Application-level Microservice")
@@ -163,7 +163,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
 
 
 
-    @Test(testName = "Deploy Canary Application-Level Microservice ")
+    @Test(groups = "Positive", testName = "Deploy Canary Application-Level Microservice ")
     @TmsLink("")
     @Story('Canary deploy of Microservice')
     @Description("Canary Deploy for Application-level Microservice")
@@ -211,8 +211,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test(testName = "Undeploy Application-Level Microservice")
-    @TmsLink("")
+    @Test(groups = "Positive", testName = "Undeploy Application-Level Microservice")
     @Story('Undeploy Microservice')
     @Description("Undeploy Application-level Microservice")
     void undeployApplication() {
@@ -234,7 +233,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     }
 
 
-    @Test
+    @Test(groups = "Positive")
     @Story('Undeploy Application after Canary deployment')
     @Description("Undeploy Application-level Microservice after Canary Deploy")
     void undeployApplicationAfterCanaryDeployment() {
