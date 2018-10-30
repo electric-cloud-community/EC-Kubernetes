@@ -14,12 +14,14 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on October 03, 2018</p>
+    <p>Revised on October 09, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
     <ul>
     <li><a href="#overview">Overview</a></li>
+    
+    <li><a href="#prerequisites">Prerequisites</a></li>
     
 
     
@@ -82,6 +84,25 @@
 <p>You need to have a Kubernetes cluster available for using this plugin.</p>
 </p>
     
+    
+    <div id="prerequisites">
+        <h2>Prerequisites</h2>
+        <p>Binary dependencies (Grapes) are loaded from ElectricFlow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
+<p>ElectricFlow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
+<p>In case the plugin procedures are running on a different from local resource, local resource should be available in the system. It can be set through server properties:</p>
+<pre><code>ectool setProperty /server/settings/localResourceName &lt;my local resource name&gt;
+</code></pre>
+<p>In case the local resource is not set, the dependency handling subprocedure will try to find local resource by the following criterias:</p>
+<ul>
+<li>It has a name &quot;local&quot;</li>
+<li>Or its hostname is one of the following: localhost, 127.0.0.1 or <server hostname>.</li>
+</ul>
+<p>If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.</p>
+<p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
+<a href="https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers" target="_blank">https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers</a>
+ for the instructions.</p>
+
+    </div>
     
 
     
@@ -831,6 +852,13 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+    
+    <h3>@PLUGIN_KEY@ 1.2.0</h3>
+    <ul>
+        
+        <li>Changed the way of storing and loading dependencies: the Repository is not required anymore. Now the depencencies and loaded through STOMP.</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.1.2</h3>
     <ul>
