@@ -9,7 +9,7 @@ In case the plugin procedures are running on a different from local resource, lo
 In case the local resource is not set, the dependency handling subprocedure will try to find local resource by the following criterias:
 
 * It has a name "local"
-* Or its hostname is one of the following: localhost, 127.0.0.1 or <server hostname>.
+* Or its hostname is one of the following: localhost, 127.0.0.1 or &lt;server hostname&gt;.
 
 If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.
 

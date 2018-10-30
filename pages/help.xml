@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on October 09, 2018</p>
+    <p>Revised on October 30, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
@@ -95,7 +95,7 @@
 <p>In case the local resource is not set, the dependency handling subprocedure will try to find local resource by the following criterias:</p>
 <ul>
 <li>It has a name &quot;local&quot;</li>
-<li>Or its hostname is one of the following: localhost, 127.0.0.1 or <server hostname>.</li>
+<li>Or its hostname is one of the following: localhost, 127.0.0.1 or &lt;server hostname&gt;.</li>
 </ul>
 <p>If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.</p>
 <p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
