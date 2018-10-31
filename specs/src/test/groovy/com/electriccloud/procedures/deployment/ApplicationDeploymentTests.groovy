@@ -51,6 +51,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
+        def resp = req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81")
         assert services.size() == 2
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
@@ -72,6 +73,8 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().value == "8080"
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
+        assert resp.statusCode() == 200
+        assert resp.body().contains("Hello World!")
         assert !deploymentLog.contains(clusterToken)
     }
 
@@ -88,6 +91,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
+        def resp = req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81")
         assert services.size() == 2
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
@@ -109,6 +113,8 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().value == "8080"
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
+        assert resp.statusCode() == 200
+        assert resp.body().contains("Hello World!")
         assert !deploymentLog.contains(clusterToken)
 
     }
@@ -127,6 +133,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
+        def resp = req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81")
         assert services.size() == 2
         assert pods.size() == 3
         assert services[1].metadata.name == serviceName
@@ -148,6 +155,8 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().value == "8080"
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
+        assert resp.statusCode() == 200
+        assert resp.body().contains("Hello World!")
         assert !deploymentLog.contains(clusterToken)
 
     }
@@ -166,6 +175,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
+        def resp = req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81")
         assert services.size() == 2
         assert deployments.size() == 2
         assert pods.size() == 4
@@ -194,6 +204,8 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
             assert it.spec.containers.first().env.first().name == "NGINX_PORT"
             assert it.status.phase == "Running"
         }
+        assert resp.statusCode() == 200
+        assert resp.body().contains("Hello World!")
         assert !deploymentLog.contains(clusterToken)
 
     }
