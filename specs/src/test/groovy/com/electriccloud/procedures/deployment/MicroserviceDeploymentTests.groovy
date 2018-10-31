@@ -13,7 +13,6 @@ import java.util.concurrent.TimeUnit
 import static com.electriccloud.helpers.enums.LogLevels.*
 import static com.electriccloud.helpers.enums.ServiceTypes.*
 import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
-import static io.restassured.RestAssured.given
 import static org.awaitility.Awaitility.await
 
 @Feature('Deployment')

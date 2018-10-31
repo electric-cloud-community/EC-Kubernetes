@@ -4,17 +4,10 @@ import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.Description
 import io.qameta.allure.Feature
 import io.qameta.allure.Story
-import io.qameta.allure.TmsLink
 import org.testng.annotations.*
-
 import java.util.concurrent.TimeUnit
-
-import static com.electriccloud.helpers.enums.LogLevels.*
 import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
-import static com.electriccloud.helpers.enums.ServiceTypes.*
 import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
-import static io.restassured.RestAssured.given
-import static io.restassured.RestAssured.given
 import static org.awaitility.Awaitility.await
 
 @Feature("Deployment")
