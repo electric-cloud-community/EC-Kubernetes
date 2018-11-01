@@ -1,3 +1,4 @@
+# Version: Thu Nov  1 14:53:06 2018
 #
 #  Copyright 2016 Electric Cloud, Inc.
 #
@@ -402,6 +403,8 @@ sub checkStompPort {
 
     if ($failed) {
         print "[WARNING] cannot connect to STOMP server at $host:$port\n";
+        $ec->setProperty("/myJobStep/summary", "STOMP server is not available at $host:$port, please ensure that STOMP server is configured correctly. Please refer to the plugin's documentation for the details.");
+        $ec->setProperty('/myJobStep/outcome', 'warning');
     }
     else {
         print "STOMP server is accessible at $host:$port\n";
@@ -438,7 +441,7 @@ sub checkStompPort {
     my $timeout = 60;
     $self->ec->getFiles({error => \$err, channel => $channel, timeout => $timeout});
     if ($err) {
-        die $err;
+        die "Error happened during files transition: $err, please try to rerun the job. If error persists, please ensure that STOMP server is available from the Resource and the port (61613 by default) is opened.";
     }
     my $files = eval {
         $self->ec->getProperty('/myJob/ec_dependencies_files')->findvalue('//value')->string_value;
@@ -451,10 +454,10 @@ sub checkStompPort {
     for my $file (keys %$mapping) {
         my $dest = $mapping->{$file};
         if (-f $dest) {
-
+            debug "Got file $dest";
         }
         else {
-            die "The dependency file $dest was sent but not received, please try to rerun the job\n";
+            die "The dependency file $dest was sent but not received, please try to rerun the job. If error persists, please ensure that STOMP server is available from the Resource and the port (61613 by default) is opened.";
         }
     }
 
@@ -470,6 +473,14 @@ sub checkStompPort {
         die "Copy failed, no files were copied to $grapeFolder, please check permissions for the directory $grapeFolder";
     }
     info "Received dependencies";
+
+    for my $project (@projects) {
+        unless($self->checkChecksums($project)) {
+            my $message = "Dependencies were received, but the checksums do not match for the project $project. This may lead to errors. Consider rerunning the job, if the error persist, please check STOMP server configuration.";
+            info "[WARNING] $message";
+            $self->setSummary($message);
+        }
+    }
 }
 
 sub printLog {
