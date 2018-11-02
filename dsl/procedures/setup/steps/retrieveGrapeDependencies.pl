@@ -32,7 +32,10 @@ to the grape root directory configured with ec-groovy.
 use File::Copy::Recursive qw(rcopy);
 use File::Path;
 use ElectricCommander;
-
+use File::Temp qw(tempfile tempdir);
+use Archive::Zip;
+use Digest::MD5 qw(md5_hex);
+use MIME::Base64 qw(decode_base64);
 use warnings;
 use strict;
 $|=1;
@@ -72,6 +75,65 @@ sub main() {
 
 
 sub retrieveDependencies {
+    my ($ec, @projects) = @_;
+
+    for my $project (@projects) {
+        retrieveProjectDependencies($ec, $project);
+    }
+}
+
+
+sub retrieveProjectDependencies {
+    my ($ec, $project) = @_;
+
+    my $dependenciesProperty = '/projects/' . $project . '/ec_groovyDependencies';
+    my $base64 = '';
+    my $xpath;
+
+    my $blocks = {};
+    my $counter = 0;
+    my $checksum = eval {
+        $ec->getProperty("$dependenciesProperty/checksum")->findvalue('//value')->string_value
+    } or do {
+        die "No checksum found for dependencies in projec $project, please try to reinstall the plugin."
+    };
+    my $hasMore = 1;
+    my $base64 = '';
+    while($hasMore) {
+        eval {
+            my $chunk = $ec->getProperty("$dependenciesProperty/ec_dependencyChunk_$counter")->findvalue('//value')->string_value;
+            $base64 .= $chunk;
+            $counter++;
+            1;
+        } or do {
+            $hasMore = 0;
+        };
+    }
+    my $resultChecksum = md5_hex($base64);
+    unless($checksum) {
+        die "No checksum found in dependendencies property, please reinstall the plugin";
+    }
+    if ($resultChecksum ne $checksum) {
+        die "Wrong dependency checksum: original checksum is $checksum calculated checksum if $resultChecksum";
+    }
+
+    return unless $base64;
+
+    my $binary = decode_base64($base64);
+    my ($tempFh, $tempFilename) = tempfile(CLEANUP => 1);
+    binmode($tempFh);
+    print $tempFh $binary;
+    close $tempFh;
+
+    my $zip = Archive::Zip->new();
+    unless($zip->read($tempFilename) == Archive::Zip::AZ_OK()) {
+      die "Cannot read .zip dependencies: $!";
+    }
+    my $grape = File::Spec->catfile($ENV{COMMANDER_DATA}, 'grape');
+    $zip->extractTree("lib/", $grape . '/');
+}
+
+sub __retrieveDependencies {
     my ($ec, @projects) = @_;
 
     my $dep = EC::DependencyManager->new($ec);
