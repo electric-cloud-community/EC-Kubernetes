@@ -48,7 +48,6 @@ class KubernetesTestBase extends TopologyMatcher {
 
         pluginName          = System.getenv("PLUGIN_NAME")
         pluginVersion       = System.getenv("PLUGIN_BUILD_VERSION")
-        pluginLegacyVersion = System.getenv("PLUGIN_LEGACY_VERSION")
         clusterEndpoint     = System.getenv("KUBE_ENDPOINT")
         nodeEndpoint        = System.getenv("KUBE_NODE_ENDPOINT")
         clusterToken        = System.getenv("KUBE_TOKEN")

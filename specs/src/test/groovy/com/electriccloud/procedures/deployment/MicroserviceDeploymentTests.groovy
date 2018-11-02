@@ -77,7 +77,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
         assert resp.statusCode() == 200
-        assert resp.body().contains("Hello World!")
+        assert resp.body().asString().contains("Hello World")
         assert !deploymentLog.contains(clusterToken)
 
     }
@@ -117,7 +117,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
         assert resp.statusCode() == 200
-        assert resp.body().contains("Hello World!")
+        assert resp.body().asString().contains("Hello World")
         assert !deploymentLog.contains(clusterToken)
     }
 
@@ -157,7 +157,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
         assert resp.statusCode() == 200
-        assert resp.body().contains("Hello World!")
+        assert resp.body().asString().contains("Hello World")
         assert !deploymentLog.contains(clusterToken)
     }
 
@@ -205,7 +205,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
             assert it.status.phase == "Running"
         }
         assert resp.statusCode() == 200
-        assert resp.body().contains("Hello World!")
+        assert resp.body().asString().contains("Hello World")
         assert !deploymentLog.contains(clusterToken)
     }
 

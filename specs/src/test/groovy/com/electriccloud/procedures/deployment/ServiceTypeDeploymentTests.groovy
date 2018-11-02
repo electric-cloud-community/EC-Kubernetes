@@ -45,10 +45,7 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
         def deployments = k8sApi.getDeployments().json.items
         def services = k8sApi.getServices().json.items
         def pods = k8sApi.getPods().json.items
-        def endpoints = [
-                req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81"),
-                req.get("${pods.first().status.hostIP}:${services[1].spec.ports[0].nodePort}")
-        ]
+        def resp = req.get("http://${services[1].status.loadBalancer.ingress[0].ip}:81")
         assert services.size() == 2
         assert pods.size() == 2
         assert services[1].metadata.name == serviceName
@@ -72,10 +69,8 @@ class ServiceTypeDeploymentTests extends KubernetesTestBase {
         assert pods.first().spec.containers.first().env.first().value == "8080"
         assert pods.first().spec.containers.first().env.first().name == "NGINX_PORT"
         assert pods.first().status.phase == "Running"
-        endpoints.forEach {
-            assert it.statusCode() == 200
-            assert it.body().asString() == "Hello World!\n"
-        }
+        assert resp.statusCode() == 200
+        assert resp.body().asString().contains("Hello World")
         assert !deploymentLog.contains(clusterToken)
     }
 
