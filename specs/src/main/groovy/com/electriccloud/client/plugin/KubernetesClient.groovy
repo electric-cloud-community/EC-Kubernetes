@@ -1,17 +1,17 @@
 package com.electriccloud.client.plugin
 
 
-import com.electriccloud.helpers.enums.LogLevels.LogLevel
+import com.electriccloud.models.enums.LogLevels.LogLevel
 
 import com.electriccloud.client.commander.CommanderClient
-import static com.electriccloud.helpers.config.ConfigHelper.message
-import static com.electriccloud.helpers.config.ConfigHelper.dslPath
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
-import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static com.electriccloud.models.config.ConfigHelper.message
+import static com.electriccloud.models.config.ConfigHelper.dslPath
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.ServiceTypes.*
 
 import io.qameta.allure.Step
 
-import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
+import static com.electriccloud.models.enums.ServiceTypes.ServiceType.*
 
 class KubernetesClient extends CommanderClient {
 
@@ -23,15 +23,27 @@ class KubernetesClient extends CommanderClient {
 
 
     @Step("Create configuration: {configurationName}, {clusterEndpoint}")
-    def createConfiguration(configurationName,
-                            clusterEndpoint, username, secretToken, clusterVersion,
-                            testConnection = true,
-                            testConnectionUri = "/apis",
-                            logLevel = DEBUG) {
+    def createConfiguration(configurationName, clusterEndpoint, username, secretToken, clusterVersion, testConnection = true, testConnectionUri = "/apis", logLevel = DEBUG) {
         message("creating kubernetes config")
-        def json = jsonHelper.configJson(configurationName, clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
-        def response = client.dslFile(dslPath(plugin, 'config'), client.encode(json.toString()))
+        def response = client.dslFileMap(dslPath(plugin, 'config'), [params: [
+                configName: configurationName,
+                endpoint: clusterEndpoint,
+                logLevel: logLevel.getValue(),
+                userName: username,
+                token: secretToken,
+                version: clusterVersion,
+                testConnection: testConnection,
+                uriToCheckCluster: testConnectionUri
+        ]])
         client.waitForJobToComplete(response.json.jobId, timeout, 2, "Configuration: ${configurationName} with endpoint ${clusterEndpoint} is successfully created.")
+        return response
+    }
+
+    @Step("Delete configuration: {confName}")
+    def deleteConfiguration(configName) {
+        message("removing configuration")
+        def response = client.dslFileMap(dslPath(plugin, 'deleteConfig'), [params: [configName: configName]])
+        client.waitForJobToComplete(response.json.jobId, timeout, 2, "Configuration: ${configName} is successfully deleted.")
         return response
     }
 
@@ -42,8 +54,15 @@ class KubernetesClient extends CommanderClient {
                           testConnectionUri = "",
                           logLevel = DEBUG) {
         message("edit kubernetes config")
-        def json = jsonHelper.editConfigJson(clusterEndpoint, username, secretToken, clusterVersion, testConnection, testConnectionUri, logLevel.getValue())
-        def response = client.dslFile(dslPath(plugin, 'editConfig'), client.encode(json.toString()))
+        def response = client.dslFileMap(dslPath(plugin, 'editConfig'), [params: [
+                endpoint: clusterEndpoint,
+                logLevel: logLevel.getValue(),
+                userName: username,
+                token: secretToken,
+                version: clusterVersion,
+                testConnection: testConnection,
+                uriToCheckCluster: testConnectionUri
+        ]])
         client.waitForJobToComplete(response.json.jobId, timeout, 2, "Configuration is successfully changed.", false)
         return response
     }
@@ -52,88 +71,67 @@ class KubernetesClient extends CommanderClient {
     @Step
     def createEnvironment(configName) {
         message("environment creation")
-        def response = client.dslFile dslPath(plugin, 'environment'), client.encode(jsonHelper.confJson(configName).toString())
+        def response = client.dslFileMap dslPath(plugin, 'environment'),  [params: [configName: configName]]
         client.log.info("Environment for project: ${response.json.project.projectName} is created successfully.")
         return response
     }
 
     @Step
-    def createService(replicaNum,
-                      volumes = [source: null, target: null ],
-                      canaryDeploy,
-                      serviceType = LOAD_BALANCER,
-                      namespace = "default",
-                      deploymentTimeout = timeout) {
+    def createService(replicaNum, volumes = [source: null, target: null ], canaryDeploy, serviceType = LOAD_BALANCER, namespace = "default", deploymentTimeout = timeout) {
         message("service creation")
-        def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
-        def response = client.dslFile dslPath(plugin, 'service'), client.encode(json.toString())
+        def response = client.dslFileMap dslPath(plugin, 'service'), [params: [
+                replicas: replicaNum,
+                sourceVolume: volumes.source,
+                targetVolume: volumes.target,
+                isCanary: canaryDeploy,
+                serviceType: serviceType,
+                namespace: namespace,
+                deploymentTimeout: deploymentTimeout
+        ]]
         client.log.info("Service for project: ${response.json.project.projectName} is created successfully.")
         return response
     }
 
     @Step
-    def createApplication(replicaNum,
-                          volumes = [source: null, target: null ],
-                          canaryDeploy,
-                          serviceType = LOAD_BALANCER,
-                          namespace = "default",
-                          deploymentTimeout = timeout) {
+    def createApplication(replicaNum, volumes = [source: null, target: null ], canaryDeploy, serviceType = LOAD_BALANCER, namespace = "default", deploymentTimeout = timeout) {
         message("application creation")
-        def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
-        def response = client.dslFile dslPath(plugin, 'application'), client.encode(json.toString())
+        def response = client.dslFileMap dslPath(plugin, 'application'), [params: [
+                replicas: replicaNum,
+                sourceVolume: volumes.source,
+                targetVolume: volumes.target,
+                isCanary: canaryDeploy,
+                serviceType: serviceType,
+                namespace: namespace,
+                deploymentTimeout: deploymentTimeout
+        ]]
         client.log.info("Service for project: ${response.json.project.projectName} is created successfully.")
         return response
     }
 
-    @Step
-    def updateService(replicaNum,
-                      volumes = [source: null, target: null ],
-                      canaryDeploy,
-                      serviceType = LOAD_BALANCER,
-                      namespace = "default",
-                      deploymentTimeout = timeout) {
-        message("service update")
-        def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
-        def response = client.dslFile dslPath(plugin, 'service'), client.encode(json.toString())
-        client.log.info("Service for project: ${response.json.project.projectName} is updated successfully.")
-        return response
-    }
 
     @Step
-    def updateApplication(replicaNum,
-                          volumes = [source: null, target: null ],
-                          canaryDeploy,
-                          serviceType = LOAD_BALANCER,
-                          namespace = "default",
-                          deploymentTimeout = timeout) {
-        message("service update")
-        def json = jsonHelper.serviceJson(replicaNum, volumes, canaryDeploy.toString(), serviceType.getValue(), namespace, deploymentTimeout.toString())
-        def response = client.dslFile dslPath(plugin, 'application'), client.encode(json.toString())
-        client.log.info("Service for project: ${response.json.project.projectName} is updated successfully.")
-        return response
-    }
-
-    @Step
-    def cleanUpCluster(config, namespace = 'default') {
+    def cleanUpCluster(configName, namespace = 'default') {
         message("cluster clean-up")
-        def response = client.dslFile dslPath(plugin, 'cleanUp'), client.encode(jsonHelper.cleanUpJson(config, namespace).toString())
+        def response = client.dslFileMap dslPath(plugin, 'cleanUp'), [params: [configName: configName, projectNamespace: namespace]]
         client.waitForJobToComplete(response.json.jobId, timeout, 5, "Cluster is successfully cleaned-up.")
         return response
     }
 
 
     @Step("Discover {cluster} on {endpoint}")
-    def discoverService(project,
-                        envProject,
-                        envName,
-                        cluster,
-                        namespace = 'default',
-                        endpoint, token,
-                        importApp = false,
-                        appName = null) {
+    def discoverService(project, envProject, envName, cluster, namespace = 'default', endpoint, token, importApp = false, appName = null) {
         message("service discovery")
-        def json = jsonHelper.discoveryJson(project, envProject, envName, namespace, cluster,  endpoint, token, importApp.toString(), appName)
-        def response = client.dslFile dslPath(plugin, 'discover'), client.encode(json.toString())
+        def response = client.dslFileMap dslPath(plugin, 'discover'), [params: [
+                projectName: project,
+                envProjectName: envProject,
+                environmentName: envName,
+                namespace: namespace,
+                clusterName: cluster,
+                clusterEndpoint: endpoint,
+                clusterApiToken: token,
+                applicationScoped: importApp.toString(),
+                applicationName: appName
+        ]]
         client.waitForJobToComplete(response.json.jobId, timeout, 2, "Service is discovered successfully.")
         return response
     }

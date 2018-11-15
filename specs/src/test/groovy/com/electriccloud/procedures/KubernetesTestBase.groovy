@@ -3,7 +3,6 @@ package com.electriccloud.procedures
 import com.electriccloud.client.api.KubernetesApi
 import com.electriccloud.client.ectool.EctoolApi
 import com.electriccloud.client.plugin.KubernetesClient
-import com.electriccloud.helpers.enums.ServiceTypes
 import com.electriccloud.listeners.TestListener
 import io.qameta.allure.Story
 import io.restassured.filter.log.RequestLoggingFilter
@@ -13,7 +12,7 @@ import org.testng.annotations.Listeners
 
 import java.util.concurrent.TimeUnit
 
-import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
+import static com.electriccloud.models.enums.ServiceTypes.ServiceType.*
 import static io.restassured.RestAssured.given
 import static org.awaitility.Awaitility.await
 import static org.awaitility.Awaitility.setDefaultTimeout

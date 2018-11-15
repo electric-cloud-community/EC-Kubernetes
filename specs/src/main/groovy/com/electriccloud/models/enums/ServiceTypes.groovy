@@ -1,9 +1,8 @@
-package com.electriccloud.helpers.enums
+package com.electriccloud.models.enums
 
 class ServiceTypes {
 
     enum ServiceType {
-
         LOAD_BALANCER("LoadBalancer"),
         CLUSTER_IP("ClusterIP"),
         NODE_PORT("NodePort")
@@ -14,9 +13,7 @@ class ServiceTypes {
             this.value = value
         }
 
-
     }
 
+
 }
-
-

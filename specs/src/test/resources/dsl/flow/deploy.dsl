@@ -1,6 +1,6 @@
-package dsl.kubernetes
+package dsl.flow
 
-def names = args.names,
+def names = args.params,
     project = names.project,
     environment = names.environment,
     envProject = names.envProject,

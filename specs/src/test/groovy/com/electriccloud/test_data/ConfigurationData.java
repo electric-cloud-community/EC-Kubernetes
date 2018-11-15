@@ -1,8 +1,8 @@
 package com.electriccloud.test_data;
 
-import com.electriccloud.helpers.enums.LogLevels;
+import com.electriccloud.models.enums.LogLevels;
 import org.testng.annotations.DataProvider;
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*;
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*;
 import static com.electriccloud.procedures.KubernetesTestBase.*;
 
 public class ConfigurationData {

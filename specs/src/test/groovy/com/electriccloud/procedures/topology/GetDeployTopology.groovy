@@ -1,7 +1,7 @@
 package com.electriccloud.procedures.topology
 
-import com.electriccloud.helpers.config.ConfigHelper
-import com.electriccloud.helpers.enums.LogLevels
+import com.electriccloud.models.config.ConfigHelper
+import com.electriccloud.models.enums.LogLevels
 import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterMethod

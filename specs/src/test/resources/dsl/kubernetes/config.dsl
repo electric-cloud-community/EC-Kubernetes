@@ -1,6 +1,6 @@
 package dsl.kubernetes
 
-def names = args.names,
+def names = args.params,
         configName = names.configName,
         pluginName = 'EC-Kubernetes',
         endpoint = names.endpoint,

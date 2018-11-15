@@ -9,8 +9,8 @@ import org.testng.Assert
 import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
-
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.ServiceTypes.*
 
 @Feature('Provsioning')
 class ProvisionTests extends KubernetesTestBase {

@@ -1,6 +1,6 @@
 package com.electriccloud.procedures.topology
 
-import com.electriccloud.helpers.config.ConfigHelper
+import com.electriccloud.models.config.ConfigHelper
 import com.electriccloud.procedures.KubernetesTestBase
 import io.qameta.allure.*
 import org.testng.annotations.AfterClass
@@ -8,7 +8,7 @@ import org.testng.annotations.BeforeClass
 import org.testng.annotations.BeforeMethod
 import org.testng.annotations.Test
 
-import static com.electriccloud.helpers.enums.LogLevels.*
+import static com.electriccloud.models.enums.LogLevels.*
 
 @Feature("Topology")
 class GetRealtimeClusterDetails extends KubernetesTestBase {

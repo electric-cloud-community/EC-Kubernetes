@@ -16,7 +16,6 @@ class NamingTestBase {
     public static String containerName
     public static String pluginName
     public static String pluginVersion
-    public static String pluginLegacyVersion
     public static String clusterEndpoint
     public static String nodeEndpoint
     public static String clusterToken

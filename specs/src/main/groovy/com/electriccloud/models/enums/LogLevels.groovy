@@ -1,5 +1,4 @@
-package com.electriccloud.helpers.enums
-
+package com.electriccloud.models.enums
 
 
 class LogLevels {

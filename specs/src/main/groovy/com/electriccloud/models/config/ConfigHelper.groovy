@@ -1,4 +1,4 @@
-package com.electriccloud.helpers.config
+package com.electriccloud.models.config
 
 
 import groovy.json.JsonBuilder

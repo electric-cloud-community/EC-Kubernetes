@@ -8,9 +8,7 @@ import io.qameta.allure.Story
 import io.qameta.allure.TmsLink
 import io.qameta.allure.TmsLinks
 import org.testng.annotations.*
-
-import static com.electriccloud.helpers.enums.LogLevels.*
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
 
 
 @Feature('Import')

@@ -7,10 +7,8 @@ import org.testng.annotations.AfterClass
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.DataProvider
 import org.testng.annotations.Test
-
-import static com.electriccloud.helpers.enums.LogLevels.*
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
-import static com.electriccloud.helpers.enums.ServiceTypes.*
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.ServiceTypes.*
 
 
 @Feature('Configuration')

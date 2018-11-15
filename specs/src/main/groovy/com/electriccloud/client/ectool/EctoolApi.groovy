@@ -2,14 +2,14 @@ package com.electriccloud.client.ectool
 
 
 import groovy.xml.XmlUtil
-import com.electriccloud.helpers.config.ConfigHelper
+import com.electriccloud.models.config.ConfigHelper
 import io.qameta.allure.Step
 import org.apache.log4j.Logger
 import java.nio.file.Paths
 import java.util.concurrent.TimeoutException
 
 import static com.electriccloud.client.APIClient.*
-import static com.electriccloud.helpers.config.ConfigHelper.message
+import static com.electriccloud.models.config.ConfigHelper.message
 
 
 class EctoolApi {

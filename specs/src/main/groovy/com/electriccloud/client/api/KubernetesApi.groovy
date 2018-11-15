@@ -6,7 +6,7 @@ import groovy.json.JsonBuilder
 
 import static groovyx.net.http.Method.DELETE
 import static groovyx.net.http.Method.GET
-import static com.electriccloud.helpers.config.ConfigHelper.message
+import static com.electriccloud.models.config.ConfigHelper.message
 
 class KubernetesApi extends HttpClient {
 

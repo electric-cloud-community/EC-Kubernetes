@@ -7,7 +7,7 @@ import org.testng.ITestContext
 import org.testng.ITestResult
 import org.testng.reporters.ExitCodeListener
 import static com.google.common.io.Files.toByteArray
-import static com.electriccloud.helpers.config.ConfigHelper.message
+import static com.electriccloud.models.config.ConfigHelper.message
 
 
 class TestListener extends ExitCodeListener {

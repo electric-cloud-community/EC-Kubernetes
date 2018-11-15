@@ -1,6 +1,6 @@
-package dsl.kubernetes
+package dsl.flow
 
-def names = args.names,
+def names = args.params,
     replicas = names.replicas.toString(),
     sourceVolume = names.sourceVolume,
     targetVolume = names.targetVolume,

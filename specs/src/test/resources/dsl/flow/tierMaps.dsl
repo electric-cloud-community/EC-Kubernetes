@@ -1,10 +1,10 @@
-package dsl.kubernetes
+package dsl.flow
 
-def names = args.names,
+def names = args.params,
     projectName = names.projectName,
     serviceName = names.serviceName
 
-getEnvironmentMaps(
+getTierMaps(
         projectName: projectName,
         serviceName: serviceName
 )

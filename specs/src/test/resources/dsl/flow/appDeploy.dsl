@@ -1,14 +1,14 @@
-package dsl.kubernetes
+package dsl.flow
 
-def names = args.names,
+def names = args.params,
     project = names.project,
-    appName = names.appName,
+    appName = names.appName
     tierMapName = names.tierMapName
 
 runProcess(
         projectName: project,
         applicationName: appName,
-        processName: 'Undeploy',
+        processName: 'Deploy',
         tierMapName: tierMapName,
         rollingDeployEnabled: false
 )

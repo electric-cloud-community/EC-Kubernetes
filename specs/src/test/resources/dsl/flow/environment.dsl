@@ -1,6 +1,6 @@
-package dsl.kubernetes
+package dsl.flow
 
-def names = args.names,
+def names = args.params,
     configName = names.configName
 
 project 'k8sProj', {
@@ -30,7 +30,7 @@ project 'k8sProj', {
             property 'ec_provision_parameter', {
 
                 // Custom properties
-                config = configName
+                dsl.kubernetes.config = configName
             }
         }
     }

@@ -7,7 +7,9 @@ import org.testng.annotations.AfterMethod
 import org.testng.annotations.BeforeClass
 import org.testng.annotations.Test
 import static org.awaitility.Awaitility.*
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.ServiceTypes.*
+
 
 @Feature("Configuration")
 class CreateConfigurationTests extends KubernetesTestBase {
@@ -54,7 +56,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
     @Story("Create Configuration without test connection")
     @Description("Create configuration without cluster test connection ")
     void createConfigurationWithoutTestConnection(){
-        def job = k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, false, clusterEndpoint)
+        def job = k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, false, clusterEndpoint)
         def logs = k8sClient.client.getJobLogs(job.json.jobId)
         def jobStatus = k8sClient.client.getJobStatus(job.json.jobId).json
         def jobSteps = k8sClient.client.getJobSteps(job.json.jobId).json.object
@@ -73,7 +75,7 @@ class CreateConfigurationTests extends KubernetesTestBase {
     @Story("Create Configuration with test connection")
     @Description("Create Configuration with cluster test connection")
     void createConfigurationWithTestConnection(){
-        def job = k8sClient.createConfiguration(configName, clusterEndpoint, 'flowqe', clusterToken, clusterVersion, true, '/api/v1/namespaces')
+        def job = k8sClient.createConfiguration(configName, clusterEndpoint, adminAccount, clusterToken, clusterVersion, true, '/api/v1/namespaces')
         def logs = k8sClient.client.getJobLogs(job.json.jobId)
         def jobStatus = k8sClient.client.getJobStatus(job.json.jobId).json
         def jobSteps = k8sClient.client.getJobSteps(job.json.jobId).json.object

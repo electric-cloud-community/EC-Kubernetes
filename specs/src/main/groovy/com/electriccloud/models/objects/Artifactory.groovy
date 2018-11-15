@@ -1,4 +1,4 @@
-package com.electriccloud.helpers.objects
+package com.electriccloud.models.objects
 
 
 class Artifactory {

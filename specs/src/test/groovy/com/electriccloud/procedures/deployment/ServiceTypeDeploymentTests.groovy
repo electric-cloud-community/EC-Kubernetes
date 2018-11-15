@@ -6,8 +6,8 @@ import io.qameta.allure.Feature
 import io.qameta.allure.Story
 import org.testng.annotations.*
 import java.util.concurrent.TimeUnit
-import static com.electriccloud.helpers.enums.LogLevels.LogLevel.*
-import static com.electriccloud.helpers.enums.ServiceTypes.ServiceType.*
+import static com.electriccloud.models.enums.LogLevels.LogLevel.*
+import static com.electriccloud.models.enums.ServiceTypes.ServiceType.*
 import static org.awaitility.Awaitility.await
 
 @Feature("Deployment")

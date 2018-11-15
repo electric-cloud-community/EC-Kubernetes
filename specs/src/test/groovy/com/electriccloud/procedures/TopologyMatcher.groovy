@@ -2,7 +2,7 @@ package com.electriccloud.procedures
 
 
 
-import com.electriccloud.helpers.config.ConfigHelper
+import com.electriccloud.models.config.ConfigHelper
 import org.apache.commons.lang.RandomStringUtils
 import org.apache.log4j.Logger
 
