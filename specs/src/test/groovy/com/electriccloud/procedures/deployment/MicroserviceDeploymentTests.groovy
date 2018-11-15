@@ -84,7 +84,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Description("Update Project-level Microservice with the same data")
     void updateProjectLevelMicroservice(){
         k8sClient.deployService(projectName, serviceName)
-        k8sClient.updateService(2, volumes, false, LOAD_BALANCER)
+        k8sClient.createService(2, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -124,7 +124,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Description("Update Project-level Microservice")
     void scaleProjectLevelMicroservice(){
         k8sClient.deployService(projectName, serviceName)
-        k8sClient.updateService(3, volumes, false, LOAD_BALANCER)
+        k8sClient.createService(3, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -164,7 +164,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Description("Canary Deploy for Project-level Microservice")
     void preformCanaryDeploymentForProjectLevelMicroservice() {
         k8sClient.deployService(projectName, serviceName)
-        k8sClient.updateService(2, volumes, true, LOAD_BALANCER)
+        k8sClient.createService(2, volumes, true, LOAD_BALANCER)
         def jobId = k8sClient.deployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -234,7 +234,7 @@ class MicroserviceDeploymentTests extends KubernetesTestBase {
     @Description("Undeploy Project-level Microservice after Canary Deploy")
     void undeployMicroserviceAfterCanaryDeployment() {
         k8sClient.deployService(projectName, serviceName)
-        k8sClient.updateService(2, volumes, true, LOAD_BALANCER)
+        k8sClient.createService(2, volumes, true, LOAD_BALANCER)
         k8sClient.deployService(projectName, serviceName)
         def jobId = k8sClient.undeployService(projectName, serviceName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)

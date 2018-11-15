@@ -81,7 +81,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Update Application-level Microservice")
     void updateApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, false, LOAD_BALANCER)
+        k8sClient.createApplication(2, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -123,7 +123,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Scale Application-level Microservice")
     void scaleApplicationLevelMicroservice(){
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(3, volumes, false, LOAD_BALANCER)
+        k8sClient.createApplication(3, volumes, false, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -165,7 +165,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Canary Deploy for Application-level Microservice")
     void preformCanaryDeploymentForApplicationLevelMicroservice() {
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, true, LOAD_BALANCER)
+        k8sClient.createApplication(2, volumes, true, LOAD_BALANCER)
         def jobId = k8sClient.deployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
         def deployments = k8sApi.getDeployments().json.items
@@ -234,7 +234,7 @@ class ApplicationDeploymentTests extends KubernetesTestBase {
     @Description("Undeploy Application-level Microservice after Canary Deploy")
     void undeployApplicationAfterCanaryDeployment() {
         k8sClient.deployApplication(projectName, applicationName)
-        k8sClient.updateApplication(2, volumes, true, LOAD_BALANCER)
+        k8sClient.createApplication(2, volumes, true, LOAD_BALANCER)
         k8sClient.deployApplication(projectName, applicationName)
         def jobId = k8sClient.undeployApplication(projectName, applicationName).json.jobId
         def deploymentLog = k8sClient.client.getJobLogs(jobId)
