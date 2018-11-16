@@ -13,80 +13,80 @@
 <div class="help">
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
-
+    
     <p>Revised on November 16, 2018</p>
-
+    
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
     <ul>
     <li><a href="#overview">Overview</a></li>
+    
 
-
-
+    
     <li><a href="#Dependency Management (Setup procedure)">Dependency Management (Setup procedure)</a></li>
+    
 
-
-
+    
     <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
-
+    
 
     <li><a href="#procedures">Plugin Procedures</a></li>
-
+    
 
     <ul>
-
+        
 
         <li><a href="#CheckCluster">Check Cluster</a></li>
-
+        
 
         <li><a href="#DeployService">Deploy Service</a></li>
-
+        
 
         <li><a href="#UndeployService">Undeploy Service</a></li>
-
+        
 
         <li><a href="#Discover">Discover</a></li>
-
+        
 
         <li><a href="#InvokeKubernetesAPI">Invoke Kubernetes API</a></li>
-
+        
 
         <li><a href="#WaitForKubernetesAPI">Wait For Kubernetes API</a></li>
-
+        
 
         <li><a href="#CreateResource">Create Resource (DEPRECATED)</a></li>
-
+        
 
         <li><a href="#ImportMicroservices">Import Microservices</a></li>
-
+        
     </ul>
 
-
-
+    
+    
     <li><a href="#usecases">Use Cases</a></li>
     <ul>
-
+        
         <li><a href="#RollingUpdates">Rolling Updates</a></li>
-
+        
         <li><a href="#CanaryDeployments">Canary Deployments</a></li>
-
+        
         <li><a href="#BlueGreenDeployments">Blue/Green Deployments</a></li>
-
+        
     </ul>
-
-
+    
+    
     <li><a href="#knownIssues">Known Issues</a></li>
-
+    
     <li><a href="#releaseNotes">Release Notes</a></li>
 </ul>
     <h3>Overview</h3>
     <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
 <p>You need to have a Kubernetes cluster available for using this plugin.</p>
 </p>
+    
+    
 
-
-
-
+    
     <div id="Dependency Management (Setup procedure)">
         <h2>Dependency Management (Setup procedure)</h2>
         <p>Binary dependencies (Grapes) are loaded from ElectricFlow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
@@ -100,7 +100,7 @@
 <li>Or its hostname is one of the following: localhost, 127.0.0.1 or &lt;server hostname&gt;.</li>
 </ul>
 <p>If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.</p>
-<p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See
+<p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
 <a href="https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers" target="_blank">https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers</a>
  for the instructions.</p>
 <p>If STOMP server cannot be configured or accessed, one can manually copy dependencies from lib/ folder of the plugin (<code>$COMMANDER_DATA/@PLUGIN_NAME@/lib</code>) to <code>$COMMANDER_DATA/grape</code> folder.</p>
@@ -108,10 +108,10 @@
 
     </div>
 
-
+    
     <!--TODO custom blocks-->
 
-
+    
     <div id="CreateConfiguration">
         <a name='CreateConfiguration' id="CreateConfiguration"> </a>
         <h2>Plugin Configurations</h2>
@@ -135,7 +135,7 @@
         <li>Click <b>Configure</b> to open the
              Configurations page.</li>
         <li>Click <b>Create Configuration</b>.</li>
-
+        
         <p>For communicating with the Kubernetes cluster, you need the following details:</p>
 <ol>
 <li>
@@ -177,7 +177,7 @@
 </li>
 </ol>
 
-
+        
         Configuration Parameters
         <table class="grid">
             <thead>
@@ -187,65 +187,65 @@
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Configuration</td>
                 <td>Unique name for the plugin configuration.</td>
             </tr>
-
+            
             <tr>
                 <td >Description</td>
                 <td>Description for the plugin configuration.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Kubernetes API Endpoint</td>
                 <td>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Bearer Token of Kubernetes Cluster</td>
                 <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</td>
             </tr>
-
+            
             <tr>
                 <td >Kubernetes Version</td>
                 <td>Kubernetes version running on the cluster master</td>
             </tr>
-
+            
             <tr>
                 <td >Test Connection</td>
                 <td>Check this checkbox to verify connectivity to Kubernetes master.</td>
             </tr>
-
+            
             <tr>
                 <td >URI Path for Checking Cluster Connectivity</td>
                 <td>URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
             </tr>
-
+            
             <tr>
                 <td >Log Level</td>
                 <td>Log level to use for logging output. Error=4, Warning=3, Info=2, Debug=1.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
-
+    
 
     <h1 id="procedures">Plugin Procedures</h1>
+    
+    
 
-
-
-
+    
     <div id="CheckCluster">
         <h2>Check Cluster</h2>
-
-
+        
+        
         <p>Checks that a Kubernetes cluster exists and is reachable. All other entities such as  Pods, services, and replication controllers all run on top of a cluster.</p>
-
-
+        
+        
         <h3>Check Cluster Parameters</h3>
         <table class="grid">
             <thead>
@@ -255,25 +255,25 @@
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="DeployService">
         <h2>Deploy Service</h2>
-
-
+        
+        
         <p>Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.</p>
-
-
+        
+        
         <h3>Deploy Service Parameters</h3>
         <table class="grid">
             <thead>
@@ -283,65 +283,65 @@
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Service Name</td>
                 <td>The name of the service in ElectricFlow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</td>
             </tr>
-
+            
             <tr>
                 <td >Service Revision ID</td>
                 <td>Revision Id of the service in ElectricFlow.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Project Name</td>
                 <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Name</td>
                 <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Revision ID</td>
                 <td>Revision Id of the application version that the service belongs to.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Cluster Name</td>
                 <td>The name of the cluster in ElectricFlow that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
             </tr>
-
+            
             <tr>
                 <td >Cluster Or Environment Project Name</td>
                 <td>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</td>
             </tr>
-
+            
             <tr>
                 <td >Environment Name</td>
                 <td>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</td>
             </tr>
-
+            
             <tr>
                 <td >Results Property Sheet</td>
                 <td>Name of the property sheet where the output properties for the deployed service will be saved. If not specified, will default to '/myParent/parent'.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="UndeployService">
         <h2>Undeploy Service</h2>
-
-
+        
+        
         <p>Undeploys a previously deployed service on the Kubernetes cluster</p>
-
-
+        
+        
         <h3>Undeploy Service Parameters</h3>
         <table class="grid">
             <thead>
@@ -351,57 +351,57 @@
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Service Name</td>
                 <td>The name of the service in ElectricFlow that encapsulates the service that was previously deployed on the Kubernetes cluster.</td>
             </tr>
-
+            
             <tr>
                 <td >Service Revision ID</td>
                 <td>Revision Id of the service in ElectricFlow.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Project Name</td>
                 <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Name</td>
                 <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Revision ID</td>
                 <td>Revision Id of the application version that the service belongs to.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Environment Name</td>
                 <td>The name of the environment that the cluster belongs to.</td>
             </tr>
-
+            
             <tr>
                 <td >Environment Project Name</td>
                 <td>The name of the project that the environment belongs to. If not specified, the environment is assumed to be in the same project as the service.</td>
             </tr>
-
+            
             <tr>
                 <td >Cluster Name</td>
                 <td>The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="Discover">
         <h2>Discover</h2>
-
-
+        
+        
         Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
@@ -439,8 +439,8 @@
     </ol>
 </div>
 
-
-
+        
+        
             <p>Procedure looks for services and deployments on Kubernetes
 cluster and transfers data into ElectricFlow. Services found
 in cluster will be mapped to Services objects in ElectricFlow,
@@ -448,7 +448,7 @@ then associated deployments will be found and containers
 definitions retrieved from there.</p>
 <p>If the object with the provided name already exists in the ElectricFlow, this object will be skipped and a warning message will be emitted to logs.</p>
 
-
+        
         <h3>Discover Parameters</h3>
         <table class="grid">
             <thead>
@@ -458,65 +458,65 @@ definitions retrieved from there.</p>
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Environment Project Name</td>
                 <td>The project containing the existing environment, or where the new environment will be created.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Environment Name</td>
                 <td>Provide the name of an existing environment that contains the Kubernetes-backend cluster to be discovered. If the environment does not already exist, provide the Kubernetes connection details below for discovery, and a new environment will be created.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Cluster Name</td>
                 <td>In an existing environment, provide the name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</td>
             </tr>
-
+            
             <tr>
                 <td >Kubernetes API Endpoint</td>
                 <td>The endpoint at which the Kubernetes API will be reachable. Must be an IP address or a resolvable DNS name. This field is required and used only if you are not providing an existing environment above for discovery.</td>
             </tr>
-
+            
             <tr>
                 <td >Service Account API Token</td>
                 <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. This field is required and used only if you are not providing an existing environment above for discovery.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Kubernetes Namespace</td>
                 <td>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Project Name</td>
                 <td>The name of project in which the discovered microservices will be created.</td>
             </tr>
-
+            
             <tr>
                 <td >Create Microservices within an Application</td>
                 <td>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Name</td>
                 <td>The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="InvokeKubernetesAPI">
         <h2>Invoke Kubernetes API</h2>
-
-
+        
+        
         <p>Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input</p>
-
-
+        
+        
         <h3>Invoke Kubernetes API Parameters</h3>
         <table class="grid">
             <thead>
@@ -526,50 +526,50 @@ definitions retrieved from there.</p>
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Kubernetes API URI</td>
                 <td>The URI for the Kubernetes API to invoke. E.g., '/api/v1/namespaces'.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">HTTP method for the Kubernetes API</td>
                 <td>HTTP method for the Kubernetes REST API to be invoked.</td>
             </tr>
-
+            
             <tr>
                 <td >Request Payload Format</td>
                 <td>Format of the request payload. Possible values are 'json' or 'yaml'. Not applicable for HTTP methods 'get' and 'delete'.</td>
             </tr>
-
+            
             <tr>
                 <td >Request Payload</td>
                 <td>The request body/payload in JSON or YAML format. Not applicable for HTTP methods 'get' and 'delete'.</td>
             </tr>
-
+            
             <tr>
                 <td >Output Property Location</td>
                 <td>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sAPIResult' else it will default to '/myJob/k8sAPIResult'.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="WaitForKubernetesAPI">
         <h2>Wait For Kubernetes API</h2>
-
-
+        
+        
         <p>Polls on Kubernetes REST API to check specific field of API response.</p>
-
-
+        
+        
         <h3>Wait For Kubernetes API Parameters</h3>
         <table class="grid">
             <thead>
@@ -579,50 +579,50 @@ definitions retrieved from there.</p>
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Kubernetes API URI</td>
                 <td>The URI to poll on E.g., '/api/v1/namespaces/default/pods/nginx'.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Response Field</td>
                 <td>Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Expected value</td>
                 <td>Value of response field to check for.E.g., 'Running'</td>
             </tr>
-
+            
             <tr>
                 <td >Timeout (in seconds)</td>
                 <td>Period to wait for response field to attain destired value before timing out.</td>
             </tr>
-
+            
             <tr>
                 <td >Output Property Location</td>
                 <td>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="CreateResource">
         <h2>Create Resource (DEPRECATED)</h2>
-
-
+        
+        
         <p>[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.</p>
-
-
+        
+        
         <h3>Create Resource Parameters</h3>
         <table class="grid">
             <thead>
@@ -632,43 +632,43 @@ definitions retrieved from there.</p>
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Configuration</td>
                 <td>Name of existing configuration which holds the authentication details for Kubernetes Cluster</td>
             </tr>
-
+            
             <tr>
                 <td class="required">URI</td>
                 <td>The URI for the API for creating the resource</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Request Format</td>
                 <td>The request body format</td>
             </tr>
-
+            
             <tr>
                 <td >Request body</td>
                 <td>The request body in JSON or YAML format.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Create or Update</td>
                 <td>Whether to create or update the resource.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
-
+    
     <div id="ImportMicroservices">
         <h2>Import Microservices</h2>
-
-
-
+        
+        
+        
     Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
         <ol>
@@ -696,9 +696,9 @@ definitions retrieved from there.</p>
             </li>
         </ol>
     </div>
-
-
-
+    
+        
+        
             <p>Procedure looks for services and deployments in Kubernetes
 YAML file and transfers data into ElectricFlow. Services found
 in YAML file will be mapped to Services objects in ElectricFlow,
@@ -707,7 +707,7 @@ definitions retrieved from there.</p>
 <p>If the configuration contains unsupported fields, these fields will be skipped and a warning message will be emitted to logs.
 If the object with the provided name already exists in the ElectricFlow, this object will be skipped and a warning message will be emitted to logs.</p>
 
-
+        
         <h3>Import Microservices Parameters</h3>
         <table class="grid">
             <thead>
@@ -717,53 +717,53 @@ If the object with the provided name already exists in the ElectricFlow, this ob
             </tr>
             </thead>
             <tbody>
-
+            
             <tr>
                 <td class="required">Kubernetes YAML File Content</td>
                 <td>Content of a Kubernetes YAML file containing related services and deployments definitions.</td>
             </tr>
-
+            
             <tr>
                 <td class="required">Project Name</td>
                 <td>The name of project in which the application or microservices will be created.</td>
             </tr>
-
+            
             <tr>
                 <td >Create Microservices within an Application</td>
                 <td>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
             </tr>
-
+            
             <tr>
                 <td >Application Name</td>
                 <td>(Optional) The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
             </tr>
-
+            
             <tr>
                 <td >Environment Project Name</td>
                 <td>(Optional) The project containing the Environment where the services will be deployed.</td>
             </tr>
-
+            
             <tr>
                 <td >Environment Name</td>
                 <td>(Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.</td>
             </tr>
-
+            
             <tr>
                 <td >Cluster Name</td>
                 <td>(Optional) The name of the existing ElectricFlow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</td>
             </tr>
-
+            
             </tbody>
         </table>
-
+        
     </div>
 
+    
 
-
-
+    
     <h1 id="usecases">Use Cases</h1>
 
-
+    
     <div id="RollingUpdates">
         <h2>Rolling Updates</h2>
 <p>Rolling updates or rolling deployment is a way to deploy a new version with zero downtime by incrementally updating instances running an old version with the new one. In Kubernetes, this is done using rolling updates which allows a <i>Deployment's</i> update to take place by incrementally updating pods with new ones.</p>
@@ -779,7 +779,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
 </p>
 
     </div>
-
+    
     <div id="CanaryDeployments">
         <h2>Canary Deployments</h2>
 <p>Canary deployment is a way of sending out a new release into production that plays the role of a "canary" to get an idea of how a new release will perform before rolling it out to all the users.</p>
@@ -811,7 +811,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
 </p>
 
     </div>
-
+    
     <div id="BlueGreenDeployments">
         <h2>Blue/Green Deployments</h2>
 <p>Blue/green deployments allow us to deploy 2 versions of an application, the current version and the next to an environment and switch seamlessly between them with zero downtime for the application.</p>
@@ -844,132 +844,139 @@ If the object with the provided name already exists in the ElectricFlow, this ob
 </p>
 
     </div>
+    
 
-
-
+    
     <h1 id="knownIssues">Known Issues</h1>
     <div>
         <p>If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with &quot;HTTP/1.1 422 Unprocessable Entity&quot; error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.</p>
 
     </div>
-
+    
 
     <h1 id="releaseNotes">Release Notes</h1>
-
+    
+    <h3>@PLUGIN_KEY@ 1.2.0</h3>
+    <ul>
+        
+        <li>Improved promotion time for the plugin.</li>
+        
+    </ul>
+    
     <h3>@PLUGIN_KEY@ 1.1.2</h3>
     <ul>
-
+        
         <li>Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'</li>
-
+        
         <li>Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'</li>
-
+        
         <li>Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService</li>
-
+        
         <li>Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'</li>
-
+        
         <li>Default port for ElectricFlow client has been changed from insecure (8000 by default) to secure (8443 by default). If COMMANDER_SECURE property is not populated, secure port and HTTPS will be used.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.1.1</h3>
     <ul>
-
+        
         <li>Added report generation on unsupported tags for <i>Import Microservices</i> procedure.</li>
-
+        
         <li>Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.</li>
-
+        
         <li>Added 'Test Connection' step for 'EditConfiguration' procedure.</li>
-
+        
         <li>Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.</li>
-
+        
         <li>Fixed viewing of container nodes within 'Topology View' for single-port services with unnamed port.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.1.0</h3>
     <ul>
-
+        
         <li>Added "Discover" procedure which can be used through the "Kubernetes Discovery" catalog item in the "Containers" service catalog for automatically creating microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.</li>
-
+        
         <li>Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.</li>
-
+        
         <li>Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.</li>
-
+        
         <li>Verified EC-Kubernetes plugin on Kubernetes version 1.10.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.6</h3>
     <ul>
-
+        
         <li>Added 'Wait For Kubernetes API' procedure.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.5</h3>
     <ul>
-
+        
         <li>All leading and trailing whitespaces in service mapping parameters such as <i>canaryDeployment</i> will be removed before the parameter value is used.</li>
-
+        
         <li>When performing a canary deployment, the service will not be created or updated in the Kubernetes cluster. The service must already exist in the cluster. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.4</h3>
     <ul>
-
+        
         <li>Added a validation check in procedure <i>Deploy Service</i> to ensure that the user-specified container port names within a service are unique.</li>
-
+        
         <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the EC-Kubernetes plugin will now monitor the deployment progress in Kubernetes and cause the step to fail in case the deployment does not complete within the deployment timeout configured as part of the service mapping. The default timeout value is 120 seconds.</li>
-
+        
         <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the deployment name to use in Kubernetes can now be overridden through the service mapping. See section <a href="#BlueGreenDeployments">Blue/Green Deployments</a> for details on how this ability can be used to implement a blue/green deployment strategy.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.3</h3>
     <ul>
-
+        
         <li>Made secrets compliant with DNS-1123 standards.</li>
-
+        
         <li>Removed unused parameter <i>additionalAttributes</i> from container mapping configuration.</li>
-
+        
         <li>When a microservice is deployed through ElectricFlow on a Kubernetes cluster, and 'NodePort' is specified as the service type in the service mapping, then the provisioned node port is registered as a pipeline stage runtime property <i>/myStageRuntime/&lt;applicationName&gt;/&lt;serviceName&gt;/&lt;targetPort&gt;/nodePort</i>.</li>
-
+        
         <li>When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.</li>
-
+        
         <li>Deprecated procedure <i>Create Resource</i>. The newly added procedure <i>Invoke Kubernetes API</i> should be used instead for creating or updating a Kubernetes resource.</li>
-
+        
         <li>Added support for <b>canary deployments</b>. See section <a href="#CanaryDeployments">Canary Deployments</a> for details.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.2</h3>
     <ul>
-
+        
         <li>Added support for Kubernetes API version 1.7</li>
-
+        
         <li>Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster master. The parameter will default to '1.6' if no value is specified.</li>
-
+        
         <li>Added procedure <i>Undeploy Service</i> to undeploy a previously deployed service.</li>
-
+        
         <li>Handled race condition in parallel creation of a namespace by multiple steps.</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.1</h3>
     <ul>
-
+        
         <li>Added helper functions in base client utility to support services Discovery in EC-GoogleContainerEngine</li>
-
+        
     </ul>
-
+    
     <h3>@PLUGIN_KEY@ 1.0.0</h3>
     <ul>
-
+        
         <li>First release.</li>
-
+        
     </ul>
-
+    
 </div>
 </body>
 </html>
