@@ -14,16 +14,16 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on November 01, 2018</p>
+    <p>Revised on October 30, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
     <ul>
     <li><a href="#overview">Overview</a></li>
     
-
+    <li><a href="#prerequisites">Prerequisites</a></li>
     
-    <li><a href="#Dependency Management (Setup procedure)">Dependency Management (Setup procedure)</a></li>
+
     
 
     
@@ -85,10 +85,8 @@
 </p>
     
     
-
-    
-    <div id="Dependency Management (Setup procedure)">
-        <h2>Dependency Management (Setup procedure)</h2>
+    <div id="prerequisites">
+        <h2>Prerequisites</h2>
         <p>Binary dependencies (Grapes) are loaded from ElectricFlow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
 <p>ElectricFlow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
 <p>In case the plugin procedures are running on a different from local resource, local resource should be available in the system. It can be set through server properties:</p>
@@ -103,10 +101,9 @@
 <p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
 <a href="https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers" target="_blank">https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers</a>
  for the instructions.</p>
-<p>If STOMP server cannot be configured or accessed, one can manually copy dependencies from lib/ folder of the plugin (<code>$COMMANDER_DATA/@PLUGIN_NAME@/lib</code>) to <code>$COMMANDER_DATA/grape</code> folder.</p>
-<p>Failed Setup procedure does not stop the job, so even if it has failed, the overall job still has a chance to finish. If no dependencies are found in the local filesystem, the script itself will attempt to download them from the internet.</p>
 
     </div>
+    
 
     
     <!--TODO custom blocks-->
