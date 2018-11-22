@@ -1,3 +1,4 @@
+// Version: Thu Oct 25 16:24:07 2018
 package com.electriccloud.commander.dsl.util
 
 import groovy.io.FileType
@@ -27,6 +28,17 @@ abstract class BasePlugin extends DslDelegatingScript {
 				description: propDescription
 	}
 
+	def deleteStepPicker(String pluginKey, String procName) {
+
+		def label = "$pluginKey - $procName"
+		def propName = "/server/ec_customEditors/pickerStep/$label"
+		def stepPickerProp = getProperty(propName, suppressNoSuchPropertyException: true)
+		if (stepPickerProp) {
+			deleteProperty propertyName: propName
+		}
+
+	}
+
 	def setupPluginMetadata(String pluginDir, String pluginKey, String pluginName, List stepsWithAttachedCredentials) {
 	    String pluginCategory = determinePluginCategory(pluginDir)
 		getProcedures(pluginName).each { proc ->
@@ -42,7 +54,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 				//Store the list of steps that require credentials to be attached as a procedure property
 				procedure proc.procedureName, {
 					property 'ec_stepsWithAttachedCredentials', value: JsonOutput.toJson(stepsWithAttachedCredentials)
-		}
+		        }
 			}
 		}
 		// configure the plugin icon if is exists
@@ -74,12 +86,7 @@ abstract class BasePlugin extends DslDelegatingScript {
 			def addStepPicker = shouldAddStepPicker(pluginName, proc.procedureName)
 			// delete the step picker if it was added by setupPluginMetadata
 			if (addStepPicker) {
-				def label = "$pluginKey - $proc.procedureName"
-				def propName = "/server/ec_customEditors/pickerStep/$label"
-				def stepPickerProp = getProperty(propName, suppressNoSuchPropertyException: true)
-				if (stepPickerProp) {
-					deleteProperty propertyName: propName
-				}
+				deleteStepPicker(pluginKey, proc.procedureName)
 			}
 
 		}
@@ -195,6 +202,10 @@ abstract class BasePlugin extends DslDelegatingScript {
 		return script.run();
 	}
 
+	def nullIfEmpty(def value) {
+		value == '' ? null : value
+	}
+
 	def buildFormalParametersFromFormXml(def proc, File formXml) {
 
 		def formElements = new XmlSlurper().parseText(formXml.text)
@@ -208,8 +219,8 @@ abstract class BasePlugin extends DslDelegatingScript {
 
 				formalParameter "$formElement.property",
 						defaultValue: formElement.value,
-						required: formElement.required,
-						description: formElement.description,
+						required: nullIfEmpty(formElement.condition) ? 0 : ( nullIfEmpty(formElement.required) ?: 0 ),
+						description: formElement.documentation,
 						type: formElement.type,
 						label: formElement.label,
 						expansionDeferred: expansionDeferred
