@@ -42,3 +42,5 @@
   - Default port for ElectricFlow client has been changed from insecure (8000 by default) to secure (8443 by default). If COMMANDER_SECURE property is not populated, secure port and HTTPS will be used.
 1.2.0:
   - Improved promotion time for the plugin.
+1.2.1:
+  - Fixed creating configuration by user with "@" in username.
