@@ -37,7 +37,7 @@ use strict;
 $|=1;
 
 
-$::gAdditionalArtifactVersion = "$[additionalArtifactVersion]";
+$::gAdditionalArtifactVersion = '$[additionalArtifactVersion]';
 
 sub main() {
     my $ec = ElectricCommander->new();
