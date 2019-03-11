@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on November 16, 2018</p>
+    <p>Revised on March 06, 2018</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
@@ -855,6 +855,13 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+    
+    <h3>@PLUGIN_KEY@ 1.2.1</h3>
+    <ul>
+        
+        <li>Configurations can be created by users with "@" sign in a name.</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.2.0</h3>
     <ul>
