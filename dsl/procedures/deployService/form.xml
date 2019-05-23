@@ -1,6 +1,6 @@
 <!--
 
-     Copyright 2016 Electric Cloud, Inc.
+     Copyright 2016 CloudBees, Inc.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -21,14 +21,14 @@
         <label>Service Name:</label>
         <property>serviceName</property>
         <required>1</required>
-        <documentation>The name of the service in ElectricFlow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</documentation>
+        <documentation>The name of the service in CloudBees Flow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Service Revision ID:</label>
         <property>serviceEntityRevisionId</property>
         <required>0</required>
-        <documentation>Revision Id of the service in ElectricFlow.</documentation>
+        <documentation>Revision Id of the service in CloudBees Flow.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -56,7 +56,7 @@
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>1</required>
-        <documentation>The name of the cluster in ElectricFlow that encapsulates the Kubernetes cluster on which the service is to be deployed.</documentation>
+        <documentation>The name of the cluster in CloudBees Flow that encapsulates the Kubernetes cluster on which the service is to be deployed.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>

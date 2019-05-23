@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on March 06, 2018</p>
+    <p>Revised on May 23, 2019</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
@@ -89,8 +89,8 @@
     
     <div id="Dependency Management (Setup procedure)">
         <h2>Dependency Management (Setup procedure)</h2>
-        <p>Binary dependencies (Grapes) are loaded from ElectricFlow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
-<p>ElectricFlow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
+        <p>Binary dependencies (Grapes) are loaded from CloudBees Flow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
+<p>CloudBees Flow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
 <p>In case the plugin procedures are running on a different from local resource, local resource should be available in the system. It can be set through server properties:</p>
 <pre><code>ectool setProperty /server/settings/localResourceName &lt;my local resource name&gt;
 </code></pre>
@@ -127,7 +127,7 @@
         </p>
 
         <h3>Creating Plugin Configurations</h3>
-        <p>To create plugin configurations in ElectricFlow,
+        <p>To create plugin configurations in CloudBees Flow,
             do these steps:</p>
 
         <li>Go to <b>Administration</b> &gt; <b>Plugins</b> to open the Plugin Manager.</li>
@@ -286,12 +286,12 @@
             
             <tr>
                 <td class="required">Service Name</td>
-                <td>The name of the service in ElectricFlow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</td>
+                <td>The name of the service in CloudBees Flow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</td>
             </tr>
             
             <tr>
                 <td >Service Revision ID</td>
-                <td>Revision Id of the service in ElectricFlow.</td>
+                <td>Revision Id of the service in CloudBees Flow.</td>
             </tr>
             
             <tr>
@@ -311,7 +311,7 @@
             
             <tr>
                 <td class="required">Cluster Name</td>
-                <td>The name of the cluster in ElectricFlow that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
+                <td>The name of the cluster in CloudBees Flow that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
             </tr>
             
             <tr>
@@ -354,12 +354,12 @@
             
             <tr>
                 <td class="required">Service Name</td>
-                <td>The name of the service in ElectricFlow that encapsulates the service that was previously deployed on the Kubernetes cluster.</td>
+                <td>The name of the service in CloudBees Flow that encapsulates the service that was previously deployed on the Kubernetes cluster.</td>
             </tr>
             
             <tr>
                 <td >Service Revision ID</td>
-                <td>Revision Id of the service in ElectricFlow.</td>
+                <td>Revision Id of the service in CloudBees Flow.</td>
             </tr>
             
             <tr>
@@ -402,37 +402,37 @@
         <h2>Discover</h2>
         
         
-        Automatically create microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+        Automatically create microservice models in CloudBees Flow for the services and the pods discovered within a namespace on a Kubernetes cluster.
 <div>
     <ol>
         <li><b>Select your method of discovery from a Kubernetes Cluster</b>  There are two options for connecting to Kubernetes for discovery
             <ul>
-                <li><b>Existing ElectricFlow Environment and Cluster</b>  Use the Cluster configuration details in an existing ElectricFlow environment to connect to Kubernetes. Enter details for the existing environment and cluster in the following parameters:
+                <li><b>Existing CloudBees Flow Environment and Cluster</b>  Use the Cluster configuration details in an existing CloudBees Flow environment to connect to Kubernetes. Enter details for the existing environment and cluster in the following parameters:
                     <ul>
                         <li>Environment Project Name: The project containing the existing environment</li>
                         <li>Environment Name:  the name of an existing environment that contains the Kubernetes backend cluster to be discovered</li>
-                        <li>Cluster Name: The name of the ElectricFlow cluster in the environment above that represents the Kubernetes cluster</li>
+                        <li>Cluster Name: The name of the CloudBees Flow cluster in the environment above that represents the Kubernetes cluster</li>
                     </ul></li>
                 <li><b>Kubernetes Connection Details</b>  Enter Kubernetes endpoint and Account details to directly connect to the endpoint and discover the clusters and pods.  Enter the endpoint and account details in the following parameters:
                     <ul>
                         <li>Kubernetes Endpoint: The endpoint where the Kubernetes endpoint will be reachable</li>
                         <li>Service Account API Token</li>
-                        <li><i>If selecting this connection option, you can optionally enter a new values for Environment Name and Cluster Name parameters, to create a new environment and cluster in ElectricFlow based on the discovered services and pods.</i></li>
+                        <li><i>If selecting this connection option, you can optionally enter a new values for Environment Name and Cluster Name parameters, to create a new environment and cluster in CloudBees Flow based on the discovered services and pods.</i></li>
                     </ul>
                 </li>
             </ul></li>
-        <li><b>Determine how the discovered microservices will be created in ElectricFlow</b>
+        <li><b>Determine how the discovered microservices will be created in CloudBees Flow</b>
             <ul>
                 <li><b>Create the microservices individually at the top-level within the project.</b> All discovered microservices will be created at the top-level.  Enter the following parameters:
                     <ul>
                         <li>Project Name: Enter the name of the project where the microservices will be created</li>
                     </ul>
                 </li>
-                <li><b>Create the Microservices within an application in ElectricFlow.</b> All discovered microservices will be created as services within a new application. Enter the following parameters:
+                <li><b>Create the Microservices within an application in CloudBees Flow.</b> All discovered microservices will be created as services within a new application. Enter the following parameters:
                     <ul>
                         <li>Project Name: Enter the name of the project where the new application will be created</li>
                         <li>Create Microservices within and Application:  Select the checkbox</li>
-                        <li>Application Name:  The name of a new application which will be created in ElectricFlow containing the discovered services</li>
+                        <li>Application Name:  The name of a new application which will be created in CloudBees Flow containing the discovered services</li>
                     </ul>
                 </li></ul>
         </li>
@@ -442,11 +442,11 @@
         
         
             <p>Procedure looks for services and deployments on Kubernetes
-cluster and transfers data into ElectricFlow. Services found
-in cluster will be mapped to Services objects in ElectricFlow,
+cluster and transfers data into CloudBees Flow. Services found
+in cluster will be mapped to Services objects in CloudBees Flow,
 then associated deployments will be found and containers
 definitions retrieved from there.</p>
-<p>If the object with the provided name already exists in the ElectricFlow, this object will be skipped and a warning message will be emitted to logs.</p>
+<p>If the object with the provided name already exists in the CloudBees Flow, this object will be skipped and a warning message will be emitted to logs.</p>
 
         
         <h3>Discover Parameters</h3>
@@ -471,7 +471,7 @@ definitions retrieved from there.</p>
             
             <tr>
                 <td class="required">Cluster Name</td>
-                <td>In an existing environment, provide the name of the ElectricFlow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</td>
+                <td>In an existing environment, provide the name of the CloudBees Flow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</td>
             </tr>
             
             <tr>
@@ -496,7 +496,7 @@ definitions retrieved from there.</p>
             
             <tr>
                 <td >Create Microservices within an Application</td>
-                <td>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
+                <td>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
             </tr>
             
             <tr>
@@ -669,27 +669,27 @@ definitions retrieved from there.</p>
         
         
         
-    Create microservices in ElectricFlow by importing a Kubernetes YAML file containing services and deployment configurations.
+    Create microservices in CloudBees Flow by importing a Kubernetes YAML file containing services and deployment configurations.
     <div>
         <ol>
             <li><b>Copy and enter the content of your Kubernetes YAML file</b></li>
-            <li><b>Determine how the new microservices will be created in ElectricFlow</b>
+            <li><b>Determine how the new microservices will be created in CloudBees Flow</b>
             <ul>
                 <li><b>Create the microservices individually at the top-level within the project.</b> All microservices will be created at the top-level. Enter the following parameters:
                 <ul>
                     <li>Project Name: Enter the name of the project where the microservices will be created</li>
                 </ul></li>
-                <li><b>Create the Microservices within an application in ElectricFlow.</b> All microservices will be created as services within a new application. Enter the following parameters:
+                <li><b>Create the Microservices within an application in CloudBees Flow.</b> All microservices will be created as services within a new application. Enter the following parameters:
                 <ul>
                     <li>Project Name: Enter the name of the project where the new application will be created</li>
                     <li>Create Microservices within and Application: Select the checkbox</li>
-                    <li>Application Name:  The name of a new application which will be created in ElectricFlow containing the new services.</li>
+                    <li>Application Name:  The name of a new application which will be created in CloudBees Flow containing the new services.</li>
                 </ul>
                 </li>
             </ul></li>
             <li><b>Optionally map the services to an existing Environment Cluster</b> Select an existing Environment that contains a cluster with Kubernetes configuration details where the new microservices can be deployed. Enter the following parameters:
             <ul>
-                <li>Environment Project Name: The project containing the ElectricFlow environment where the services will be deployed.</li>
+                <li>Environment Project Name: The project containing the CloudBees Flow environment where the services will be deployed.</li>
                 <li>Environment Name: The name of the existing environment that contains a cluster where the newly created microservice(s) will be deployed.</li>
                 <li>Cluster Name: The name of an existing EC-Kubernetes (or EC-AzureContainerService) backed cluster in the environment above where the newly created microservice(s) will be deployed.</li>
             </ul>
@@ -700,12 +700,12 @@ definitions retrieved from there.</p>
         
         
             <p>Procedure looks for services and deployments in Kubernetes
-YAML file and transfers data into ElectricFlow. Services found
-in YAML file will be mapped to Services objects in ElectricFlow,
+YAML file and transfers data into CloudBees Flow. Services found
+in YAML file will be mapped to Services objects in CloudBees Flow,
 then associated deployments will be found and containers
 definitions retrieved from there.</p>
 <p>If the configuration contains unsupported fields, these fields will be skipped and a warning message will be emitted to logs.
-If the object with the provided name already exists in the ElectricFlow, this object will be skipped and a warning message will be emitted to logs.</p>
+If the object with the provided name already exists in the CloudBees Flow, this object will be skipped and a warning message will be emitted to logs.</p>
 
         
         <h3>Import Microservices Parameters</h3>
@@ -730,7 +730,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
             
             <tr>
                 <td >Create Microservices within an Application</td>
-                <td>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in ElectricFlow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
+                <td>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
             </tr>
             
             <tr>
@@ -750,7 +750,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
             
             <tr>
                 <td >Cluster Name</td>
-                <td>(Optional) The name of the existing ElectricFlow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</td>
+                <td>(Optional) The name of the existing CloudBees Flow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</td>
             </tr>
             
             </tbody>
@@ -767,7 +767,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     <div id="RollingUpdates">
         <h2>Rolling Updates</h2>
 <p>Rolling updates or rolling deployment is a way to deploy a new version with zero downtime by incrementally updating instances running an old version with the new one. In Kubernetes, this is done using rolling updates which allows a <i>Deployment's</i> update to take place by incrementally updating pods with new ones.</p>
-<p>EC-Kubernetes plugin deploys services using rolling updates by default. When ElectricFlow deploys a service to Kubernetes, the EC-Kubernetes plugin uses the following service attributes for the <i>Deployment</i>'s rolling update attributes in Kubernetes.</p>
+<p>EC-Kubernetes plugin deploys services using rolling updates by default. When CloudBees Flow deploys a service to Kubernetes, the EC-Kubernetes plugin uses the following service attributes for the <i>Deployment</i>'s rolling update attributes in Kubernetes.</p>
 <p>
     <ol>
         <li><b>Rolling Deployment - Min Microservice Instances: </b>Minimum number of pods that must be running during a rolling update. Defaults to 1 if not set.</li>
@@ -784,7 +784,7 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <h2>Canary Deployments</h2>
 <p>Canary deployment is a way of sending out a new release into production that plays the role of a "canary" to get an idea of how a new release will perform before rolling it out to all the users.</p>
 <p>A canary deployment consists of rolling out a new release or a new functionality to a subset of users or servers. This can be achieved in a Kubernetes cluster by deploying a canary of a new release side by side with the previous release so that the new release can receive live production traffic before fully rolling it out. (Reference: <a href="https://kubernetes.io/docs/concepts/cluster-administration/manage-deployment/#canary-deployments" target="_blank">Canary Deployments</a>).</p>
-<p>When ElectricFlow deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller.
+<p>When CloudBees Flow deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller.
     In order to perform a canary deployment, the following two service mapping attributes can be set:<br/>
     <ol>
         <li><b>Perform Canary Deployment: </b>If true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.</li>
@@ -816,10 +816,10 @@ If the object with the provided name already exists in the ElectricFlow, this ob
         <h2>Blue/Green Deployments</h2>
 <p>Blue/green deployments allow us to deploy 2 versions of an application, the current version and the next to an environment and switch seamlessly between them with zero downtime for the application.</p>
 <p>A blue/green deployment can be achieved in Kubernetes by creating a new deployment, say <i>my-deployment-green</i> for running the new version while all the old pods created earlier for the older deployment, say <i>my-deployment-blue</i> are still serving all the live requests. Once the new deployment has completed successfully, and has optionally been tested through a test service, then the service in Kubernetes is switched to send requests to the newly created pods running the new version.</p>
-<p>When ElectricFlow deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller.
+<p>When CloudBees Flow deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller.
 <br/>In order to orchestrate a blue/green deployment, the following two service mapping attributes can be leveraged:<br/>
 <ol>
-    <li><b>Service Name Override: </b>Name for the service in Kubernetes. If no override value is specified, the service name in ElectricFlow will be used to name the service in Kubernetes.</li>
+    <li><b>Service Name Override: </b>Name for the service in Kubernetes. If no override value is specified, the service name in CloudBees Flow will be used to name the service in Kubernetes.</li>
     <li><b>Deployment Name Override: </b>Name for the deployment in Kubernetes. If no value is specified, then the name of the Kubernetes service being created or updated will be used to name the deployment in Kubernetes.</li>
 </ol>
 <br/>Having these attributes in the service mapping allows you to use the same service deployment and undeployment processes that you would use for performing a more typical service deployment or undeployment. The following steps describe how a blue/green deployment can be orchestrated using the two service mapping attributes mentioned above.
@@ -855,6 +855,10 @@ If the object with the provided name already exists in the ElectricFlow, this ob
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+
+    <h3 id="1.2.2">@PLUGIN_KEY@ 1.2.2</h3>
+    <p>Renaming from "Electric Cloud" to "CloudBees"</p>
+
     
     <h3>@PLUGIN_KEY@ 1.2.1</h3>
     <ul>
