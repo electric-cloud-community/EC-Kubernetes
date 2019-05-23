@@ -1,6 +1,6 @@
 <!--
 
-     Copyright 2016 Electric Cloud, Inc.
+     Copyright 2016 CloudBees, Inc.
 
      Licensed under the Apache License, Version 2.0 (the "License");
      you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@
         <label>Service Name Override:</label>
         <property>serviceNameOverride</property>
         <required>0</required>
-        <documentation>Name for the service in Kubernetes. If no override value is specified here, the service name in ElectricFlow will be used to name the service in Kubernetes.</documentation>
+        <documentation>Name for the service in Kubernetes. If no override value is specified here, the service name in CloudBees Flow will be used to name the service in Kubernetes.</documentation>
     </formElement>
 
 

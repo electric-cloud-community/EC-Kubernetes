@@ -1,5 +1,5 @@
 <plugin>
-  <author>Electric Cloud</author>
+  <author>CloudBees</author>
   <authorUrl>http://www.electric-cloud.com/support</authorUrl>
   <category>Container Management</category>
   <ecSupportLevel>10</ecSupportLevel>
@@ -9,5 +9,5 @@
   <key>EC-Kubernetes</key>
   <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
 </plugin>
