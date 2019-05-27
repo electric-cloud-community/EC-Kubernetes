@@ -1,6 +1,6 @@
 ## Rolling Updates
 <p>Rolling updates or rolling deployment is a way to deploy a new version with zero downtime by incrementally updating instances running an old version with the new one. In Kubernetes, this is done using rolling updates which allows a <i>Deployment's</i> update to take place by incrementally updating pods with new ones.</p>
-<p>EC-Kubernetes plugin deploys services using rolling updates by default. When ElectricFlow deploys a service to Kubernetes, the EC-Kubernetes plugin uses the following service attributes for the <i>Deployment</i>'s rolling update attributes in Kubernetes.</p>
+<p>EC-Kubernetes plugin deploys services using rolling updates by default. When CloudBees Flow deploys a service to Kubernetes, the EC-Kubernetes plugin uses the following service attributes for the <i>Deployment</i>'s rolling update attributes in Kubernetes.</p>
 <p>
     <ol>
         <li><b>Rolling Deployment - Min Microservice Instances: </b>Minimum number of pods that must be running during a rolling update. Defaults to 1 if not set.</li>
