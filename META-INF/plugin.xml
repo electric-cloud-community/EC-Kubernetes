@@ -9,5 +9,5 @@
   <key>EC-Kubernetes</key>
   <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
-  <version>1.2.2</version>
+  <version>1.2.3</version>
 </plugin>

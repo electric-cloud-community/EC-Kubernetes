@@ -14,22 +14,25 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on May 27, 2019</p>
+    <p>Revised on August 06, 2019</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
     <ul>
+    
     <li><a href="#overview">Overview</a></li>
     
-
     
-    <li><a href="#Dependency Management (Setup procedure)">Dependency Management (Setup procedure)</a></li>
     
-
+    
+    
+    
+    
     
     <li><a href="#CreateConfiguration">Plugin Configuration</a></li>
     
 
+    
     <li><a href="#procedures">Plugin Procedures</a></li>
     
 
@@ -62,6 +65,9 @@
     </ul>
 
     
+
+    
+    
     
     <li><a href="#usecases">Use Cases</a></li>
     <ul>
@@ -75,46 +81,32 @@
     </ul>
     
     
+    
+    
     <li><a href="#knownIssues">Known Issues</a></li>
+    
     
     <li><a href="#releaseNotes">Release Notes</a></li>
 </ul>
-    <h3>Overview</h3>
+
+    
+    <h1>Overview</h1>
     <p><p>EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).</p>
 <p>You need to have a Kubernetes cluster available for using this plugin.</p>
 </p>
     
     
-
     
-    <div id="Dependency Management (Setup procedure)">
-        <h2>Dependency Management (Setup procedure)</h2>
-        <p>Binary dependencies (Grapes) are loaded from CloudBees Flow server through STOMP or (in case Agent and Server are located on the same machine) copied directly from the plugin folder into $COMMANDER_DATA/grape folder.</p>
-<p>CloudBees Flow Agent should be able to write to $COMMANDER_DATA/grape folder.</p>
-<p>In case the plugin procedures are running on a different from local resource, local resource should be available in the system. It can be set through server properties:</p>
-<pre><code>ectool setProperty /server/settings/localResourceName &lt;my local resource name&gt;
-</code></pre>
-<p>In case the local resource is not set, the dependency handling subprocedure will try to find local resource by the following criterias:</p>
-<ul>
-<li>It has a name &quot;local&quot;</li>
-<li>Or its hostname is one of the following: localhost, 127.0.0.1 or &lt;server hostname&gt;.</li>
-</ul>
-<p>If neither local resource is found in the resource nor its name is provided in the server settings, the dependencies wil fail to load.</p>
-<p>STOMP server should be configured correctly and be available from the Agent resource. STOMP server is using port 61613 by default. See 
-<a href="https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers" target="_blank">https://helpcenter.electric-cloud.com/hc/en-us/articles/214884463-KBEC-00352-Configuring-Stomp-for-Preflight-and-EC-FileOps-file-transfers</a>
- for the instructions.</p>
-<p>If STOMP server cannot be configured or accessed, one can manually copy dependencies from lib/ folder of the plugin (<code>$COMMANDER_DATA/@PLUGIN_NAME@/lib</code>) to <code>$COMMANDER_DATA/grape</code> folder.</p>
-<p>Failed Setup procedure does not stop the job, so even if it has failed, the overall job still has a chance to finish. If no dependencies are found in the local filesystem, the script itself will attempt to download them from the internet.</p>
-
-    </div>
-
     
+    
+    
+
     <!--TODO custom blocks-->
 
     
     <div id="CreateConfiguration">
         <a name='CreateConfiguration' id="CreateConfiguration"> </a>
-        <h2>Plugin Configurations</h2>
+        <h1>Plugin Configurations</h1>
 
         <p>
             Plugin configurations are sets of parameters that apply
@@ -134,7 +126,7 @@
         <li>Find the @PLUGIN_NAME@ row.</li>
         <li>Click <b>Configure</b> to open the
              Configurations page.</li>
-        <li>Click <b>Create Configuration</b>.</li>
+        <li>Click <b>Create Configuration</b> as per the description of parameters below.</li>
         
         <p>For communicating with the Kubernetes cluster, you need the following details:</p>
 <ol>
@@ -189,49 +181,67 @@
             <tbody>
             
             <tr>
-                <td class="required">Configuration</td>
-                <td>Unique name for the plugin configuration.</td>
+                
+                    <td class="required">Configuration</td>
+                    <td>Unique name for the plugin configuration.</td>
+                
             </tr>
             
             <tr>
-                <td >Description</td>
-                <td>Description for the plugin configuration.</td>
+                
+                    <td >Description</td>
+                    <td>Description for the plugin configuration.</td>
+                
             </tr>
             
             <tr>
-                <td class="required">Kubernetes API Endpoint</td>
-                <td>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</td>
+                
+                    <td class="required">Kubernetes API Endpoint</td>
+                    <td>The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.</td>
+                
             </tr>
             
             <tr>
-                <td class="required">Bearer Token of Kubernetes Cluster</td>
-                <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</td>
+                
+                    <td class="required">Bearer Token of Kubernetes Cluster</td>
+                    <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.</td>
+                
             </tr>
             
             <tr>
-                <td >Kubernetes Version</td>
-                <td>Kubernetes version running on the cluster master</td>
+                
+                    <td >Kubernetes Version</td>
+                    <td>Kubernetes version running on the cluster master</td>
+                
             </tr>
             
             <tr>
-                <td >Test Connection</td>
-                <td>Check this checkbox to verify connectivity to Kubernetes master.</td>
+                
+                    <td >Test Connection</td>
+                    <td>Check this checkbox to verify connectivity to Kubernetes master.</td>
+                
             </tr>
             
             <tr>
-                <td >URI Path for Checking Cluster Connectivity</td>
-                <td>URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
+                
+                    <td >URI Path for Checking Cluster Connectivity</td>
+                    <td>URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'</td>
+                
             </tr>
             
             <tr>
-                <td >Log Level</td>
-                <td>Log level to use for logging output. Error=4, Warning=3, Info=2, Debug=1.</td>
+                
+                    <td >Log Level</td>
+                    <td>Log level to use for logging output. Error=4, Warning=3, Info=2, Debug=1.</td>
+                
             </tr>
             
             </tbody>
         </table>
         
     </div>
+    
+
     
 
     <h1 id="procedures">Plugin Procedures</h1>
@@ -257,12 +267,17 @@
             <tbody>
             
             <tr>
+                
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -285,52 +300,73 @@
             <tbody>
             
             <tr>
+                
                 <td class="required">Service Name</td>
                 <td>The name of the service in CloudBees Flow that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Service Revision ID</td>
                 <td>Revision Id of the service in CloudBees Flow.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Project Name</td>
                 <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Name</td>
                 <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Revision ID</td>
                 <td>Revision Id of the application version that the service belongs to.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Cluster Name</td>
                 <td>The name of the cluster in CloudBees Flow that encapsulates the Kubernetes cluster on which the service is to be deployed.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Cluster Or Environment Project Name</td>
                 <td>The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Environment Name</td>
                 <td>The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Results Property Sheet</td>
                 <td>Name of the property sheet where the output properties for the deployed service will be saved. If not specified, will default to '/myParent/parent'.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -353,47 +389,66 @@
             <tbody>
             
             <tr>
+                
                 <td class="required">Service Name</td>
                 <td>The name of the service in CloudBees Flow that encapsulates the service that was previously deployed on the Kubernetes cluster.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Service Revision ID</td>
                 <td>Revision Id of the service in CloudBees Flow.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Project Name</td>
                 <td>The name of the project that the service belongs to. In case of an application-level service it also owns the application.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Name</td>
                 <td>The name of the application that the service belongs to. Not applicable for a top-level service.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Revision ID</td>
                 <td>Revision Id of the application version that the service belongs to.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Environment Name</td>
                 <td>The name of the environment that the cluster belongs to.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Environment Project Name</td>
                 <td>The name of the project that the environment belongs to. If not specified, the environment is assumed to be in the same project as the service.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Cluster Name</td>
                 <td>The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -460,52 +515,73 @@ definitions retrieved from there.</p>
             <tbody>
             
             <tr>
+                
                 <td class="required">Environment Project Name</td>
                 <td>The project containing the existing environment, or where the new environment will be created.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Environment Name</td>
                 <td>Provide the name of an existing environment that contains the Kubernetes-backend cluster to be discovered. If the environment does not already exist, provide the Kubernetes connection details below for discovery, and a new environment will be created.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Cluster Name</td>
                 <td>In an existing environment, provide the name of the CloudBees Flow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Kubernetes API Endpoint</td>
                 <td>The endpoint at which the Kubernetes API will be reachable. Must be an IP address or a resolvable DNS name. This field is required and used only if you are not providing an existing environment above for discovery.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Service Account API Token</td>
                 <td>Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. This field is required and used only if you are not providing an existing environment above for discovery.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Kubernetes Namespace</td>
                 <td>The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Project Name</td>
                 <td>The name of project in which the discovered microservices will be created.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Create Microservices within an Application</td>
                 <td>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Name</td>
                 <td>The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -528,37 +604,52 @@ definitions retrieved from there.</p>
             <tbody>
             
             <tr>
+                
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Kubernetes API URI</td>
                 <td>The URI for the Kubernetes API to invoke. E.g., '/api/v1/namespaces'.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">HTTP method for the Kubernetes API</td>
                 <td>HTTP method for the Kubernetes REST API to be invoked.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Request Payload Format</td>
                 <td>Format of the request payload. Possible values are 'json' or 'yaml'. Not applicable for HTTP methods 'get' and 'delete'.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Request Payload</td>
                 <td>The request body/payload in JSON or YAML format. Not applicable for HTTP methods 'get' and 'delete'.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Output Property Location</td>
                 <td>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sAPIResult' else it will default to '/myJob/k8sAPIResult'.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -581,37 +672,52 @@ definitions retrieved from there.</p>
             <tbody>
             
             <tr>
+                
                 <td class="required">Configuration</td>
                 <td>The name of an existing configuration which holds all the connection information for the Kubernetes cluster.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Kubernetes API URI</td>
                 <td>The URI to poll on E.g., '/api/v1/namespaces/default/pods/nginx'.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Response Field</td>
                 <td>Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Expected value</td>
                 <td>Value of response field to check for.E.g., 'Running'</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Timeout (in seconds)</td>
                 <td>Period to wait for response field to attain destired value before timing out.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Output Property Location</td>
                 <td>Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -634,32 +740,45 @@ definitions retrieved from there.</p>
             <tbody>
             
             <tr>
+                
                 <td class="required">Configuration</td>
                 <td>Name of existing configuration which holds the authentication details for Kubernetes Cluster</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">URI</td>
                 <td>The URI for the API for creating the resource</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Request Format</td>
                 <td>The request body format</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Request body</td>
                 <td>The request body in JSON or YAML format.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Create or Update</td>
                 <td>Whether to create or update the resource.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
 
@@ -719,44 +838,65 @@ If the object with the provided name already exists in the CloudBees Flow, this 
             <tbody>
             
             <tr>
+                
                 <td class="required">Kubernetes YAML File Content</td>
                 <td>Content of a Kubernetes YAML file containing related services and deployments definitions.</td>
+                
             </tr>
             
             <tr>
+                
                 <td class="required">Project Name</td>
                 <td>The name of project in which the application or microservices will be created.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Create Microservices within an Application</td>
                 <td>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Application Name</td>
                 <td>(Optional) The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Environment Project Name</td>
                 <td>(Optional) The project containing the Environment where the services will be deployed.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Environment Name</td>
                 <td>(Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.</td>
+                
             </tr>
             
             <tr>
+                
                 <td >Cluster Name</td>
                 <td>(Optional) The name of the existing CloudBees Flow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</td>
+                
             </tr>
             
             </tbody>
         </table>
+
+        
+
         
     </div>
+
+    
+
+    
 
     
 
@@ -847,23 +987,36 @@ If the object with the provided name already exists in the CloudBees Flow, this 
     
 
     
+    
+    
     <h1 id="knownIssues">Known Issues</h1>
     <div>
         <p>If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with &quot;HTTP/1.1 422 Unprocessable Entity&quot; error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.</p>
 
     </div>
     
+    
 
     <h1 id="releaseNotes">Release Notes</h1>
-
-    <h3 id="1.2.2">@PLUGIN_KEY@ 1.2.2</h3>
-    <p>Renaming from "Electric Cloud" to "CloudBees"</p>
-
+    
+    <h3>@PLUGIN_KEY@ 1.2.3</h3>
+    <ul>
+        
+        <li>Fixed documentation for the binary dependencies management.</li>
+        
+    </ul>
+    
+    <h3>@PLUGIN_KEY@ 1.2.2</h3>
+    <ul>
+        
+        <li>Renaming from "Electric Cloud" to "CloudBees".</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.2.1</h3>
     <ul>
         
-        <li>Configurations can be created by users with "@" sign in a name.</li>
+        <li>Fixed creating configuration by user with "@" in username.</li>
         
     </ul>
     

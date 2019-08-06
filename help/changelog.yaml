@@ -44,3 +44,7 @@
   - Improved promotion time for the plugin.
 1.2.1:
   - Fixed creating configuration by user with "@" in username.
+1.2.2:
+  - Renaming from "Electric Cloud" to "CloudBees".
+1.2.3:
+  - Fixed documentation for the binary dependencies management.
