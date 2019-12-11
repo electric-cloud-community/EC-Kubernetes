@@ -7,16 +7,13 @@ procedure 'Create Resource',
 
 	step 'setup',
       subproject: '',
-      subprocedure: 'Setup',
+      subprocedure: 'flowpdk-setup',
       command: null,
       errorHandling: 'failProcedure',
       exclusiveMode: 'none',
       postProcessor: 'postp',
       releaseMode: 'none',
-      timeLimitUnits: 'minutes', {
-
-    	  actualParameter 'additionalArtifactVersion', ''
-    }
+      timeLimitUnits: 'minutes'
 
 	step 'createResource',
 	  command: new File(pluginDir, 'dsl/procedures/createResource/steps/createResource.groovy').text,
