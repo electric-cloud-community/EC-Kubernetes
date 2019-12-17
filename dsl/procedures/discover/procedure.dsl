@@ -45,15 +45,13 @@ procedure 'Discover',
 
     step 'setup',
       subproject: '',
-      subprocedure: 'Setup',
+      subprocedure: 'flowpdk-setup',
       command: null,
       errorHandling: 'failProcedure',
       exclusiveMode: 'none',
       postProcessor: 'postp',
       releaseMode: 'none',
-      timeLimitUnits: 'minutes', {
-          actualParameter 'additionalArtifactVersion', ''
-    }
+      timeLimitUnits: 'minutes'
 
 	step 'discover',
     	  command: new File(pluginDir, 'dsl/procedures/discover/steps/discover.groovy').text,

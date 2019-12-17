@@ -14,7 +14,7 @@
     <h1>@PLUGIN_KEY@</h1>
     <p>Plugin version @PLUGIN_VERSION@</p>
     
-    <p>Revised on August 06, 2019</p>
+    <p>Revised on December 11, 2019</p>
     
     <hr style="margin-left: -10px; margin-top: 10px; height: 1px; width: 100%; color: #5981BD;" noshade="noshade"/>
     <h1>Contents</h1>
@@ -998,6 +998,13 @@ If the object with the provided name already exists in the CloudBees Flow, this 
     
 
     <h1 id="releaseNotes">Release Notes</h1>
+    
+    <h3>@PLUGIN_KEY@ 1.3.0</h3>
+    <ul>
+        
+        <li>Changed dependency delivery procedure.</li>
+        
+    </ul>
     
     <h3>@PLUGIN_KEY@ 1.2.3</h3>
     <ul>

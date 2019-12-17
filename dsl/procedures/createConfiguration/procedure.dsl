@@ -5,7 +5,7 @@ procedure 'CreateConfiguration',
 
     step 'setup',
           subproject: '/plugins/EC-Kubernetes/project',
-          subprocedure: 'Setup',
+          subprocedure: 'flowpdk-setup',
           command: null,
           errorHandling: 'failProcedure',
           condition: '$[testConnection]',

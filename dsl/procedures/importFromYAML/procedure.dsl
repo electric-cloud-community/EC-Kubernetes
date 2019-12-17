@@ -38,15 +38,13 @@ procedure 'Import Microservices',
 
     step 'setup',
           subproject: '',
-          subprocedure: 'Setup',
+          subprocedure: 'flowpdk-setup',
           command: null,
           errorHandling: 'failProcedure',
           exclusiveMode: 'none',
           postProcessor: 'postp',
           releaseMode: 'none',
-          timeLimitUnits: 'minutes', {
-          actualParameter 'additionalArtifactVersion', ''
-   }
+          timeLimitUnits: 'minutes'
 
     step 'import',
           command: new File(pluginDir, 'dsl/procedures/importFromYAML/steps/import.groovy').text,

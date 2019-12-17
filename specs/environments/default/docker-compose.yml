@@ -11,6 +11,10 @@ services:
       - internal
     container_name: electricflow
     tty: true
+    extra_hosts:
+      - maven.org:127.0.0.1
+      - repo1.maven.org:127.0.0.1
+      - jcenter.bintray.com:127.0.0.1
 networks:
   internal:
     driver: bridge
