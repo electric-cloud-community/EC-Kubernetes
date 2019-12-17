@@ -66,7 +66,8 @@ sub fetchFromServer {
     );
 
     my $httpProxy = $ENV{COMMANDER_HTTP_PROXY};
-    if ($httpProxy) {
+    if ($httpProxy && $ElectricCommander::VERSION >= 9.0000) {
+        # Because prior 9.0, the proxy didn't work with rest calls
         $ua->proxy(https => $httpProxy);
         $ua->proxy(http => $httpProxy);
     }
@@ -140,6 +141,45 @@ sub fetchFromDsl {
     return $dependencies;
 }
 
+
+sub setupParentPlugins {
+    my ($self, $pluginsList) = @_;
+
+    for my $plugin (split(/\s+/ => $pluginsList)) {
+        logInfo "Found external plugin dependency: $plugin";
+
+        my $jobId = $self->ec()->runProcedure({
+            projectName => "/plugins/$plugin/project",
+            procedureName => "flowpdk-setup",
+        })->findvalue('//jobId')->string_value;
+
+        logInfo "Launched setup job for the plugin $plugin, jobId: $jobId";
+        my $status = $self->ec()->getJobStatus($jobId);
+
+        logInfo "Waiting for the setup job...";
+
+        while($status->findvalue('//status') ne 'completed') {
+            sleep 5;
+            $status = $self->ec()->getJobStatus($jobId);
+        }
+        my $outcome = $status->findvalue('//outcome');
+        if ($outcome eq 'error') {
+            die "Setup job for the parent plugin failed";
+        }
+    }
+}
+
+sub isLocalResource {
+    my ($self) = @_;
+
+    my $file = File::Spec->catfile($ENV{COMMANDER_PLUGINS}, '@PLUGIN_NAME@/META-INF');
+    if (-d $file) {
+        logInfo "Working on local resource";
+        return 1;
+    }
+    return 0;
+}
+
 # Auto-generated method for the procedure DeliverDependencies/DeliverDependencies
 # Add your code into this method and it will be called when step runs
 sub deliverDependencies {
@@ -149,9 +189,15 @@ sub deliverDependencies {
     $self->ec->setProperty('/myJob/grabbedResource', $resName);
     $self->ec->setProperty('/myJobStep/parent/flowpdkResource', $resName);
     $self->ec->setProperty('/myJob/flowpdkResource', $resName);
+
+    my $dependsOnPlugins = $self->ec->getPropertyValue('dependsOnPlugins');
+    if ($dependsOnPlugins) {
+        $self->setupParentPlugins($dependsOnPlugins);
+    }
+
     logInfo "Grabbed resource $resName";
 
-    if ($self->checkCache()) {
+    if ($self->checkCache() || $self->isLocalResource()) {
         print "Local file cache is ok\n";
         $self->copyGrapes();
         $self->copySharedDeps();
