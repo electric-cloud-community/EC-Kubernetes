@@ -76,6 +76,7 @@ class ClusterView {
         topology.addNode(buildClusterNode())
 
         kubeNamespaces.findAll { !isSystemNamespace(it) && isValidNamespace(it) }.each { namespace ->
+            String namespaceName = getNamespaceName(namespace)
             topology.addNode(buildNamespaceNode(namespace))
             topology.addLink(getClusterId(), getNamespaceId(namespace))
 
@@ -84,20 +85,44 @@ class ClusterView {
                     isValidService(kubeService) && !isSystemService(kubeService)
             }
 
+            def usedPods = []
+
             services.each { service ->
                 def pods = getServicePodsTopology(service)
                 topology.addLink(getNamespaceId(namespace), getServiceId(service))
                 topology.addNode(buildServiceNode(service, pods))
+                usedPods.addAll(pods)
 
                 pods.each { pod ->
-                    topology.addLink(getServiceId(service), getPodId(service, pod))
+                    topology.addLink(getServiceId(service), getPodId(namespaceName, pod))
                     topology.addNode(buildPodNode(service, pod))
 
                     def containers = pod.spec.containers
                     containers.each { container ->
-                        topology.addLink(getPodId(service, pod), getContainerId(service, pod, container))
-                        topology.addNode(buildContainerNode(service, pod, container))
+                        topology.addLink(getPodId(namespaceName, pod), getContainerId(namespaceName, pod, container))
+                        topology.addNode(buildContainerNode(namespaceName, pod, container))
                     }
+                }
+            }
+
+
+
+            // pods without services
+            def usedPodsNames = usedPods.collect {
+                it.metadata.name
+            }
+            def standalonePods = kubePods.findAll {
+                !(it.metadata.name in usedPodsNames) && it.metadata.namespace == namespaceName
+            }
+            standalonePods.each { pod ->
+                topology.addLink(getNamespaceId(namespace), getPodId(namespaceName, pod))
+                topology.addNode(buildPodNode(namespaceName, pod))
+
+                def containers = pod?.spec?.containers
+                containers?.each { container ->
+                    topology.addLink(getPodId(namespaceName, pod), getContainerId(namespaceName, pod, container))
+
+                    topology.addNode(buildContainerNode(namespaceName, pod, container))
                 }
             }
         }
@@ -231,9 +256,14 @@ class ClusterView {
             }
             def labels = object.metadata?.labels
             def match = true
-            selector.each { k, v ->
-                if (labels.get(k) != v) {
-                    match = false
+            if (!labels) {
+                match = false
+            }
+            else {
+                selector.each { k, v ->
+                    if (labels?.get(k) != v) {
+                        match = false
+                    }
                 }
             }
             match
@@ -531,14 +561,15 @@ class ClusterView {
         return "http://${endpoint}"
     }
 
-    String getPodId(service, pod) {
-        def namespaceId = "${this.getClusterId()}::${service.metadata.namespace}"
-        "${namespaceId}::${pod.metadata.name}"
+    String getPodId(String namespaceName, pod) {
+        def namespaceId = "${this.getClusterId()}::${namespaceName}"
+        return "${namespaceId}::${pod.metadata.name}"
     }
 
-    String getContainerId(service, pod, container) {
-        "${getPodId(service, pod)}::${container.name}"
+    String getContainerId(String namespace, pod, container) {
+        "${getPodId(namespace, pod)}::${container.name}"
     }
+
 
     def buildClusterNode() {
         ClusterNode node = createClusterNode(getClusterId(), TYPE_CLUSTER, getClusterName())
@@ -548,10 +579,10 @@ class ClusterView {
         node
     }
 
-    def buildPodNode(service, pod) {
+    def buildPodNode(String namespace, pod) {
         def name = pod.metadata.name
         def status = pod.status.phase
-        ClusterNode node = createClusterNode(getPodId(service, pod), TYPE_POD, name)
+        ClusterNode node = createClusterNode(getPodId(namespace, pod), TYPE_POD, name)
         node.setStatus(status)
         if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
             node.setDisplayType(DISPLAY_POD)
@@ -574,8 +605,8 @@ class ClusterView {
         node
     }
 
-    def buildContainerNode(service, pod, container) {
-        def node = createClusterNode(getContainerId(service, pod, container), TYPE_CONTAINER, container.name)
+    def buildContainerNode(String namespace, pod, container) {
+        def node = createClusterNode(getContainerId(namespace, pod, container), TYPE_CONTAINER, container.name)
         node.setStatus(getContainerStatus(pod, container))
         if (node.metaClass.respondsTo(node, "setDisplayType", String)) {
             node.setDisplayType(DISPLAY_CONTAINER)
