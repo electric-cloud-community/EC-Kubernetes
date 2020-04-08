@@ -230,6 +230,9 @@ class ClusterView {
                 return false
             }
             def labels = object.metadata?.labels
+            if (!labels) {
+                return false
+            }
             def match = true
             selector.each { k, v ->
                 if (labels.get(k) != v) {
