@@ -53,7 +53,7 @@ sub new {
 
 
 sub fetchFromServer {
-    my ($self, $dest) = @_;
+    my ($self, $dest, $serverVersion) = @_;
 
     # REST Client
     my $ec = ElectricCommander->new;
@@ -66,7 +66,7 @@ sub fetchFromServer {
     );
 
     my $httpProxy = $ENV{COMMANDER_HTTP_PROXY};
-    if ($httpProxy && $ElectricCommander::VERSION >= 9.0000) {
+    if ($httpProxy && $ElectricCommander::VERSION >= 9.0000 && compareMinor($serverVersion, '2020.03') >= 0) {
         # Because prior 9.0, the proxy didn't work with rest calls
         $ua->proxy(https => $httpProxy);
         $ua->proxy(http => $httpProxy);
@@ -215,7 +215,7 @@ sub deliverDependencies {
     my $serverVersion = $self->ec()->getVersions()->findvalue('//serverVersion/version')->string_value;
     logInfo "Server version is $serverVersion";
     if (compareMinor($serverVersion, '9.3') >= 0) {
-        $dependencies = $self->fetchFromServer($dest);
+        $dependencies = $self->fetchFromServer($dest, $serverVersion);
     }
     else {
         $dependencies = $self->fetchFromDsl($dest);
