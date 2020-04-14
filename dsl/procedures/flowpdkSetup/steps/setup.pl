@@ -66,7 +66,12 @@ sub fetchFromServer {
     );
 
     my $httpProxy = $ENV{COMMANDER_HTTP_PROXY};
-    if ($httpProxy && $ElectricCommander::VERSION >= 9.0000 && compareMinor($serverVersion, '2020.03') >= 0) {
+
+    # Proxy was fixed in 2020.03 and should be fixed in the version next to 9.3, will it be 10.0 or 9.4
+    # We do not care for preview releases prior march though.
+    my $fixedVersion = compareMinor($serverVersion, '9.4') >= 0;
+
+    if ($httpProxy && $ElectricCommander::VERSION >= 9.0000 && $fixedVersion) {
         # Because prior 9.0, the proxy didn't work with rest calls
         $ua->proxy(https => $httpProxy);
         $ua->proxy(http => $httpProxy);
