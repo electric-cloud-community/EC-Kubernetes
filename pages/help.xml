@@ -1004,6 +1004,8 @@ If the object with the provided name already exists in the CloudBees Flow, this 
         
         <li>Provisioning of Binary Dependencies (for example Grape jars) in the agent resource, required by this plugin, is now delivered through a newly introduced mechanism called Plugin Dependency Management. Binary dependencies will now be seamlessly delivered to the agent resource from the Flow Server, any time a new version of a plugin is invoked the first time. Flow Repository set up is no longer required for this plugin.</li>
         
+        <li>Fixed Smart Map rendering for the case with serviceless pods.</li>
+        
     </ul>
     
     <h3>@PLUGIN_KEY@ 1.2.3</h3>
