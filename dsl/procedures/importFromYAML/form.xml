@@ -38,7 +38,7 @@
         <checkedValue>1</checkedValue>
         <uncheckedValue>0</uncheckedValue>
         <initiallyChecked>0</initiallyChecked>
-        <documentation>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
+        <documentation>(Optional) Select to create all services defined in the Kubernetes YAML file within one application in CloudBees CD. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -66,6 +66,6 @@
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>0</required>
-        <documentation>(Optional) The name of the existing CloudBees Flow cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</documentation>
+        <documentation>(Optional) The name of the existing CloudBees CD cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.</documentation>
     </formElement>
 </editor>

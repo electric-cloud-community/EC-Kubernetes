@@ -21,14 +21,14 @@
         <label>Service Name:</label>
         <property>serviceName</property>
         <required>1</required>
-        <documentation>The name of the service in CloudBees Flow that encapsulates the service that was previously deployed on the Kubernetes cluster.</documentation>
+        <documentation>The name of the service in CloudBees CD that encapsulates the service that was previously deployed on the Kubernetes cluster.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
         <label>Service Revision ID:</label>
         <property>serviceEntityRevisionId</property>
         <required>0</required>
-        <documentation>Revision Id of the service in CloudBees Flow.</documentation>
+        <documentation>Revision Id of the service in CloudBees CD.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
