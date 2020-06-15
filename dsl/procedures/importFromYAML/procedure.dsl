@@ -34,7 +34,7 @@ procedure 'Import Microservices',
 
     //Using a simple description for use with the step picker since it cannot handle HTML content
     property 'stepPickerDescription',
-        value: 'Create microservices in CloudBees Flow by importing a Kubernetes YAML file containing services and deployment configurations.'
+        value: 'Create microservices in CloudBees CD by importing a Kubernetes YAML file containing services and deployment configurations.'
 
     step 'setup',
           subproject: '',

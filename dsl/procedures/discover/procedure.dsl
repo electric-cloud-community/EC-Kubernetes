@@ -41,7 +41,7 @@ procedure 'Discover',
 
     //Using a simple description for use with the step picker since it cannot handle HTML content
     property 'stepPickerDescription',
-        value: 'Automatically create microservice models in CloudBees Flow for the services and the pods discovered within a namespace on a Kubernetes cluster.'
+        value: 'Automatically create microservice models in CloudBees CD for the services and the pods discovered within a namespace on a Kubernetes cluster.'
 
     step 'setup',
       subproject: '',
