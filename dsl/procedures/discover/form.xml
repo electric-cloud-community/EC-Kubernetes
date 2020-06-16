@@ -35,7 +35,7 @@
         <label>Cluster Name:</label>
         <property>clusterName</property>
         <required>1</required>
-        <documentation>In an existing environment, provide the name of the CloudBees Flow cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</documentation>
+        <documentation>In an existing environment, provide the name of the CloudBees CD cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
@@ -73,7 +73,7 @@
         <uncheckedValue>false</uncheckedValue>
         <required>0</required>
         <property>ecp_kubernetes_applicationScoped</property>
-        <documentation>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in CloudBees Flow. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
+        <documentation>(Optional) Select to create all discovered services in the Kubernetes namespace within one application in CloudBees CD. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.</documentation>
     </formElement>
     <formElement>
         <type>entry</type>
