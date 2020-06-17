@@ -1,6 +1,6 @@
 import java.io.File
 
-procedure 'flowpdk-setup', description: 'Delivers binary dependencies from the Flow server to the agent', {
+procedure 'flowpdk-setup', description: 'Delivers binary dependencies from the CloudBees CD server to the agent', {
 
     // don't add a step picker for this procedure since it is internally invoked
     property 'standardStepPicker', value: false
