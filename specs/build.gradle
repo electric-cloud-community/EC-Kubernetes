@@ -30,7 +30,8 @@ dependencies {
 
 test {
     systemProperties['COMMANDER_SERVER'] = findProperty('server') ?: 'localhost'
-    systemProperties['COMMANDER_SECURE'] = findProperty('secure') ?: 1
+    systemProperties['COMMANDER_SERVER'] = findProperty('server') ?: 'localhost'
+    systemProperties['COMMANDER_PASSWORD'] = findProperty('password') ?: 'changeme'
 }
 
 sendAllureReports {

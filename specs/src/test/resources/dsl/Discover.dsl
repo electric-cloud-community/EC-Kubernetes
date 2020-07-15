@@ -1,3 +1,5 @@
+package dsl
+
 def projName = args.projectName
 def params = args.params
 
