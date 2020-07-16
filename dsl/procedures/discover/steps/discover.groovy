@@ -82,14 +82,14 @@ try {
         pluginConfig = client.getPluginConfig(efClient, clusterName, envProjectName, environmentName)
     }
 
-    def discovery = new DiscoveryBuilder()
-        .projectName(projectName)
-        .applicationName(applicationName)
-        .environmentProjectName(envProjectName)
-        .environmentName(environmentName)
-        .clusterName(clusterName)
-        .pluginConfig(pluginConfig)
-        .build()
+    def discovery = new Discovery(
+        projectName: projectName,
+        applicationName: applicationName,
+        environmentProjectName: envProjectName,
+        environmentName: environmentName,
+        clusterName: clusterName,
+        pluginConfig: pluginConfig
+    )
 
     def services = discovery.discover(namespace)
     if (services.size() == 0) {
