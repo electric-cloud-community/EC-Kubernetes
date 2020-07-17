@@ -155,10 +155,14 @@ public class Discovery extends EFClient {
 
         service.secrets?.each { cred ->
             def credName = getCredName(cred)
-            ef.createCredential(
+            try {
+                ef.createCredential(
                 projectName: projectName, credentialName: credName,
                 userName: cred.userName, password: cred.password)
-            logger INFO, "Credential $credName has been created"
+                logger INFO, "Credential $credName has been created"
+            } catch (Throwable e) {
+                println "Failed to create credential $credName"
+            }
         }
 
         service.containers.each { container ->
