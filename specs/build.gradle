@@ -1,12 +1,9 @@
 plugins {
-    id "com.cloudbees.cd.plugins.specs" version "1.3.0.0"
+    id "com.cloudbees.cd.plugins.specs" version "1.5.12.0"
 }
-apply plugin: "groovy"
-apply plugin: 'idea'
 
 version = "1.0"
 description = "EC-Kubernetes Specs"
-
 sourceCompatibility = 1.8
 
 defaultTasks 'test'
@@ -20,27 +17,13 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.4.5:indy'
-    compile 'org.spockframework:spock-core:1.1-groovy-2.4'
-    compile 'com.jayway.restassured:rest-assured:2.4.0'
-
-    compile 'com.electriccloud:ec-specs-plugins-core:1.9.1'
-    compile group: 'org.codehaus.groovy.modules.http-builder', name: 'http-builder', version: '0.7.1'
-}
-
-test {
-    systemProperties['COMMANDER_SERVER'] = findProperty('server') ?: 'localhost'
-    systemProperties['COMMANDER_SERVER'] = findProperty('server') ?: 'localhost'
-    systemProperties['COMMANDER_PASSWORD'] = findProperty('password') ?: 'changeme'
+    implementation 'org.codehaus.groovy:groovy-all:2.4.5:indy'
+    implementation 'org.spockframework:spock-core:1.1-groovy-2.4'
+    implementation 'com.jayway.restassured:rest-assured:2.4.0'
+    implementation 'com.electriccloud:ec-specs-plugins-core:1.9.1'
+    implementation group: 'org.codehaus.groovy.modules.http-builder', name: 'http-builder', version: '0.7.1'
 }
 
 sendAllureReports {
     projectName = 'ec-kubernetes'
 }
-
-configureTests {
-    environmentName = findProperty('envName') ?: 'default'
-    readEnvironmentVariables = true
-    readSecrets = true
-}
-
