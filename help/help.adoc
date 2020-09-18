@@ -1,0 +1,806 @@
+Plugin version @PLUGIN_VERSION@
+
+Revised on September 17, 2020
+
+
+
+
+== Overview
+
+EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).
+
+You need to have a Kubernetes cluster available for using this plugin.
+
+
+
+
+
+
+
+
+
+== Plugin Configurations
+Plugin configurations are sets of parameters that apply
+across some or all of the plugin procedures. They
+reduce repetition of common values, create
+predefined parameter sets for end users, and
+securely store credentials where needed. Each configuration
+is given a unique name that is entered in designated
+parameters on procedures that use them.
+
+
+=== Creating Plugin Configurations
+To create plugin configurations in {CD}, do these steps:
+
+* Go to **Administration** &gt;**Plugins** to open the Plugin Manager.
+* Find the @PLUGIN_NAME@ row.
+* Click *Configure* to open the
+     Configurations page.
+* Click *Create Configuration* as per the description of parameters below.
+
+
+For communicating with the Kubernetes cluster, you need the following details:
+
+. Base address of API Endpoint URL
+. Bearer token which has authorization to access API.
+
+Use the following steps for creating a service account and obtaining the service account bearer token:
+
+** Download the Kubeconfig file from your Kubernetes cluster. Or if you have direct access to Kubectl shell of the cluster, that will work too.
+** You will need to install Kubectl (http://kubernetes.io/docs/user-guide/prereqs/) or have access to Kubectl shell
+** Create a service account with following kubectl command:
+
+----
+kubectl create serviceaccount api-user
+----
+
+** Assign cluster-admin role to serviceaccount api-user. Specify serviceaccount name as default:api-user, if it is created in default namespace.
+
+----
+kubectl create clusterrolebinding root-cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=default:api-user
+----
+
+** Get details of the service account we just created, from the output determine name of secret in which data is stored:
+
+----
+kubectl get serviceaccount api-user -o yaml
+----
+
+** Assuming name of secret from above step is secret-1234, get details of secret:
+
+----
+kubectl get secret secret-1234 -o yaml
+----
+
+** The value of the token field in the output above is base64 encoded. We need to decode it to use in the plugin configuration. On a Unix like system, following command can be used to decode the value:
+
+----
+echo "<encoded_token_value>" | base64 --decode
+----
+
+
+=== Configuration Procedure Parameters
+[cols=",",options="header",]
+|===
+|Parameter |Description
+
+|Configuration | Unique name for the plugin configuration.
+
+
+|Description | Description for the plugin configuration.
+
+
+|Kubernetes API Endpoint | The endpoint at which Kubernetes API will be reachable. Must be a IP address or a resolvable DNS name.
+
+
+|Bearer Token of Kubernetes Cluster | Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.
+
+
+|Kubernetes Version | Kubernetes version running on the cluster master
+
+
+|Test Connection | Check this checkbox to verify connectivity to Kubernetes master.
+
+
+|URI Path for Checking Cluster Connectivity | URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'
+
+
+|Log Level | Log level to use for logging output. Error=4, Warning=3, Info=2, Debug=1.
+
+
+|===
+
+
+
+
+
+[[procedures]]
+== Plugin Procedures
+
+
+
+[[CheckCluster]]
+=== Check Cluster
+
+
+Checks that a Kubernetes cluster exists and is reachable. All other entities such as  Pods, services, and replication controllers all run on top of a cluster.
+
+
+
+==== Check Cluster Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Configuration | The name of an existing configuration which holds all the connection information for the Kubernetes cluster.
+
+
+|===
+
+
+
+
+
+
+[[DeployService]]
+=== Deploy Service
+
+
+Creates or updates the Kubernetes service and the Deployment configuration for Pods and ReplicaSets in the Kubernetes cluster.
+
+
+
+==== Deploy Service Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Service Name | The name of the service in {CD} that encapsulates the service to be deployed on the Kubernetes cluster. Please note that this name will be modified to comply with the naming conventions of Kubernetes.
+
+
+| Service Revision ID | Revision Id of the service in {CD}.
+
+
+| Project Name | The name of the project that the service belongs to. In case of an application-level service it also owns the application.
+
+
+| Application Name | The name of the application that the service belongs to. Not applicable for a top-level service.
+
+
+| Application Revision ID | Revision Id of the application version that the service belongs to.
+
+
+| Cluster Name | The name of the cluster in {CD} that encapsulates the Kubernetes cluster on which the service is to be deployed.
+
+
+| Cluster Or Environment Project Name | The name of the project that the cluster belongs to if it is a top-level project cluster. Or the name of the project that the environment belongs to if it is an environment-scoped cluster.
+
+
+| Environment Name | The name of the environment that the cluster belongs to. Not applicable for a top-level project cluster.
+
+
+| Results Property Sheet | Name of the property sheet where the output properties for the deployed service will be saved. If not specified, will default to '/myParent/parent'.
+
+
+|===
+
+
+
+
+
+
+[[UndeployService]]
+=== Undeploy Service
+
+
+Undeploys a previously deployed service on the Kubernetes cluster
+
+
+
+==== Undeploy Service Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Service Name | The name of the service in {CD} that encapsulates the service that was previously deployed on the Kubernetes cluster.
+
+
+| Service Revision ID | Revision Id of the service in {CD}.
+
+
+| Project Name | The name of the project that the service belongs to. In case of an application-level service it also owns the application.
+
+
+| Application Name | The name of the application that the service belongs to. Not applicable for a top-level service.
+
+
+| Application Revision ID | Revision Id of the application version that the service belongs to.
+
+
+| Environment Name | The name of the environment that the cluster belongs to.
+
+
+| Environment Project Name | The name of the project that the environment belongs to. If not specified, the environment is assumed to be in the same project as the service.
+
+
+| Cluster Name | The name of the cluster in the environment on which the service was previously deployed. If not specified, the application tier mapping will be used to find the cluster name.
+
+
+|===
+
+
+
+
+
+
+[[Discover]]
+=== Discover
+
+
+Automatically create microservice models in {CD} for the services and the pods discovered within a namespace on a Kubernetes cluster.
+
+
+ .  *Select your method of discovery from a Kubernetes Cluster*   There are two options for connecting to Kubernetes for discovery
+            
+
+ **  *Existing {CD} Environment and Cluster*   Use the Cluster configuration details in an existing {CD} environment to connect to Kubernetes. Enter details for the existing environment and cluster in the following parameters:
+                    
+
+ *** Environment Project Name: The project containing the existing environment
+
+ *** Environment Name:  the name of an existing environment that contains the Kubernetes backend cluster to be discovered
+
+ *** Cluster Name: The name of the {CD} cluster in the environment above that represents the Kubernetes cluster
+
+ **  *Kubernetes Connection Details*   Enter Kubernetes endpoint and Account details to directly connect to the endpoint and discover the clusters and pods.  Enter the endpoint and account details in the following parameters:
+                    
+
+ *** Kubernetes Endpoint: The endpoint where the Kubernetes endpoint will be reachable
+
+ *** Service Account API Token
+
+ *** _If selecting this connection option, you can optionally enter a new values for Environment Name and Cluster Name parameters, to create a new environment and cluster in {CD} based on the discovered services and pods._
+ *  *Determine how the discovered microservices will be created in {CD}* 
+ **  *Create the microservices individually at the top-level within the project.*  All discovered microservices will be created at the top-level.  Enter the following parameters:
+                    
+
+ *** Project Name: Enter the name of the project where the microservices will be created
+
+ **  *Create the Microservices within an application in {CD}.*  All discovered microservices will be created as services within a new application. Enter the following parameters:
+                    
+
+ *** Project Name: Enter the name of the project where the new application will be created
+
+ *** Create Microservices within and Application:  Select the checkbox
+
+ *** Application Name:  The name of a new application which will be created in {CD} containing the discovered services
+
+
+
+Procedure looks for services and deployments on Kubernetes
+cluster and transfers data into {CD}. Services found
+in cluster will be mapped to Services objects in {CD},
+then associated deployments will be found and containers
+definitions retrieved from there.
+
+If the object with the provided name already exists in the {CD}, this object will be skipped and a warning message will be emitted to logs.
+
+
+==== Discover Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Environment Project Name | The project containing the existing environment, or where the new environment will be created.
+
+
+| Environment Name | Provide the name of an existing environment that contains the Kubernetes-backend cluster to be discovered. If the environment does not already exist, provide the Kubernetes connection details below for discovery, and a new environment will be created.
+
+
+| Cluster Name | In an existing environment, provide the name of the {CD} cluster representing the Kubernetes cluster whose deployed services are to be discovered. If the environment does not already exist, provide the name of the cluster to be created in the new environment.
+
+
+| Kubernetes API Endpoint | The endpoint at which the Kubernetes API will be reachable. Must be an IP address or a resolvable DNS name. This field is required and used only if you are not providing an existing environment above for discovery.
+
+
+| Service Account API Token | Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster. This field is required and used only if you are not providing an existing environment above for discovery.
+
+
+| Kubernetes Namespace | The name of the Kubernetes namespace within which the deployed services should be discovered. Default to 'default' namespace.
+
+
+| Project Name | The name of project in which the discovered microservices will be created.
+
+
+| Create Microservices within an Application | (Optional) Select to create all discovered services in the Kubernetes namespace within one application in {CD}. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.
+
+
+| Application Name | The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.
+
+
+|===
+
+
+
+
+
+
+[[InvokeKubernetesAPI]]
+=== Invoke Kubernetes API
+
+
+Invokes Kubernetes REST API based on specified input parameters. Can also be used to create or modify a resource in Kubernetes cluster based on JSON/YAML as input
+
+
+
+==== Invoke Kubernetes API Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Configuration | The name of an existing configuration which holds all the connection information for the Kubernetes cluster.
+
+
+| Kubernetes API URI | The URI for the Kubernetes API to invoke. E.g., '/api/v1/namespaces'.
+
+
+| HTTP method for the Kubernetes API | HTTP method for the Kubernetes REST API to be invoked.
+
+
+| Request Payload Format | Format of the request payload. Possible values are 'json' or 'yaml'. Not applicable for HTTP methods 'get' and 'delete'.
+
+
+| Request Payload | The request body/payload in JSON or YAML format. Not applicable for HTTP methods 'get' and 'delete'.
+
+
+| Output Property Location | Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sAPIResult' else it will default to '/myJob/k8sAPIResult'.
+
+
+|===
+
+
+
+
+
+
+[[WaitForKubernetesAPI]]
+=== Wait For Kubernetes API
+
+
+Polls on Kubernetes REST API to check specific field of API response.
+
+
+
+==== Wait For Kubernetes API Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Configuration | The name of an existing configuration which holds all the connection information for the Kubernetes cluster.
+
+
+| Kubernetes API URI | The URI to poll on E.g., '/api/v1/namespaces/default/pods/nginx'.
+
+
+| Response Field | Specific field (in JSONPath expression format E.g., 'status.phase') in Kubernetes API response to check for.
+
+
+| Expected value | Value of response field to check for.E.g., 'Running'
+
+
+| Timeout (in seconds) | Period to wait for response field to attain destired value before timing out.
+
+
+| Output Property Location | Location of the output property where the API response will be saved. If not specified, then if the procedure is invoked in a pipeline, the location will default to '/myStageRuntime/k8sWaitAPIResult' else it will default to '/myJob/k8sWaitAPIResult'.
+
+
+|===
+
+
+
+
+
+
+[[CreateResource]]
+=== Create Resource (DEPRECATED)
+
+
+[Deprecated] Creates or updates a resource in Kubernetes cluster based on JSON/YAML as input. Use the "Invoke Kubernetes API" procedure instead.
+
+
+
+==== Create Resource Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Configuration | Name of existing configuration which holds the authentication details for Kubernetes Cluster
+
+
+| URI | The URI for the API for creating the resource
+
+
+| Request Format | The request body format
+
+
+| Request body | The request body in JSON or YAML format.
+
+
+| Create or Update | Whether to create or update the resource.
+
+
+|===
+
+
+
+
+
+
+[[ImportMicroservices]]
+=== Import Microservices
+
+
+
+    Create microservices in {CD} by importing a Kubernetes YAML file containing services and deployment configurations.
+    
+
+ .  *Copy and enter the content of your Kubernetes YAML file* 
+ .  *Determine how the new microservices will be created in {CD}* 
+ **  *Create the microservices individually at the top-level within the project.*  All microservices will be created at the top-level. Enter the following parameters:
+                
+
+ *** Project Name: Enter the name of the project where the microservices will be created
+
+ **  *Create the Microservices within an application in {CD}.*  All microservices will be created as services within a new application. Enter the following parameters:
+                
+
+ *** Project Name: Enter the name of the project where the new application will be created
+
+ *** Create Microservices within and Application: Select the checkbox
+
+ *** Application Name:  The name of a new application which will be created in {CD} containing the new services.
+
+ *  *Optionally map the services to an existing Environment Cluster*  Select an existing Environment that contains a cluster with Kubernetes configuration details where the new microservices can be deployed. Enter the following parameters:
+            
+
+ ** Environment Project Name: The project containing the {CD} environment where the services will be deployed.
+
+ ** Environment Name: The name of the existing environment that contains a cluster where the newly created microservice(s) will be deployed.
+
+ ** Cluster Name: The name of an existing EC-Kubernetes (or EC-AzureContainerService) backed cluster in the environment above where the newly created microservice(s) will be deployed.
+
+
+
+Procedure looks for services and deployments in Kubernetes
+YAML file and transfers data into {CD}. Services found
+in YAML file will be mapped to Services objects in {CD},
+then associated deployments will be found and containers
+definitions retrieved from there.
+
+If the configuration contains unsupported fields, these fields will be skipped and a warning message will be emitted to logs.
+If the object with the provided name already exists in the {CD}, this object will be skipped and a warning message will be emitted to logs.
+
+
+==== Import Microservices Parameters
+[cols=",",options="header",]
+|===
+| Parameter | Description
+
+| Kubernetes YAML File Content | Content of a Kubernetes YAML file containing related services and deployments definitions.
+
+
+| Project Name | The name of project in which the application or microservices will be created.
+
+
+| Create Microservices within an Application | (Optional) Select to create all services defined in the Kubernetes YAML file within one application in {CD}. If selected, then the application name must be provided. If unselected, microservices will be created at the top-level in the project.
+
+
+| Application Name | (Optional) The name of the new application that will contain the microservices. Required only if 'Create Microservices within an Application' is selected.
+
+
+| Environment Project Name | (Optional) The project containing the Environment where the services will be deployed.
+
+
+| Environment Name | (Optional) The name of an existing environment that contains a cluster where the newly created microservice(s) will be deployed.
+
+
+| Cluster Name | (Optional) The name of the existing {CD} cluster representing a Kubernetes cluster in the environment above where the newly created microservice(s) will be deployed.
+
+
+|===
+
+
+
+
+
+
+
+
+
+
+
+
+
+== Use Cases
+
+
+[[RollingUpdates]]
+=== Rolling Updates
+
+Rolling updates or rolling deployment is a way to deploy a new version with zero downtime by incrementally updating instances running an old version with the new one. In Kubernetes, this is done using rolling updates which allows a _Deployment&#39;s_ update to take place by incrementally updating pods with new ones.
+
+EC-Kubernetes plugin deploys services using rolling updates by default. When {CD} deploys a service to Kubernetes, the EC-Kubernetes plugin uses the following service attributes for the _Deployment_&#39;s rolling update attributes in Kubernetes.
+
+. *Rolling Deployment - Min Microservice Instances:* Minimum number of pods that must be running during a rolling update. Defaults to 1 if not set.
+. *Rolling Deployment - Max Microservice Instances:* Maximum number of pods that can be running during a rolling update. The incremental number of pods that can be created during the rolling update is the difference between this attribute and the *Number of microservice instances*.
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/rollingdeploymentattributes.png[image]
+
+[[CanaryDeployments]]
+=== Canary Deployments
+
+Canary deployment is a way of sending out a new release into production that plays the role of a &quot;canary&quot; to get an idea of how a new release will perform before rolling it out to all the users.
+
+A canary deployment consists of rolling out a new release or a new functionality to a subset of users or servers. This can be achieved in a Kubernetes cluster by deploying a canary of a new release side by side with the previous release so that the new release can receive live production traffic before fully rolling it out. (Reference: https://kubernetes.io/docs/concepts/cluster-administration/manage-deployment/#canary-deployments[Canary Deployments]).
+
+When {CD} deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller. In order to perform a canary deployment, the following two service mapping attributes can be set:
+
+. *Perform Canary Deployment:* If true, then a canary deployment will be performed. Any previous deployment will remain unchanged in the namespace allowing this canary deployment to receive live traffic side by side with the previous deployment.
+. *Number of Canary Replicas:* The number of replicas to create if performing a canary deployment. Defaults to 1 replica for the canary deployment.
+
+Having these attributes in the service mapping allows you to use the same service deployment and undeployment processes that you would use for performing a more typical service deployment or undeployment. The following steps describe how this can be achieved.
+
+. Set _\$[/myJob/canaryDeployment]_ as the property reference value for *Perform Canary Deployment* and _\$[/myJob/canaryReplicas]_ for *Number of Canary Replicas*.
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentserviceattributes.png[image]
+
+. Now add _canaryDeployment_ and _canaryReplicas_ as parameters to your service or application deploy and the undeploy processes.\
+The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. If _canaryDeployment_ is set to true, then a canary deployment will be performed.\
+image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentdeployprocessparameters.png[image]\
+Similarly, during undeploy process through _Undeploy Service_ procedure, if _canaryDeployment_ is set to true, then the canary deployment will be removed without impacting the previous deployment or the service.
+image:../../plugins/@PLUGIN_KEY@/images/CanaryDeploymentUndeployProcessParameters.png[screenshot]
+. Finally tie the deploy and undeploy processes into an end-to-end service release pipeline including managing the canary deployments and rolling out new releases.
+image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentpipeline.png[image]
+
+** Define a &#39;deploy canary&#39; task to perform a canary deployment using the specified version on the same environment where the service is targeted.
+** After the canary deployment is pushed out to the environment, side by side with the previous release, use a manual task to approve the roll out of the new version if it is confirmed that the &#39;canary deployment is safe&#39; and good to be rolled out.
+** Once the canary deployment is confirmed to be safe and the pipeline is allowed to continue, define a &#39;deploy new service version&#39; task to deploy the new version of the service.
+** Finally, regardless of the canary deployment&#39;s result, define an &#39;undeploy the canary&#39; task to undeploy the canary deployment.
+
+[[BlueGreenDeployments]]
+=== Blue/Green Deployments
+
+Blue/green deployments allow us to deploy 2 versions of an application, the current version and the next to an environment and switch seamlessly between them with zero downtime for the application.
+
+A blue/green deployment can be achieved in Kubernetes by creating a new deployment, say _my-deployment-green_ for running the new version while all the old pods created earlier for the older deployment, say _my-deployment-blue_ are still serving all the live requests. Once the new deployment has completed successfully, and has optionally been tested through a test service, then the service in Kubernetes is switched to send requests to the newly created pods running the new version.
+
+When {CD} deploys a service to Kubernetes, the EC-Kubernetes plugin manages both the service in Kubernetes (the abstraction for a logical set of pods and a policy by which to access them) as well as the deployment controller (a deployment controller provides declarative updates for pods and replicate sets). The service created or updated by the plugin is configured to point to the pods created based on the pod specifications declared in the deployment controller.
+In order to orchestrate a blue/green deployment, the following two service mapping attributes can be leveraged:
+
+. *Service Name Override:* Name for the service in Kubernetes. If no override value is specified, the service name in {CD} will be used to name the service in Kubernetes.
+. *Deployment Name Override:* Name for the deployment in Kubernetes. If no value is specified, then the name of the Kubernetes service being created or updated will be used to name the deployment in Kubernetes.
+
+\
+Having these attributes in the service mapping allows you to use the same service deployment and undeployment processes that you would use for performing a more typical service deployment or undeployment. The following steps describe how a blue/green deployment can be orchestrated using the two service mapping attributes mentioned above.
+
+. Set _\$[/myJob/serviceNameOverride]_ as the property reference value for *Service Name Override* and _\$[/myJob/deploymentNameOverride]_ for *Deployment Name Override*.
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentserviceattributes.png[image]
+
+. Now add _serviceNameOverride_ and _deploymentNameOverride_ as parameters to your service or application deploy and the undeploy processes.
+The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. We will use different combination of values for these two parameters to do a blue/green deployment next.\
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentdeployprocessparameters.png[image]
+
+Similarly, we will use different combination of values for these two parameters when undeploying the service.
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentundeployprocessparameters.png[image]
+
+_Note that the processes also have a parameter defined for passing in the container image version to use when deploying the service._
+
+. Now that the basic building blocks are in place, lets deploy the very first version of the service with no value set for _serviceNameOverride_ and _deploymentNameOverride_ set to say &#39;my-deployment-v1&#39;, where v1 is the image version number. This becomes the &#39;blue&#39; deployment or the version that is currently deployed. Now, for any new version that is to be deployed for the service, the deployment pipeline should include the following tasks in order to orchestrate a blue/green deployment:
+
+image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentpipeline.png[image]
+
+** Create an environment snapshot for the application or the microservice to capture deployment details for the service such as the current version deployed.
+** Now define a task for the &#39;green&#39; deployment using the new version to create a deployment for. Use the service name override so that a new deployment is created in kubernetes as well as a new service end-point. The new service end-point can be used to access the &#39;green&#39; deployment in order to perform any final tests or verification if required.
+** Now, create another task for the deploy process, this time using the deployment name override but not the service name override. This will result in the original service&#39;s selector to be updated to target the pods created through the new deployment.
+** Finally, define a &#39;cleanup blue deployment&#39; task to undeploy the original &#39;blue&#39; deployment as well as the new service end point by specifying both the service name override value and the deployment name override value.
+
+
+
+
+
+
+== Known Issues
+If microservices were previously deployed on Kubernetes v1.9 using the @PLUGIN_KEY@ v1.0.5 plugin and the plugin configuration was defined to use Kubernetes API version 1.9, then after upgrading to @PLUGIN_KEY@ 1.1.0 or above, the deployment fails with "HTTP/1.1 422 Unprocessable Entity" error. As a work-around, the plugin configuration needs to be updated to use Kubernetes API version 1.7. After successfully redeploying all the microservices once, the plugin configuration can be switched back to Kubernetes API version 1.9.
+
+
+
+[[rns]]
+== Release notes
+
+
+=== EC-Kubernetes 1.3.2
+
+- Upgrading certain third-party libraries to address security issues.
+
+
+
+=== EC-Kubernetes 1.3.1
+
+- Renaming from "CloudBees Flow" to "{CD}".
+
+
+
+=== EC-Kubernetes 1.3.0
+
+- Provisioning of Binary Dependencies (for example Grape jars) in the agent resource, required by this plugin, is now delivered through a newly introduced mechanism called Plugin Dependency Management. Binary dependencies will now be seamlessly delivered to the agent resource from the Flow Server, any time a new version of a plugin is invoked the first time. Flow Repository set up is no longer required for this plugin.
+
+
+- Fixed Smart Map rendering for the case with serviceless pods.
+
+
+
+=== EC-Kubernetes 1.2.3
+
+- Fixed documentation for the binary dependencies management.
+
+
+
+=== EC-Kubernetes 1.2.2
+
+- Renaming from "Electric Cloud" to "CloudBees".
+
+
+
+=== EC-Kubernetes 1.2.1
+
+- Fixed creating configuration by user with "@" in username.
+
+
+
+=== EC-Kubernetes 1.2.0
+
+- Improved promotion time for the plugin.
+
+
+
+=== EC-Kubernetes 1.1.2
+
+- Relabeled parameter label in 'Create/EditConfiguration' - 'URI for checking cluster connectivity' to 'URI Path for Checking Cluster Connectivity'
+
+
+- Fixed 'Test Connection' issues within 'Create/EditConfiguration' - fixed handling of 'URI Path for Checking Cluster Connectivity'
+
+
+- Extended 'Import Microservices' by possiblity to map imported microservices to Kubernetes cluster from EC-AzureContainerService
+
+
+- Fixed error 'Unsupported fields in Discovery: deploymentStrategy, maxRunningPercentage, minAvailabilityPercentage'
+
+
+- Default port for ElectricFlow client has been changed from insecure (8000 by default) to secure (8443 by default). If COMMANDER_SECURE property is not populated, secure port and HTTPS will be used.
+
+
+
+=== EC-Kubernetes 1.1.1
+
+- Added report generation on unsupported tags for 
+_Import Microservices_ procedure.
+
+
+- Configured the plugin to allow the ElectricFlow UI to create configs inline of procedure form.
+
+
+- Added 'Test Connection' step for 'EditConfiguration' procedure.
+
+
+- Updated 'Deploy Service' procedure by Warning in case of deploying 'Headless' service.
+
+
+- Fixed viewing of container nodes within 'Topology View' for single-port services with unnamed port.
+
+
+
+=== EC-Kubernetes 1.1.0
+
+- Added "Discover" procedure which can be used through the "Kubernetes Discovery" catalog item in the "Containers" service catalog for automatically creating microservice models in ElectricFlow for the services and the pods discovered within a namespace on a Kubernetes cluster.
+
+
+- Added "Import Microservices" procedure which can be used through the "Import Kubernetes YAML file" catalog item in the "Containers" service catalog for creating microservice models in ElectricFlow.
+
+
+- Added support for retrieving and creating the plugin configurations through the "Configurations" option on the application process step and the pipeline stage task editors.
+
+
+- Verified EC-Kubernetes plugin on Kubernetes version 1.10.
+
+
+
+=== EC-Kubernetes 1.0.6
+
+- Added 'Wait For Kubernetes API' procedure.
+
+
+
+=== EC-Kubernetes 1.0.5
+
+- All leading and trailing whitespaces in service mapping parameters such as 
+_canaryDeployment_ will be removed before the parameter value is used.
+
+
+- When performing a canary deployment, the service will not be created or updated in the Kubernetes cluster. The service must already exist in the cluster. See section 
+ #CanaryDeployments[Canary Deployments]  for details.
+
+
+
+=== EC-Kubernetes 1.0.4
+
+- Added a validation check in procedure 
+_Deploy Service_ to ensure that the user-specified container port names within a service are unique.
+
+
+- When deploying a microservice through ElectricFlow on a Kubernetes cluster, the EC-Kubernetes plugin will now monitor the deployment progress in Kubernetes and cause the step to fail in case the deployment does not complete within the deployment timeout configured as part of the service mapping. The default timeout value is 120 seconds.
+
+
+- When deploying a microservice through ElectricFlow on a Kubernetes cluster, the deployment name to use in Kubernetes can now be overridden through the service mapping. See section 
+ #BlueGreenDeployments[Blue/Green Deployments]  for details on how this ability can be used to implement a blue/green deployment strategy.
+
+
+
+=== EC-Kubernetes 1.0.3
+
+- Made secrets compliant with DNS-1123 standards.
+
+
+- Removed unused parameter 
+_additionalAttributes_ from container mapping configuration.
+
+
+- When a microservice is deployed through ElectricFlow on a Kubernetes cluster, and 'NodePort' is specified as the service type in the service mapping, then the provisioned node port is registered as a pipeline stage runtime property 
+_/myStageRuntime/<applicationName>/<serviceName>/<targetPort>/nodePort_.
+
+
+- When deploying a microservice through ElectricFlow on a Kubernetes cluster, the service name to use in Kubernetes can now be overridden through the service mapping.
+
+
+- Deprecated procedure 
+_Create Resource_. The newly added procedure 
+_Invoke Kubernetes API_ should be used instead for creating or updating a Kubernetes resource.
+
+
+- Added support for 
+ *canary deployments* . See section 
+ #CanaryDeployments[Canary Deployments]  for details.
+
+
+
+=== EC-Kubernetes 1.0.2
+
+- Added support for Kubernetes API version 1.7
+
+
+- Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster master. The parameter will default to '1.6' if no value is specified.
+
+
+- Added procedure 
+_Undeploy Service_ to undeploy a previously deployed service.
+
+
+- Handled race condition in parallel creation of a namespace by multiple steps.
+
+
+
+=== EC-Kubernetes 1.0.1
+
+- Added helper functions in base client utility to support services Discovery in EC-GoogleContainerEngine
+
+
+
+=== EC-Kubernetes 1.0.0
+
+- First release.
+
+
+
