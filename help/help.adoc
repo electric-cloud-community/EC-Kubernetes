@@ -541,7 +541,7 @@ image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentserviceattribu
 The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. If _canaryDeployment_ is set to true, then a canary deployment will be performed.\
 image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentdeployprocessparameters.png[image]\
 Similarly, during undeploy process through _Undeploy Service_ procedure, if _canaryDeployment_ is set to true, then the canary deployment will be removed without impacting the previous deployment or the service.
-image:../../plugins/EC-Kubernetes/images/CanaryDeploymentUndeployProcessParameters.png[screenshot]
+image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentundeployprocessparameters.png[screenshot]
 . Finally tie the deploy and undeploy processes into an end-to-end service release pipeline including managing the canary deployments and rolling out new releases.
 image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentpipeline.png[image]
 
