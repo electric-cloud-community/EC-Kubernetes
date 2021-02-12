@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="org.slf4j"
-		module="slf4j-parent"
-		revision="1.7.10"
+	<info organisation="org.ow2.asm"
+		module="asm-parent"
+		revision="5.0.4"
 		status="release"
-		publication="20200429144005"
+		publication="20210119190132"
 	>
-		<license name="MIT License" url="http://www.opensource.org/licenses/mit-license.php" />
-		<description homepage="http://www.slf4j.org">
-		Top SLF4J project pom.xml file
+		<license name="BSD" url="http://asm.objectweb.org/license.html" />
+		<description homepage="http://asm.objectweb.org/">
+		A very small and fast Java bytecode manipulation framework
 		</description>
-		<m:properties__cal10n.version>0.8.1</m:properties__cal10n.version>
-		<m:properties__slf4j.api.minimum.compatible.version>1.6.0</m:properties__slf4j.api.minimum.compatible.version>
 		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
-		<m:properties__log4j.version>1.2.17</m:properties__log4j.version>
-		<m:properties__junit.version>4.10</m:properties__junit.version>
-		<m:properties__logback.version>1.0.13</m:properties__logback.version>
-		<m:properties__maven-site-plugin.version>3.3</m:properties__maven-site-plugin.version>
-		<m:dependency.management__org.slf4j__slf4j-api__version>1.7.10</m:dependency.management__org.slf4j__slf4j-api__version>
-		<m:dependency.management__org.slf4j__slf4j-jdk14__version>1.7.10</m:dependency.management__org.slf4j__slf4j-jdk14__version>
-		<m:dependency.management__log4j__log4j__version>1.2.17</m:dependency.management__log4j__log4j__version>
-		<m:dependency.management__ch.qos.cal10n__cal10n-api__version>0.8.1</m:dependency.management__ch.qos.cal10n__cal10n-api__version>
-		<m:maven.plugins>org.apache.maven.plugins__maven-compiler-plugin__2.3.2|org.apache.maven.plugins__maven-jar-plugin__2.3.1|org.apache.maven.plugins__maven-surefire-plugin__2.10|org.apache.maven.plugins__maven-source-plugin__2.1.2|org.apache.maven.plugins__maven-assembly-plugin__2.2|org.codehaus.mojo__build-helper-maven-plugin__1.7|org.apache.maven.plugins__maven-site-plugin__3.3</m:maven.plugins>
+		<m:properties__ow2DistMgmtReleasesUrl>http://repository.ow2.org/nexus/service/local/staging/deploy/maven2</m:properties__ow2DistMgmtReleasesUrl>
+		<m:properties__ow2DistMgmtSnapshotsUrl>http://repository.ow2.org/nexus/content/repositories/snapshots</m:properties__ow2DistMgmtSnapshotsUrl>
+		<m:properties__organization.logo>
+      http://www.ow2.org/xwiki/bin/download/NewsEvents/MarketingResources/ow2_logo_small_transp.png
+    </m:properties__organization.logo>
+		<m:maven.plugins>org.apache.maven.plugins__maven-enforcer-plugin__1.0-beta-1|org.apache.maven.plugins__maven-enforcer-plugin__1.0-beta-1</m:maven.plugins>
+		<m:dependency.management__org.ow2.asm__asm__version>5.0.4</m:dependency.management__org.ow2.asm__asm__version>
+		<m:dependency.management__org.ow2.asm__asm-tree__version>5.0.4</m:dependency.management__org.ow2.asm__asm-tree__version>
+		<m:dependency.management__org.ow2.asm__asm-analysis__version>5.0.4</m:dependency.management__org.ow2.asm__asm-analysis__version>
+		<m:dependency.management__org.ow2.asm__asm-commons__version>5.0.4</m:dependency.management__org.ow2.asm__asm-commons__version>
+		<m:dependency.management__org.ow2.asm__asm-util__version>5.0.4</m:dependency.management__org.ow2.asm__asm-util__version>
+		<m:dependency.management__org.ow2.asm__asm-xml__version>5.0.4</m:dependency.management__org.ow2.asm__asm-xml__version>
 	</info>
 	<configurations>
 		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
@@ -37,11 +38,4 @@
 	</configurations>
 	<publications>
 	</publications>
-	<dependencies>
-		<dependency org="junit" name="junit" rev="4.10" force="true" conf="test->runtime(*),master(*)"/>
-		<override org="org.slf4j" module="slf4j-api" matcher="exact" rev="1.7.10"/>
-		<override org="org.slf4j" module="slf4j-jdk14" matcher="exact" rev="1.7.10"/>
-		<override org="log4j" module="log4j" matcher="exact" rev="1.2.17"/>
-		<override org="ch.qos.cal10n" module="cal10n-api" matcher="exact" rev="0.8.1"/>
-	</dependencies>
 </ivy-module>

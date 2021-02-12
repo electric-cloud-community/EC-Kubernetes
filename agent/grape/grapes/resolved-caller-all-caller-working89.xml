@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0">
+	<info organisation="caller"
+		module="all-caller"
+		revision="working89"
+		status="integration"
+		publication="20210212185707"
+		default="true"
+	/>
+	<configurations>
+		<conf name="default" visibility="public"/>
+	</configurations>
+	<publications>
+	</publications>
+	<dependencies>
+		<dependency org="org.yaml" name="snakeyaml" rev="1.19" force="true" conf="default->default">
+			<artifact name="snakeyaml" type="jar" ext="jar"/>
+		</dependency>
+		<dependency org="org.yaml" name="snakeyaml" rev="1.27" force="true" conf="default->default">
+			<artifact name="snakeyaml" type="jar" ext="jar"/>
+		</dependency>
+		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.30" force="true" conf="default->default">
+			<artifact name="slf4j-api" type="jar" ext="jar"/>
+		</dependency>
+		<dependency org="com.jayway.jsonpath" name="json-path" rev="2.5.0" force="true" conf="default->default">
+			<artifact name="json-path" type="jar" ext="jar"/>
+		</dependency>
+		<dependency org="com.jayway.jsonpath" name="json-path" rev="2.0.0" force="true" conf="default->default">
+			<artifact name="json-path" type="jar" ext="jar"/>
+		</dependency>
+		<exclude org="commons-beanutils" module="commons-beanutils" artifact="*" type="*" ext="*" matcher="exact"/>
+		<exclude org="commons-collections" module="commons-collections" artifact="*" type="*" ext="*" matcher="exact"/>
+		<exclude org="org.codehaus.groovy.modules.http-builder" module="http-builder" artifact="*" type="*" ext="*" matcher="exact"/>
+		<exclude org="net.sf.json-lib" module="json-lib" artifact="*" type="*" ext="*" matcher="exact"/>
+	</dependencies>
+</ivy-module>
