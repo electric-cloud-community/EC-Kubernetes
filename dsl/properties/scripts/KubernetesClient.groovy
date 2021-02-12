@@ -6,6 +6,7 @@ import static groovyx.net.http.Method.GET
 import static groovyx.net.http.Method.PATCH
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.Method.PUT
+@GrabExclude('org.slf4j:slf4j-api')
 @Grab('com.jayway.jsonpath:json-path:2.0.0' )
 @GrabExclude('net.sf.json-lib:json-lib')
 

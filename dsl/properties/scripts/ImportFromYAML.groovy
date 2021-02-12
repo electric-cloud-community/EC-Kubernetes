@@ -1,8 +1,9 @@
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
+@GrabExclude('org.slf4j:slf4j-api')
 @Grab('org.yaml:snakeyaml:1.27')
 @GrabExclude('net.sf.json-lib:json-lib')
-@GrabExclude('org.slf4j:slf4j-api')
+
 import org.yaml.snakeyaml.Yaml
 
 public class ImportFromYAML extends EFClient {
