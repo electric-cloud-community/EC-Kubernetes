@@ -7,6 +7,7 @@ import static groovyx.net.http.Method.PATCH
 import static groovyx.net.http.Method.POST
 import static groovyx.net.http.Method.PUT
 @Grab('com.jayway.jsonpath:json-path:2.0.0' )
+@GrabExclude('net.sf.json-lib:json-lib')
 
 import static com.jayway.jsonpath.JsonPath.parse
 
