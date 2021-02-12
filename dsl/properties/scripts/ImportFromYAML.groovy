@@ -1,6 +1,8 @@
 import groovy.json.JsonBuilder
 import groovy.json.JsonSlurper
-@Grab('org.yaml:snakeyaml:1.19')
+@Grab('org.yaml:snakeyaml:1.27')
+@GrabExclude('net.sf.json-lib:json-lib')
+@GrabExclude('org.slf4j:slf4j-api')
 import org.yaml.snakeyaml.Yaml
 
 public class ImportFromYAML extends EFClient {
@@ -186,7 +188,7 @@ public class ImportFromYAML extends EFClient {
             def applicationId = app.applicationId
             setEFProperty("/myJob/report-urls/Application: $applicationName", "/flow/#applications/$applicationId")
         }
-      
+
         def efServices = getServices(projectName, applicationName)
         services.each { service ->
             def svc = createOrUpdateService(projectName, envProjectName, envName, clusterName, efServices, service, applicationName)

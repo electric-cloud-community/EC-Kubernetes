@@ -9,7 +9,7 @@
   <key>EC-Kubernetes</key>
   <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
-  <version>1.3.3</version>
+  <version>1.3.4</version>
 <hasAdoc>true</hasAdoc>
 
 <detailedDescription>Kubernetes is an open-source system for automating deployment, scaling, and management of containerized applications. The EC-Kubernetes plugin integrates with your Kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define, such as CPU and memory.</detailedDescription>

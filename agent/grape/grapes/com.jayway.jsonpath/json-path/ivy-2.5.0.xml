@@ -1,17 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven">
-	<info organisation="org.sonatype.oss"
-		module="oss-parent"
-		revision="7"
+	<info organisation="com.jayway.jsonpath"
+		module="json-path"
+		revision="2.5.0"
 		status="release"
-		publication="20200109172344"
+		publication="20201210162359"
 	>
-		<description homepage="http://nexus.sonatype.org/oss-repository-hosting.html">
-		Sonatype helps open source projects to set up Maven repositories on https://oss.sonatype.org/
+		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
+		<description homepage="https://github.com/jayway/JsonPath">
+		Java port of Stefan Goessner JsonPath.
 		</description>
-		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
-		<m:properties__sonatypeOssDistMgmtSnapshotsUrl>https://oss.sonatype.org/content/repositories/snapshots/</m:properties__sonatypeOssDistMgmtSnapshotsUrl>
-		<m:maven.plugins>org.apache.maven.plugins__maven-enforcer-plugin__1.0</m:maven.plugins>
 	</info>
 	<configurations>
 		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
@@ -26,5 +24,17 @@
 		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
 	</configurations>
 	<publications>
+		<artifact name="json-path" type="jar" ext="jar" conf="master"/>
+		<artifact name="json-path" type="source" ext="jar" conf="sources" m:classifier="sources"/>
+		<artifact name="json-path" type="javadoc" ext="jar" conf="javadoc" m:classifier="javadoc"/>
 	</publications>
+	<dependencies>
+		<dependency org="net.minidev" name="json-smart" rev="2.3" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
+		<dependency org="org.slf4j" name="slf4j-api" rev="1.7.30" force="true" conf="compile->compile(*),master(*);runtime->runtime(*)"/>
+		<dependency org="com.fasterxml.jackson.core" name="jackson-databind" rev="2.11.3" force="true" conf="optional->compile(*),master(*)"/>
+		<dependency org="com.google.code.gson" name="gson" rev="2.8.6" force="true" conf="optional->compile(*),master(*)"/>
+		<dependency org="org.json" name="json" rev="20140107" force="true" conf="optional->compile(*),master(*)"/>
+		<dependency org="org.apache.tapestry" name="tapestry-json" rev="5.6.1" force="true" conf="optional->compile(*),master(*)"/>
+		<dependency org="org.codehaus.jettison" name="jettison" rev="1.4.1" force="true" conf="optional->compile(*),master(*)"/>
+	</dependencies>
 </ivy-module>
