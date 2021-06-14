@@ -4,7 +4,7 @@
   <category>Container Management</category>
   <ecSupportLevel>10</ecSupportLevel>
   <commander-version min="8.3" />
-  <description>Integrates with Kubernetes orchestration engine to deploy Docker containers.</description>
+  <description>Integrates with Kubernetes orchestration engine to deploy Docker containers (Deprecated)</description>
   <help>help.xml</help>
   <key>EC-Kubernetes</key>
   <configure>ec_config</configure>
@@ -12,6 +12,6 @@
   <version>1.3.4</version>
 <hasAdoc>true</hasAdoc>
 
-<detailedDescription>Kubernetes is an open-source system for automating deployment, scaling, and management of containerized applications. The EC-Kubernetes plugin integrates with your Kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define, such as CPU and memory.</detailedDescription>
+<detailedDescription>This plugin is deprecated.</detailedDescription>
 <catalogLabel>Kubernetes</catalogLabel>
 </plugin>
