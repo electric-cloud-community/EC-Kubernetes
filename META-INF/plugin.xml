@@ -9,7 +9,7 @@
   <key>EC-Kubernetes</key>
   <configure>ec_config</configure>
   <label>EC-Kubernetes</label>
-  <version>1.3.4</version>
+  <version>1.3.5</version>
 <hasAdoc>true</hasAdoc>
 
 <detailedDescription>This plugin is deprecated.</detailedDescription>
