@@ -1,6 +1,14 @@
 Plugin version @PLUGIN_VERSION@
 
-Revised on September 17, 2020
+Revised on June 14, 2021
+
+== Overview
+
+= The plugin has been deprecated
+
+This plugin was deprecated.
+
+'''''
 
 == Plugin Configurations
 Plugin configurations are sets of parameters that apply
