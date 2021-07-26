@@ -517,7 +517,7 @@ EC-Kubernetes plugin deploys services using rolling updates by default. When {CD
 . *Rolling Deployment - Min Microservice Instances:* Minimum number of pods that must be running during a rolling update. Defaults to 1 if not set.
 . *Rolling Deployment - Max Microservice Instances:* Maximum number of pods that can be running during a rolling update. The incremental number of pods that can be created during the rolling update is the difference between this attribute and the *Number of microservice instances*.
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/rollingdeploymentattributes.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/rollingdeploymentattributes.png[image]
 
 [[CanaryDeployments]]
 === Canary Deployments
@@ -535,15 +535,15 @@ Having these attributes in the service mapping allows you to use the same servic
 
 . Set _\$[/myJob/canaryDeployment]_ as the property reference value for *Perform Canary Deployment* and _\$[/myJob/canaryReplicas]_ for *Number of Canary Replicas*.
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentserviceattributes.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/canarydeploymentserviceattributes.png[image]
 
 . Now add _canaryDeployment_ and _canaryReplicas_ as parameters to your service or application deploy and the undeploy processes.\
 The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. If _canaryDeployment_ is set to true, then a canary deployment will be performed.\
-image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentdeployprocessparameters.png[image]\
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/canarydeploymentdeployprocessparameters.png[image]\
 Similarly, during undeploy process through _Undeploy Service_ procedure, if _canaryDeployment_ is set to true, then the canary deployment will be removed without impacting the previous deployment or the service.
 image:../../plugins/EC-Kubernetes/images/CanaryDeploymentUndeployProcessParameters.png[screenshot]
 . Finally tie the deploy and undeploy processes into an end-to-end service release pipeline including managing the canary deployments and rolling out new releases.
-image::cloudbees-common::cd-plugins/ec-kubernetes/canarydeploymentpipeline.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/canarydeploymentpipeline.png[image]
 
 ** Define a &#39;deploy canary&#39; task to perform a canary deployment using the specified version on the same environment where the service is targeted.
 ** After the canary deployment is pushed out to the environment, side by side with the previous release, use a manual task to approve the roll out of the new version if it is confirmed that the &#39;canary deployment is safe&#39; and good to be rolled out.
@@ -568,22 +568,22 @@ Having these attributes in the service mapping allows you to use the same servic
 
 . Set _\$[/myJob/serviceNameOverride]_ as the property reference value for *Service Name Override* and _\$[/myJob/deploymentNameOverride]_ for *Deployment Name Override*.
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentserviceattributes.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/bluegreendeploymentserviceattributes.png[image]
 
 . Now add _serviceNameOverride_ and _deploymentNameOverride_ as parameters to your service or application deploy and the undeploy processes.
 The values specified for these parameters will automatically be resolved when the service mapping is used by EC-Kubernetes while performing the deployment. We will use different combination of values for these two parameters to do a blue/green deployment next.\
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentdeployprocessparameters.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/bluegreendeploymentdeployprocessparameters.png[image]
 
 Similarly, we will use different combination of values for these two parameters when undeploying the service.
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentundeployprocessparameters.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/bluegreendeploymentundeployprocessparameters.png[image]
 
 _Note that the processes also have a parameter defined for passing in the container image version to use when deploying the service._
 
 . Now that the basic building blocks are in place, lets deploy the very first version of the service with no value set for _serviceNameOverride_ and _deploymentNameOverride_ set to say &#39;my-deployment-v1&#39;, where v1 is the image version number. This becomes the &#39;blue&#39; deployment or the version that is currently deployed. Now, for any new version that is to be deployed for the service, the deployment pipeline should include the following tasks in order to orchestrate a blue/green deployment:
 
-image::cloudbees-common::cd-plugins/ec-kubernetes/bluegreendeploymentpipeline.png[image]
+image::cloudbees-common-sda::cd-plugins/ec-kubernetes/bluegreendeploymentpipeline.png[image]
 
 ** Create an environment snapshot for the application or the microservice to capture deployment details for the service such as the current version deployed.
 ** Now define a task for the &#39;green&#39; deployment using the new version to create a deployment for. Use the service name override so that a new deployment is created in Kubernetes as well as a new service end-point. The new service end-point can be used to access the &#39;green&#39; deployment in order to perform any final tests or verification if required.
