@@ -87,10 +87,10 @@ echo "<encoded_token_value>" | base64 --decode
 |Bearer Token of Kubernetes Cluster | Service account bearer token for a service account which has permissions to create resources in the Kubernetes cluster.
 
 
-|Kubernetes Version | Kubernetes version running on the cluster master
+|Kubernetes Version | Kubernetes version running on the cluster {CTRL}
 
 
-|Test Connection | Check this checkbox to verify connectivity to Kubernetes master.
+|Test Connection | Check this checkbox to verify connectivity to Kubernetes {CTRL}.
 
 
 |URI Path for Checking Cluster Connectivity | URI path to use with the Kubernetes API endpoint for checking cluster connectivity, e.g., 'api/v1/apis'
@@ -772,7 +772,7 @@ _Invoke Kubernetes API_ should be used instead for creating or updating a Kubern
 - Added support for Kubernetes API version 1.7
 
 
-- Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster master. The parameter will default to '1.6' if no value is specified.
+- Added 'kubernetesVersion' parameter in the plugin configuration to allow the user to identify the Kubernetes version running on the cluster {CTRL}. The parameter will default to '1.6' if no value is specified.
 
 
 - Added procedure
