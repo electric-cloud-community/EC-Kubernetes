@@ -1,8 +1,5 @@
 
-overview: |
-  EC-Kubernetes plugin integrates with the kubernetes cluster to run Docker containers. Kubernetes schedules your containers into the cluster and manages them automatically based on requirements you define (such as CPU and memory).
-
-  You need to have a Kubernetes cluster available for using this plugin.
+overview: This plugin was deprecated.
 excludeProcedures:
   - Setup
   - Define Container
